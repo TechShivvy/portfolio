@@ -4,6 +4,7 @@ import styles from "./_Progressbar.module.css";
 function Progressbar() {
   const [scrollPercentage, setScrollPercentage] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   // Function to update the progress bar based on scroll position
   function updateProgressBar() {
     const scrollTop =
@@ -15,23 +16,23 @@ function Progressbar() {
     setScrollPercentage(newScrollPercentage);
   }
 
-  useEffect(() => {
-    function updateWindowWidth() {
-      setWindowWidth(window.innerWidth);
-    }
+  function updateWindowWidth() {
+    setWindowWidth(window.innerWidth);
+  }
 
-    updateWindowWidth();
+  useEffect(() => {
     // Update the progress bar when the page loads
     updateProgressBar();
+    updateWindowWidth();
 
-    // Update the progress bar when the page is scrolled
+    // Add event listeners for scroll and resize
     window.addEventListener("scroll", updateProgressBar);
     window.addEventListener("resize", updateWindowWidth);
 
-    // Clean up the event listener when the component unmounts
+    // Clean up the event listeners when the component unmounts
     return () => {
       window.removeEventListener("scroll", updateProgressBar);
-      window.addEventListener("resize", updateWindowWidth);
+      window.removeEventListener("resize", updateWindowWidth);
     };
   }, []); // Empty dependency array to run the effect only once
 
