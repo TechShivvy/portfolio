@@ -43,7 +43,7 @@ function ProjectCard({ project }) {
 function Project(props) {
   const { data } = props;
   return (
-    <div className={styles["project-section"]} id="project">
+    <div className={styles["project-section"]} id="projects">
       <h2>Projects</h2>
       <p>Few projects that I have done</p>
       <div className={styles.container} id="container">
