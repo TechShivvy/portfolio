@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shivi</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <script src="script.js"></script>
+    <script src="matrix.js"></script>
+    <script src="main.js"></script>
+    <script>
+
+      // Function to create a card element
+      function createCard(item) {
+        const card = document.createElement("div");
+        card.classList.add("card");
+
+        const title = document.createElement("div");
+        title.classList.add("card-title");
+        title.textContent = item.title;
+
+        const description = document.createElement("div");
+        description.classList.add("card-description");
+        description.textContent = item.description;
+
+        const skills = document.createElement("div");
+        skills.classList.add("card-skills");
+        skills.textContent = `Skills: ${item.skills.join(", ")}`;
+
+        const buttons = document.createElement("div");
+        buttons.classList.add("card-buttons");
+
+        // Create GitHub link button
+        if (item.links.github) {
+          const githubButton = document.createElement("a");
+          githubButton.classList.add("card-button");
+          githubButton.href = item.links.github;
+          githubButton.textContent = "GitHub";
+          buttons.appendChild(githubButton);
+        }
+
+        // Create Preview link button
+        if (item.links.preview) {
+          const previewButton = document.createElement("a");
+          previewButton.classList.add("card-button");
+          previewButton.href = item.links.preview;
+          previewButton.textContent = "Preview";
+          buttons.appendChild(previewButton);
+        }
+
+        card.appendChild(title);
+        card.appendChild(description);
+        card.appendChild(skills);
+        card.appendChild(buttons);
+
+        return card;
+      }
+
+      // Get the container element
+      const cardContainer = document.getElementById("container");
+
+      // Create and append cards to the container
+      projects.forEach((item) => {
+        const card = createCard(item);
+        cardContainer.appendChild(card);
+      });
+    </script>
+  </body>
+</html>

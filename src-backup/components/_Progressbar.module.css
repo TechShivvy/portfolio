@@ -1,0 +1,17 @@
+.progress-container {
+  display: none;
+  position: fixed;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  height: 1px; /* Adjust the height as needed */
+  background-color: #ccc; /* Background color of the progress bar container */
+  z-index: 9999;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background-color: #00ff00; /* Color of the progress bar */
+  transition: width 0.3s ease;
+}

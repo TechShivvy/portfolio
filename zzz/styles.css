@@ -1,0 +1,64 @@
+/* styles.css */
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@200&display=swap");
+
+body {
+  background: #000015;
+  color: white;
+  font-family: "Roboto Mono", monospace;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  height: 100vh; /* Full viewport height */
+  overflow: hidden; /* Hide overflow if text is too big */
+}
+
+#displayout {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center; /* Center content inside */
+  text-align: center; /* Center text inside */
+}
+
+#output {
+  display: flex;
+  flex-wrap: wrap; /* Wrap text to multiple lines if needed */
+  justify-content: center; /* Center text horizontally */
+  text-shadow: 0px 0px 20px #0000cc, 0px 0px 10px #0000ff;
+  font-size: 54px;
+  /* max-width: 90%; Adjust the maximum width to your liking */
+  word-wrap: break-word;
+  white-space: normal;
+  margin: 0 auto; /* Center the container */
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+}
+
+#inputtext {
+  margin: auto;
+  width: 70%;
+  outline: none;
+  padding: 10px;
+}
+#inputarea {
+  margin: auto;
+  width: 40%;
+}
+#btn {
+  margin: auto;
+  width: 20%;
+  padding: 10px;
+}
+.letters {
+  margin: 10px;
+}
+
+/* Media query for screens up to 768px wide (typical mobile devices) */
+@media (max-width: 768px) {
+  #output {
+    font-size: 20px; /* Adjust font size for mobile */
+    max-width: 100%; /* Allow text to occupy full width */
+  }
+}

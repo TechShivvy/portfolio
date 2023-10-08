@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shivi</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* height: 100vh; */
+      }
+
+      .card {
+        /* max-width: 400px;
+        min-width: 300px; */
+        /* flex:1; */
+        width: 50%;
+        /* height:200px; */
+        padding: 20px;
+        border: 2px solid white;
+        background: transparent;
+        border-radius: 10px;
+        box-shadow: none;
+        margin: 10px; /* Add margin between cards */
+      }
+
+      .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        /* height:30px; */
+      }
+
+      .card-description {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        word-wrap: break-word;
+        /* height:100px; */
+      }
+
+      .card-skills {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+
+      .card-buttons {
+        display: flex;
+        justify-content: space-between; /* Justify buttons equally */
+        align-items: center; /* Center buttons vertically */
+        gap: 10px; /* Add gap between buttons */
+      }
+
+      .card-button {
+        flex: 1; /* Equal width for buttons */
+        padding: 8px 16px;
+        background-color: transparent;
+        border: 2px solid white;
+        border-radius: 5px;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .card-button:hover {
+        background-color: white;
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar" id="navbar">
+      <ul>
+        <li><a href="#home">&nbsphome&nbsp</a></li>
+        <li><a href="#about">&nbspabout&nbsp</a></li>
+        <li><a href="#project">&nbspprojects&nbsp</a></li>
+        <li><a href="#contact">&nbspcontact&nbsp</a></li>
+      </ul>
+    </nav>
+    <div class="progress-container" id="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="matrix-container" id="home">
+      <canvas id="matrix"></canvas>
+      <div class="centered-content">
+        <h1 id="hackerText">S h i v c h a r a n</h1>
+      </div>
+    </div>
+
+    <div class="about-section" id="about">
+      <h2>About Me</h2>
+      <p>
+        A <strong> CSE Grad</strong> who codes sometimes. I'm currently on a
+        quest to locate the elusive missing semicolon ;)
+      </p>
+
+      <!-- Add more content about yourself here -->
+
+      <div class="fakeMenu">
+        <div class="fakeButtons fakeClose"></div>
+        <div class="fakeButtons fakeMinimize"></div>
+        <div class="fakeButtons fakeZoom"></div>
+      </div>
+      <div class="fakeScreen" id="fakeScreen">
+        <!-- <p class="line1">$ yo gulp-webapp</p>
+        <p class="line2">Out of the box I include HTML5 Boilerplate, jQuery, and a gulpfile.js to build your app.</p>
+        <p class="line3">[?] What more would you like? (Press space to select)</p>
+        <p class="line4">><span class="cursor4">_</span></p> -->
+        <!-- <p class="line">&gt; Shivcharan.contactInfo</p>
+        <p>
+          ["<a href="mailto:shivanavukkarasu@example.com"
+            >shivanavukkarasu@example.com</a
+          >", "<a href="https://www.linkedin.com/in/shivcharan">LinkedIn</a>",
+          "<a href="https://github.com/shivcharan">Github</a>"]
+        </p>
+        <p class="line">
+          <a href="shivcharan_resume.pdf">shivcharan_resume.pdf</a>
+        </p>
+        <p class="line">
+      design, basketball, cooking, starcraft
+        </p>
+        <p class="line">
+          B.Sc. Structural Engineering - University of
+          California, San Diego
+        </p>
+        <p class="line">
+          Skills: Sass, JavaScript, Python, React, Redux, Flask, webpack,
+          git
+        </p> -->
+        <!-- <span class="cursor">&nbsp</span> -->
+      </div>
+    </div>
+
+    <div class="project-section" id="project">
+      <h2>Projekts</h2>
+      <p>Few projects that i have done</p>
+      <div class="container" id="container">
+        <!-- <div class="card">
+          <div class="card-title">Card Title 1</div>
+          <div class="card-description">
+            This is the first card with oahseggggggggggggggggggggrrrrrrrrrrrrrrrrrrrrrrrgrawgwrharhaerh
+            aerh
+            ae
+            hwegargaerhaehae
+            utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d utline. okayd d 
+          </div>
+          <div class="card-skills">Skills: HTML, CSS, JavaScript</div>
+          <div class="card-buttons">
+            <a href="#" class="card-button">Button 1</a>
+            <a href="#" class="card-button">Button 2</a>
+          </div>
+        </div> -->
+      </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="matrix.js"></script>
+    <script src="main.js"></script>
+    <script>
+      // Data
+      const projects = [
+        {
+          title: "Spicetify Extensions",
+          description: "Spicetify extensions that I create",
+          skills: ["Typescript", "Spicetify"],
+          links: {
+            github: "https://github.com/TechShivvy/spicetify-extensions",
+          },
+        },
+        {
+          title: "Feat.ify",
+          description:
+            "A web app for Spotify users to create playlists spotlighting tracks where a specified artist is featured.",
+          skills: ["Flask", "Python", "HTML5", "CSS3", "JavaScript"],
+          links: {
+            github: "https://github.com/TechShivvy/feat-ify",
+            preview: "https://featify.onrender.com/",
+          },
+        },
+        {
+          title: "YT-Party",
+          description:
+            "YT-Party is a cool web app that facilitates synchronized YouTube watching sessions.",
+          skills: ["React", "Socket.io", "Node", "Express"],
+          links: {
+            github: "https://github.com/TechShivvy/yt-party",
+            preview: "https://ytparty.onrender.com/",
+          },
+        },
+        {
+          title: "Login server",
+          description:
+            "A comprehensive 'login system' with essential features including email verification using OTP and password reset functionality.",
+          skills: ["Mongo", "Express", "Node", "API", "Postman"],
+          links: {
+            github: "https://github.com/TechShivvy/login-server",
+          },
+        },
+        {
+          title: "Outpass Management System",
+          description:
+            "The MERN Stack 'Outpass Management System' streamlines outpass requests for college students and faculties.",
+          skills: ["MERN"],
+          links: {
+            github: "https://github.com/TechShivvy/outpass-management-system",
+            preview: "https://ssn-oms.onrender.com/",
+          },
+        },
+        {
+          title: "Memory Game",
+          description:
+            "A straightforward memory game using HTML, CSS, and JavaScript. It features characters from Brawl Stars and has a nice user interface. Plus, there are three different difficulty levels to choose from.",
+          skills: ["HTML", "CSS", "JS"],
+          links: {
+            github:
+              "https://github.com/TechShivvy/college-works/tree/main/sem6/IP/Lab/memory-game",
+            preview: "https://memory-brawl.onrender.com/",
+          },
+        },
+        {
+          title: "Spotify Data Stream",
+          description:
+            "We used Spark & Kafka for real-time song request analysis. With Spark's distributed processing and Kafka's streaming, we extracted insights seamlessly.",
+          skills: ["Kafka", "Spark", "Big Data", "Java"],
+          links: {
+            github: "https://github.com/TechShivvy/spotify-data-stream",
+          },
+        },
+        {
+          title: "Movie Ticket Booking System",
+          description:
+            "A simple yet comprehensive movie ticket booking system built using C++, created for my 12th-grade Computer Science boards.",
+          skills: ["Turbo CPP"],
+          links: {
+            github: "https://github.com/TechShivvy/movie-cpp",
+          },
+        },
+      ];
+
+      // Function to create a card element
+      function createCard(item) {
+        const card = document.createElement("div");
+        card.classList.add("card");
+
+        const title = document.createElement("div");
+        title.classList.add("card-title");
+        title.textContent = item.title;
+
+        const description = document.createElement("div");
+        description.classList.add("card-description");
+        description.textContent = item.description;
+
+        const skills = document.createElement("div");
+        skills.classList.add("card-skills");
+        skills.textContent = `Skills: ${item.skills.join(", ")}`;
+
+        const buttons = document.createElement("div");
+        buttons.classList.add("card-buttons");
+
+        // Create GitHub link button
+        if (item.links.github) {
+          const githubButton = document.createElement("a");
+          githubButton.classList.add("card-button");
+          githubButton.href = item.links.github;
+          githubButton.textContent = "GitHub";
+          buttons.appendChild(githubButton);
+        }
+
+        // Create Preview link button
+        if (item.links.preview) {
+          const previewButton = document.createElement("a");
+          previewButton.classList.add("card-button");
+          previewButton.href = item.links.preview;
+          previewButton.textContent = "Preview";
+          buttons.appendChild(previewButton);
+        }
+
+        card.appendChild(title);
+        card.appendChild(description);
+        card.appendChild(skills);
+        card.appendChild(buttons);
+
+        return card;
+      }
+
+      // Get the container element
+      const cardContainer = document.getElementById("container");
+
+      // Create and append cards to the container
+      projects.forEach((item) => {
+        const card = createCard(item);
+        cardContainer.appendChild(card);
+      });
+    </script>
+
+    <footer>
+      <div class="footer-content">
+        <p>Made by Shivi &copy; 2023 | All Rights Reserved</p>
+      </div>
+    </footer>
+  </body>
+</html>

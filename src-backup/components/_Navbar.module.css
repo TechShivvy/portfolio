@@ -1,0 +1,68 @@
+.navbar {
+  display: none;
+  justify-content: center; /* Center-align items horizontally */
+  align-items: center;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  z-index: 999;
+}
+
+.navbar ul {
+  list-style: none; /* Remove list bullets */
+  padding: 0; /* Remove default padding */
+  display: flex; /* Display list items in a single line */
+  justify-content: space-around; /* Distribute items evenly */
+  width: 100%; /* Ensure full width */
+}
+
+.navbar li {
+  margin-right: 20px; /* Add spacing between list items if needed */
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #fff;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #fff;
+  display: inline-block;
+  position: relative;
+}
+
+.navbar a::before,
+.navbar a::after {
+  content: "[";
+  position: absolute;
+  top: 0;
+  transition: transform 0.3s ease; /* Add a transition for smooth animation */
+}
+
+.navbar a::after {
+  content: "]";
+  right: 0;
+}
+
+/* Define the hover effect */
+.navbar a:hover::before {
+  color: #00ff00;
+  transform: translateX(-5px); /* Move left by 5px */
+}
+
+.navbar a:hover::after {
+  color: #00ff00;
+  transform: translateX(5px); /* Move right by 5px */
+}
+
+/* Media query for smaller screens (e.g., mobile devices) */
+@media (max-width: 768px) {
+  .navbar ul {
+    flex-direction: column; /* Stack list items vertically on smaller screens */
+    text-align: center; /* Center-align text within each list item */
+  }
+}
