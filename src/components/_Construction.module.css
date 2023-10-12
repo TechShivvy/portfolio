@@ -1,0 +1,13 @@
+/* YourComponent.css */
+.section {
+  display: flex;
+  justify-content: center; /* Horizontally center the child elements */
+  align-items: center; /* Vertically center the child elements */
+  height: 100vh; /* Set the section's height to the viewport height */
+  /* background-color: lightgray; Set a background color for the section */
+}
+
+.centered-image {
+  max-width: 50%;
+  max-height: 50%;
+}

@@ -4,17 +4,17 @@ export default [
     return: [
       {
         text: "Email",
-        href: "mailto:shivanavukkarasu@example.com",
+        href: "mailto:shivcharan.thiru@gmail.com",
       },
       {
         text: "LinkedIn",
-        href: "https://www.linkedin.com/in/shivcharan",
+        href: "https://www.linkedin.com/in/shivcharan-thirunavukkarasu-09063723a",
         rel: "noopener",
         target: "_blank",
       },
       {
         text: "Github",
-        href: "https://github.com/shivcharan",
+        href: "https://github.com/TechShivvy",
         rel: "noopener",
         target: "_blank",
       },
@@ -25,7 +25,7 @@ export default [
     return: [
       {
         text: "shivcharan_resume.pdf",
-        href: "/shivcharan_resume.pdf",
+        href: "https://drive.google.com/file/d/1Xfr_fC38tmBgT5QwKVc3pCmQjnxekW4A/view?usp=sharing",
         target: "_blank",
         rel: "noopener",
       },
@@ -41,7 +41,6 @@ export default [
   },
   {
     input: "Shivcharan.skills",
-    return:
-      '["C/C++", "Python", "JavaScript", "React", "Redux", "Flask", "webpack", "git"]',
+    return: '["C/C++", "Python", "JavaScript", "React", "Flask", "SQL"]',
   },
 ];
