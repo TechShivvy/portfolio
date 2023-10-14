@@ -1,4 +1,4 @@
-export default [
+const PROJECTS = [
   {
     title: "Spicetify Extensions",
     description: "Spicetify extensions that I create",
@@ -76,3 +76,7 @@ export default [
     },
   },
 ];
+
+Object.freeze(PROJECTS);
+
+export default PROJECTS;

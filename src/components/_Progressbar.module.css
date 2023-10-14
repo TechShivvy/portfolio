@@ -4,14 +4,14 @@
   top: 50px;
   left: 0;
   width: 100%;
-  height: 1px; /* Adjust the height as needed */
-  background-color: #ccc; /* Background color of the progress bar container */
+  height: 1px; 
+  background-color: #ccc; 
   z-index: 9999;
 }
 
 .progress-bar {
   height: 100%;
   width: 0;
-  background-color: #00ff00; /* Color of the progress bar */
-  transition: width 0.3s ease;
+  background-color: #00ff00; 
+  transition: width 0.05s ease 0s;
 }

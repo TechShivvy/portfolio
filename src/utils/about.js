@@ -1,7 +1,8 @@
 import React from "react";
-import styles from "./_About.module.css";
+import styles from "../components/_About.module.css";
 
-function FormatAndAppendData({ data }) {
+function AboutLines({ data }) {
+  // data=data.aboutData
   return (
     // <div className={styles.fakeScreen} id="fakeScreen">
     // {data.map((item, index) => (
@@ -68,4 +69,4 @@ function FormatAndAppendData({ data }) {
   );
 }
 
-export default FormatAndAppendData;
+export default AboutLines;

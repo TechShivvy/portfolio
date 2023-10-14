@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./_Home.module.css";
-import task1 from "./../tasks/task1";
+import task1 from "../utils/scramble";
 import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
@@ -8,7 +8,7 @@ const Home = () => {
   const canvasRef = useRef(null);
   useEffect(() => {
     async function loadTask1() {
-      await task1(); // Wait for task1 to complete
+      await task1();
       // Now that task1 is complete, you can run the following code
       // const [task1Complete, setTask1Complete] = useState(false);
       //   const characters =
@@ -57,10 +57,10 @@ const Home = () => {
       //   }
 
       //   animateMatrix();
-      setStartAnimation(true); // Start the Matrix animation
+      setStartAnimation(true); 
     }
 
-    loadTask1(); // Call the async function to initiate the loading process
+    loadTask1(); 
   }, []);
 
   return (

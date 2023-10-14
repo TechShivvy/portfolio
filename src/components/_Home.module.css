@@ -6,7 +6,7 @@
   /* color: #00ff00; */
   color: #ff0000;
   font-family: "Hacked", Courier, monospace;
-  font-size: 24px;
+  font-size: 28px;
   text-align: center;
   z-index: 999;
 }
@@ -36,9 +36,9 @@
   /* width: 100vh; */
   /* height: auto; */
 }
-/* Media query for smaller screens (e.g., mobile devices) */
+
 @media (max-width: 768px) {
   .centered-content {
-    font-size: 10px; /* Adjust font size for smaller screens */
+    font-size: 10px; 
   }
 }

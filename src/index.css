@@ -28,7 +28,12 @@ body {
 
   align-items: center;
   color: white;
-  font-family: Courier, monospace;
+  /* font-family: Courier, monospace; */
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+  /* font-family: "Bitter","Roboto Slab","Cambria",Georgia,serif; */
+  /* font-family: Camphor,Open Sans,Segoe UI,sans-serif; */
+  /* font-family: "Rubik","Poppins","Hel­vetica",Arial,sans-serif; */
 }
 
 code {

@@ -8,7 +8,7 @@
     align-items: center; */
 }
 
-.container {
+.project-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,7 +26,7 @@
   background: transparent;
   border-radius: 10px;
   box-shadow: none;
-  margin: 10px; /* Add margin between cards */
+  margin: 10px; 
 
   display: flex;
   flex-direction: column;
@@ -75,9 +75,9 @@
   display: flex;
   /* flex-direction: column; */
   flex-wrap: wrap;
-  justify-content: space-between; /* Justify buttons equally */
-  align-items: center; /* Center buttons vertically */
-  gap: 10px; /* Add gap between buttons */
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 10px; 
 }
 
 .card-button {

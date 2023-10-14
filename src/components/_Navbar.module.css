@@ -1,6 +1,6 @@
 .navbar {
   display: none;
-  justify-content: center; /* Center-align items horizontally */
+  justify-content: center; 
   align-items: center;
   position: fixed;
   top: 0;
@@ -12,15 +12,15 @@
 }
 
 .navbar ul {
-  list-style: none; /* Remove list bullets */
-  padding: 0; /* Remove default padding */
-  display: flex; /* Display list items in a single line */
-  justify-content: space-around; /* Distribute items evenly */
-  width: 100%; /* Ensure full width */
+  list-style: none; 
+  padding: 0; 
+  display: flex; 
+  justify-content: space-around; 
+  width: 100%; 
 }
 
 .navbar li {
-  margin-right: 20px; /* Add spacing between list items if needed */
+  margin-right: 20px; 
 }
 
 .navbar a {
@@ -40,7 +40,7 @@
   content: "[";
   position: absolute;
   top: 0;
-  transition: transform 0.3s ease; /* Add a transition for smooth animation */
+  transition: transform 0.3s ease; 
 }
 
 .navbar a::after {
@@ -48,22 +48,22 @@
   right: 0;
 }
 
-/* Define the hover effect */
+
 .navbar a:hover::before {
   color: #00ff00;
-  transform: translateX(-5px); /* Move left by 5px */
+  transform: translateX(-5px); 
 }
 
 .navbar a:hover::after {
   color: #00ff00;
-  transform: translateX(5px); /* Move right by 5px */
+  transform: translateX(5px); 
 }
 
-/* Media query for smaller screens (e.g., mobile devices) */
+
 @media (max-width: 768px) {
   .navbar ul {
-    flex-direction: column; /* Stack list items vertically on smaller screens */
-    text-align: center; /* Center-align text within each list item */
+    flex-direction: column; 
+    text-align: center; 
   }
 }
 

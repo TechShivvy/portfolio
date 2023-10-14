@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import $ from "jquery"; // Import jQuery
+import $ from "jquery";
 import styles from "./_Progressbar.module.css";
 
 function Progressbar() {
   const [scrollPercentage, setScrollPercentage] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  // Function to update the progress bar based on scroll position
   function updateProgressBar() {
     const scrollTop =
       document.documentElement.scrollTop || document.body.scrollTop;
@@ -23,30 +22,27 @@ function Progressbar() {
 
   function showProgressBar() {
     if (window.scrollY > window.innerHeight) {
-      $("#progress-container").slideDown(250);
+      $("#progress-container").slideDown(300);
     } else {
       $("#progress-container").slideUp(0);
     }
   }
 
   useEffect(() => {
-    // Update the progress bar when the page loads
     showProgressBar();
     updateProgressBar();
     updateWindowWidth();
 
-    // Add event listeners for scroll and resize
-    window.addEventListener("scroll", showProgressBar);
-    window.addEventListener("scroll", updateProgressBar);
-    window.addEventListener("resize", updateWindowWidth);
+    $(window).on("resize scroll", showProgressBar);
+    $(window).on("resize scroll", updateProgressBar);
+    $(window).on("resize", updateWindowWidth);
 
-    // Clean up the event listeners when the component unmounts
     return () => {
-      window.removeEventListener("scroll", showProgressBar);
-      window.removeEventListener("scroll", updateProgressBar);
-      window.removeEventListener("resize", updateWindowWidth);
+      $(window).off("resize scroll", showProgressBar);
+      $(window).off("resize scroll", updateProgressBar);
+      $(window).off("resize", updateWindowWidth);
     };
-  }, []); // Empty dependency array to run the effect only once
+  }, []);
 
   return (
     <div

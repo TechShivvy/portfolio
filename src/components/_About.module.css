@@ -1,7 +1,11 @@
 .about-section {
   margin-top: 10px;
-  padding-top: 40px;
+  padding: 50px;
   width: 100%;
+
+  box-sizing: border-box;
+
+  padding-top: 40px;
   /* height: 100%; */
 }
 .fakeButtons {
@@ -31,7 +35,7 @@
 }
 
 .fakeMenu {
-  width: 75%;
+  /* width: 75%; */
   box-sizing: border-box;
   height: 25px;
   background-color: #bbb;
@@ -43,35 +47,80 @@
 .fakeScreen {
   background-color: #151515;
   box-sizing: border-box;
-  width: 75%;
+  /* width: 75%; */
   margin: 0 auto;
   padding: 20px;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
+  /* font-family: Monaco,Consola,"Lucida Console",monospace; */
+  /* font-family: Monaco,Consolas, "Lucida Console", monospace; */
+  font-family: "Menlo", "Monaco", "Andale Mono", "lucida console", "Courier New",
+    monospace;
 }
 
-/* Style every even p element inside the fakeScreen */
+
 /* #fakeScreen p:nth-child(even) {
  
 } */
 
 .fakeScreen > div:not(:last-child) p:nth-child(even) {
-  color: #ff0000; /* Change the color to your desired color for even paragraphs */
+  color: #ff0000;
   padding-bottom: 20px;
 }
 
-/* Style all a elements (links) to be green */
 .fakeScreen a {
-  color: #00ff00; /* Green color for links */
-  text-decoration: none; /* Remove underline */
+  color: #00ff00; 
+  text-decoration: none;
 }
 span.cursor {
   background: hsla(0, 0%, 97%, 0.65);
   animation: caret 1s steps(1) infinite;
 }
 
+h2 {
+  /* text-align: center; */
+  font-size: 24px;
+}
+
+/* span {
+  font-size: 50px;
+} */
+
+.container {
+  box-sizing: border-box;
+  width: 75%;
+  margin: 0 auto;
+  /* padding: 20px; */
+}
+.para {
+  font-size: 25px;
+  /* width: 75%; */
+  /* margin-left: 50px;; */
+}
+strong {
+  font-weight: bolder;
+}
+h2::after {
+  content: "";
+  display: block;
+  width: 25px;
+  /* margin: 0 auto; */
+  margin-top: 20px;
+  border-bottom: 4px solid green; 
+}
+
+.custom-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.custom-list li::before {
+  content: ">";
+  margin-right: 5px;
+}
+
 @keyframes caret {
   50% {
-    background-color: transparent; /* Make the cursor invisible */
+    background-color: transparent; 
   }
 }

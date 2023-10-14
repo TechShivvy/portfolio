@@ -61,9 +61,7 @@
 
 // export default Matrix;
 
-// MatrixAnimation.js
 import styles from "./_Home.module.css";
-// MatrixAnimation.js
 import React, { useEffect, useRef } from "react";
 
 const MatrixAnimation = ({ startAnimation }) => {
@@ -71,7 +69,7 @@ const MatrixAnimation = ({ startAnimation }) => {
 
   useEffect(() => {
     if (!startAnimation) {
-      return; // Don't start the animation if startAnimation is false
+      return;
     }
 
     const characters =
@@ -82,10 +80,10 @@ const MatrixAnimation = ({ startAnimation }) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    canvas.width = window.innerWidth;
+    canvas.width = window.innerWidth+10;
     canvas.height = window.innerHeight;
 
-    const columns = Math.floor(canvas.width / fontSize);
+    const columns = Math.floor(canvas.width / fontSize)+10;
     const rows = Math.floor(canvas.height / fontSize);
 
     const matrix = [];
@@ -114,7 +112,6 @@ const MatrixAnimation = ({ startAnimation }) => {
     }
 
     function animateMatrix() {
-      // Check if the animation should start
       drawMatrix();
       requestAnimationFrame(animateMatrix);
     }

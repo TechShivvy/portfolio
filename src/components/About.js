@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./_About.module.css"; // Import the CSS module
-import FormatAndAppendData from "./putData";
+import AboutLines from "../utils/about";
 
 function About(props) {
   const [contentElements, setContentElements] = useState([]);
@@ -62,17 +62,20 @@ function About(props) {
 
   return (
     <div className={styles["about-section"]} id="about">
-      <h2>About Me</h2>
-      <p>
-        A <strong> CSE Grad</strong> who codes sometimes. I'm currently on a
+      <h2>About</h2>
+    <div className={styles["container"]}>
+      <p className={styles["para"]}>
+        I'm Shivcharan Thirunavukkarasu<br/>
+        A <strong> CSE Grad</strong> who codes sometimes. <br/>I'm currently on a
         quest to locate the elusive missing semicolon ;)
       </p>
+      </div>
       <div className={styles.fakeMenu}>
         <div className={`${styles.fakeButtons} ${styles.fakeClose}`}></div>
         <div className={`${styles.fakeButtons} ${styles.fakeMinimize}`}></div>
         <div className={`${styles.fakeButtons} ${styles.fakeZoom}`}></div>
       </div>
-      <FormatAndAppendData data={props.data} />
+      <AboutLines data={props.data} />
       {/* <div className={styles.fakeScreen} id="fakeScreen"> */}
         {/* {contentElements} */}
       {/* </div> */}

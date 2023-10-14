@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./_Navbar.module.css";
-import $ from "jquery"; // Import jQuery
+import $ from "jquery";
 
 function Navbar() {
   const [isNavbarVisible, setIsNavbarVisible] = useState(false);
@@ -8,13 +8,13 @@ function Navbar() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    // Function to show the navbar when scrolling down
     function showNavbar() {
       if (window.scrollY > window.innerHeight) {
         setIsNavbarVisible(true);
         $("#navbar").slideDown(250);
       } else {
         setIsNavbarVisible(false);
+        $("#navbar").slideUp(0);
         // $("#navbar, #progress-container").slideUp(250);
       }
     }
@@ -24,15 +24,15 @@ function Navbar() {
     }
 
     updateWindowWidth();
-    // Add an event listener to the window's scroll event
-    window.addEventListener("scroll", showNavbar);
-    window.addEventListener("resize", updateWindowWidth);
-    // Clean up the event listener when the component unmounts
+
+    $(window).on("scroll resize", showNavbar);
+    $(window).on("resize", updateWindowWidth);
+
     return () => {
-      window.removeEventListener("resize", updateWindowWidth);
-      window.removeEventListener("scroll", showNavbar);
+      $(window).off("scroll resize", showNavbar);
+      $(window).off("resize", updateWindowWidth);
     };
-  }, []); // Empty dependency array to run the effect only once
+  }, []);
 
   return (
     <nav
@@ -42,7 +42,7 @@ function Navbar() {
       // }
       id="navbar"
       style={
-        isNavbarVisible && windowWidth >= 768
+        windowWidth >= 768
           ? { visibility: "visible" }
           : { visibility: "hidden" }
       }

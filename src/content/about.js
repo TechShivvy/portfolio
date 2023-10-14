@@ -1,4 +1,4 @@
-export default [
+const ABOUT = [
   {
     input: "Shivcharan.contactInfo",
     return: [
@@ -44,3 +44,7 @@ export default [
     return: '["C/C++", "Python", "JavaScript", "React", "Flask", "SQL"]',
   },
 ];
+
+Object.freeze(ABOUT);
+
+export default ABOUT;
