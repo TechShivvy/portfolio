@@ -44,13 +44,13 @@ function FormatAndAppendData({ data }) {
               {item.return.length > 1 ? "[" : ""}
               {item.return.map((link, linkIndex) => (
                 <React.Fragment key={linkIndex}>
-                  <a
+                  "<a
                     href={link.href}
                     target={link.target || "_blank"}
                     rel={link.rel || "noopener"}
                   >
-                    "{link.text}"
-                  </a>
+                    {link.text}
+                  </a>"
                   {linkIndex < item.return.length - 1 ? ", " : ""}
                 </React.Fragment>
               ))}
