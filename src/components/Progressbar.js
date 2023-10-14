@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import $ from "jquery"; // Import jQuery
 import styles from "./_Progressbar.module.css";
 
 function Progressbar() {
@@ -20,17 +21,28 @@ function Progressbar() {
     setWindowWidth(window.innerWidth);
   }
 
+  function showProgressBar() {
+    if (window.scrollY > window.innerHeight) {
+      $("#progress-container").slideDown(250);
+    } else {
+      $("#progress-container").slideUp(0);
+    }
+  }
+
   useEffect(() => {
     // Update the progress bar when the page loads
+    showProgressBar();
     updateProgressBar();
     updateWindowWidth();
 
     // Add event listeners for scroll and resize
+    window.addEventListener("scroll", showProgressBar);
     window.addEventListener("scroll", updateProgressBar);
     window.addEventListener("resize", updateWindowWidth);
 
     // Clean up the event listeners when the component unmounts
     return () => {
+      window.removeEventListener("scroll", showProgressBar);
       window.removeEventListener("scroll", updateProgressBar);
       window.removeEventListener("resize", updateWindowWidth);
     };

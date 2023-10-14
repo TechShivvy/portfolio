@@ -12,10 +12,10 @@ function Navbar() {
     function showNavbar() {
       if (window.scrollY > window.innerHeight) {
         setIsNavbarVisible(true);
-        $("#navbar, #progress-container").slideDown(250);
+        $("#navbar").slideDown(250);
       } else {
         setIsNavbarVisible(false);
-        $("#navbar, #progress-container").slideUp(250);
+        // $("#navbar, #progress-container").slideUp(250);
       }
     }
 
