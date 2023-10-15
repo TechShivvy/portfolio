@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./_About.module.css"; // Import the CSS module
+import styles from "./_About.module.css";
 import AboutLines from "../utils/about";
 
 function About(props) {
@@ -71,9 +71,9 @@ function About(props) {
       </p>
       </div>
       <div className={styles.fakeMenu}>
-        <div className={`${styles.fakeButtons} ${styles.fakeClose}`}></div>
-        <div className={`${styles.fakeButtons} ${styles.fakeMinimize}`}></div>
-        <div className={`${styles.fakeButtons} ${styles.fakeZoom}`}></div>
+        <div className={`${styles.fakeButtons} ${styles.fakeClose}`}/>
+        <div className={`${styles.fakeButtons} ${styles.fakeMinimize}`}/>
+        <div className={`${styles.fakeButtons} ${styles.fakeZoom}`}/>
       </div>
       <AboutLines data={props.data} />
       {/* <div className={styles.fakeScreen} id="fakeScreen"> */}
