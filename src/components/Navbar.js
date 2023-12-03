@@ -11,10 +11,10 @@ function Navbar() {
     function showNavbar() {
       if (window.scrollY > window.innerHeight) {
         setIsNavbarVisible(true);
-        $("#navbar").slideDown(250);
+        $("#navbar").fadeIn(300);
       } else {
         setIsNavbarVisible(false);
-        $("#navbar").slideUp(0);
+        $("#navbar").fadeOut(0);
         // $("#navbar, #progress-container").slideUp(250);
       }
     }

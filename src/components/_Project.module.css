@@ -9,9 +9,10 @@
 }
 
 .project-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: repeat(3,auto);
+  gap: 1.5rem;
   /* height: 100vh; */
 }
 
@@ -19,38 +20,40 @@
   /* max-width: 400px;
     min-width: 300px; */
   /* flex:1; */
-  width: 50%;
   /* height:200px; */
   padding: 20px;
   border: 2px solid white;
   background: transparent;
   border-radius: 10px;
   box-shadow: none;
-  margin: 10px; 
-
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   /* align-items: center; */
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .card:hover {
-  border: 2px solid green;
-  /* background-color: yellow; */
-  /* color: black; */
+  background-color: whitesmoke;
   font-weight: bold;
+  color: #165757;
 }
 
 .card:hover  .card-title {
-  color: red;
+  color: black;
 }
 
 .card:hover .card-skills-text {
-  color: red;
+  color: black
 }
 .card:hover > .card-skills {
-  color: yellow;
+  color: #571616;
 }
 
+.card:hover .card-button {
+  border: 2px solid #165757;
+  color: #165757;
+}
 
 .card-title {
   font-size: 1.5rem;
@@ -73,9 +76,9 @@
 
 .card-buttons {
   display: flex;
+  justify-content: flex-end;
   /* flex-direction: column; */
   flex-wrap: wrap;
-  justify-content: space-between; 
   align-items: center; 
   gap: 10px; 
 }
@@ -94,6 +97,41 @@
 }
 
 .card-button:hover {
-  background-color: white;
-  color: black;
+  background-color: #165757;
+  border-color:#165757 !important;
+  color: white !important;
 }
+
+.container {
+  box-sizing: border-box;
+  width: 75%;
+  margin: 0 auto;
+  /* padding: 20px; */
+}
+
+.para {
+  font-size: 25px;
+  /* width: 75%; */
+  /* margin-left: 50px;; */
+}
+
+@media (max-width: 750px){
+  .project-container {
+    display:grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(8,auto);
+    gap: 1.5rem;
+    /* height: 100vh; */
+  }
+}
+
+@media (max-width: 1000px ) and (min-width: 751px){
+  .project-container {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(8,auto);
+    gap: 1.5rem;
+    /* height: 100vh; */
+  }
+}
+

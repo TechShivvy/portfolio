@@ -19,6 +19,7 @@
 #matrix {
   width: 100%;
   height: 100%;
+
 }
 
 .centered-content {
@@ -33,3 +34,4 @@
   text-align: center;
   z-index: 999;
 }
+

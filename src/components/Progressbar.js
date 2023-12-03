@@ -22,9 +22,9 @@ function Progressbar() {
 
   function showProgressBar() {
     if (window.scrollY > window.innerHeight) {
-      $("#progress-container").slideDown(300);
+      $("#progress-container").fadeIn(400);
     } else {
-      $("#progress-container").slideUp(0);
+      $("#progress-container").fadeOut(0);
     }
   }
 

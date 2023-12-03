@@ -36,7 +36,7 @@ body {
   /* font-family: "Rubik","Poppins","Hel­vetica",Arial,sans-serif; */
 }
 
-code {
+code,input,button {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
@@ -53,4 +53,34 @@ html {
 @font-face {
   font-family: Hacked;
   src: url(https://hackedfont.com/HACKED.ttf);
+}
+
+::-moz-selection {
+  background: white;
+  color: #2ba2a2;
+}
+
+::selection {
+  background: white;
+  color: #2ba2a2;
+}
+
+::-moz-selection {
+  color: white;
+  background: #2ba2a2;
+}
+::selection {
+  color: white;
+  background: #2ba2a2;
+}
+
+
+/* For mobile browsers */
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }

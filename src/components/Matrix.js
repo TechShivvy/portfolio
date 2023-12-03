@@ -95,7 +95,7 @@ const MatrixAnimation = ({ startAnimation }) => {
       context.fillStyle = "rgba(0, 0, 0, 0.05)";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.fillStyle = "#009900";
+      context.fillStyle = "#626e5e";
       context.font = fontSize + "px monospace";
 
       for (let i = 0; i < matrix.length; i++) {
@@ -123,3 +123,4 @@ const MatrixAnimation = ({ startAnimation }) => {
 };
 
 export default MatrixAnimation;
+

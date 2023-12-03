@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
+import swal from "sweetalert";
 import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
@@ -57,11 +58,31 @@ const Home = () => {
       //   }
 
       //   animateMatrix();
-      setStartAnimation(true); 
+      setStartAnimation(true);
     }
 
-    loadTask1(); 
+    loadTask1();
   }, []);
+
+  const handleH1Click = () => {
+    console.log("H1 element clicked!");
+    const hasRun = sessionStorage.getItem("hasRun");
+
+    if (hasRun && hasRun === "true") {
+      // Show a pop-up asking if the user wants to see the animation again
+      swal({
+        title: "Do you want to see the animation again?",
+        icon: "info",
+        buttons: ["No", "Yes"],
+      }).then((value) => {
+        if (value) {
+          // If user clicks "Yes", remove hasRun from sessionStorage and reload the page
+          sessionStorage.removeItem("hasRun");
+          window.location.reload();
+        }
+      });
+    }
+  };
 
   return (
     <div className={styles["home-section"]} id="home">
@@ -69,7 +90,9 @@ const Home = () => {
       <MatrixAnimation startAnimation={startAnimation} />
       {/* <canvas className={styles["matrix"]} id="matrix" ref={canvasRef} /> */}
       <div className={styles["centered-content"]}>
-        <h1 id="hackerText">S h i v c h a r a n</h1>
+        <h1 id="hackerText" onClick={handleH1Click}>
+          S h i v c h a r a n
+        </h1>
       </div>
     </div>
   );

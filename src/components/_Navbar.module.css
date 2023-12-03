@@ -50,12 +50,12 @@
 
 
 .navbar a:hover::before {
-  color: #00ff00;
+  color: #2ba2a2;
   transform: translateX(-5px); 
 }
 
 .navbar a:hover::after {
-  color: #00ff00;
+  color: #2ba2a2;
   transform: translateX(5px); 
 }
 
@@ -66,4 +66,5 @@
     text-align: center; 
   }
 }
+
 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Pop-up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+        .popup {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+        .btn {
+            margin: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closePopup()">
+    <div class="popup" onclick="event.stopPropagation();">
+        <h2>Your Custom Pop-up Content</h2>
+        <p>This is a simple custom pop-up created using HTML, CSS, and JavaScript.</p>
+        <button class="btn" onclick="doSomethingYes()">Yes</button>
+        <button class="btn" onclick="doSomethingNo()">No</button>
+    </div>
+</div>
+
+<button onclick="openPopup()">Open Pop-up</button>
+
+<script>
+    function openPopup() {
+        document.getElementById('overlay').style.display = 'flex';
+    }
+
+    function closePopup() {
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function doSomethingYes() {
+        alert('You clicked Yes! Do something here.');
+        closePopup();
+    }
+
+    function doSomethingNo() {
+        alert('You clicked No! Do something else here.');
+        closePopup();
+    }
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@ function Project() {
   return (
     <div className="project-section" id="project">
       <h2>Projekts</h2>
-      <p>Few projects that i have done</p>
+      <p>A glimpse into my completed projects</p>
       <div class="container" id="container"></div>
     </div>
   );

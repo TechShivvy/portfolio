@@ -24,7 +24,7 @@ const task1 = () => {
   if (hasRun) {
     // sessionStorage.setItem("hasRunOnce", "true");
     isAnimationComplete = true;
-    centeredContentElement.style.color = "#00ff00";
+    centeredContentElement.style.color = "#2ba2a2";
   }
 
   function getRandomChar() {
@@ -82,7 +82,7 @@ const task1 = () => {
         console.log("'" + textElement.innerHTML + "'");
       } else {
         isAnimationComplete = true;
-        centeredContentElement.style.color = "#00ff00";
+        centeredContentElement.style.color = "#2ba2a2";
         sessionStorage.setItem("hasRun","true");
         clearInterval(inst);
         resolve();
@@ -113,7 +113,7 @@ const task1 = () => {
       if (isAnimationComplete) {
         isHovered = true;
         clearInterval(inst);
-        centeredContentElement.style.color = "#ff0000";
+        centeredContentElement.style.color = "#a22b2b";
         inst = setInterval(scrambleTextEndless, 100);
       }
     });
@@ -122,7 +122,7 @@ const task1 = () => {
       if (isAnimationComplete) {
         isHovered = false;
         textElement.innerHTML = originalText;
-        centeredContentElement.style.color = "#00ff00";
+        centeredContentElement.style.color = "#2ba2a2";
       }
     });
 
@@ -132,3 +132,4 @@ const task1 = () => {
 };
 
 export default task1;
+

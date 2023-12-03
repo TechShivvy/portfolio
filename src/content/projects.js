@@ -1,5 +1,14 @@
 const PROJECTS = [
   {
+    title: "CoNote",
+    description:
+      "CoNote is a collaborative note-making android app with permissions management.",
+    skills: ["Java"],
+    links: {
+      github: "https://github.com/vishal1361/CoNote",
+    },
+  },
+  {
     title: "Spicetify Extensions",
     description: "Spicetify extensions that I create",
     skills: ["Typescript", "Spicetify"],

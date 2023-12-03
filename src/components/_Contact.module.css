@@ -1,0 +1,142 @@
+.contact-section {
+  margin-top: 10px;
+  padding-top: 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+h2 {
+  font-size: 24px;
+}
+
+.container {
+  box-sizing: border-box;
+  width: 75%;
+  margin: 0 auto;
+}
+
+strong {
+  font-weight: bolder;
+}
+
+h2::after {
+  content: "";
+  display: block;
+  width: 25px;
+  margin-top: 20px;
+  border-bottom: 4px solid #2ba2a2;
+}
+
+.form-container {
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.contact-form {
+  max-width: 100%; /* Update to 100% to fill the container */
+  margin: auto;
+}
+
+.contact-form input,
+.contact-form textarea,
+.contact-form button {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 8px;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+textarea {
+  width: 100%;
+  min-width: 200px; /* Set your desired minimum width */
+  min-height: 15em;
+  resize: vertical; /* Restrict resizing only vertically */
+}
+
+.contact-form button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.contact-form button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.validation-error {
+  color: #ff0000; /* Red color for error text */
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.valid-input {
+  border: 1px solid green;
+}
+
+textarea:focus,
+input:focus {
+  outline: none;
+}
+
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two columns */
+  gap: 20px; /* Adjust the gap as needed */
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-align: center;
+}
+
+.text-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.text-above-image *,
+.text-below-image *{
+  margin: 0;
+  padding: 0;
+}
+
+h3{
+  font-size: 3rem;
+}
+
+.text-below-image{
+  text-align: justify;
+}
+
+.contact-image {
+  width: 70%;
+  align-self: center; /* Center align the image */
+  max-width: 100%; /* Ensure the image doesn't exceed its container */
+}
+
+@media (max-width: 768px) {
+  .gridContainer {
+    grid-template-columns: 1fr; /* Change to a single column for smaller screens */
+  }
+
+  .gridItem {
+    /* Adjust styles for smaller screens if needed */
+  }
+
+  .text-above-image{
+    display: none;
+  }
+}
