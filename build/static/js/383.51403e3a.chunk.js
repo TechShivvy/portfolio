@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkportfolio=self.webpackChunkportfolio||[]).push([[383],{6383:function(e,r,o){o.r(r),o.d(r,{default:function(){return c}});o(2791);var t="_Footer_footer-content__rrh24",s="_Footer_hover-text__FWs2Y",n=o(184);var c=function(){return(0,n.jsx)("footer",{children:(0,n.jsx)("div",{className:t,children:(0,n.jsxs)("p",{children:["Made by ",(0,n.jsx)("span",{className:s})," \xa9 2023 | All Rights Reserved"]})})})}}}]);
+//# sourceMappingURL=383.51403e3a.chunk.js.map
