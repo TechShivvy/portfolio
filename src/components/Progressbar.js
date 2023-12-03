@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import $ from "jquery";
 import styles from "./_Progressbar.module.css";
+import $ from "jquery";
 
 function Progressbar() {
   const [scrollPercentage, setScrollPercentage] = useState(0);
@@ -11,8 +11,11 @@ function Progressbar() {
       document.documentElement.scrollTop || document.body.scrollTop;
     const scrollHeight = document.documentElement.scrollHeight;
     const clientHeight = document.documentElement.clientHeight;
-    const newScrollPercentage =
-      (scrollTop / (scrollHeight - clientHeight)) * 100;
+    let newScrollPercentage = Math.min(
+      (scrollTop / (scrollHeight - clientHeight)) * 100,
+      100
+    );
+    newScrollPercentage = Math.max(newScrollPercentage, 0);
     setScrollPercentage(newScrollPercentage);
   }
 
@@ -53,7 +56,7 @@ function Progressbar() {
       <div
         className={styles["progress-bar"]}
         id="progress-bar"
-        style={{ width: `${scrollPercentage}%` }}
+        style={{ width: `${Math.min(scrollPercentage, 100)}%` }}
       ></div>
     </div>
   );

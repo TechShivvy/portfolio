@@ -10,18 +10,27 @@
   margin: 0 auto;
 }
 
-h1 {
+.h1 {
   font-size: 200px;
   text-align: center;
   margin: 0 auto;
 }
 
-h2 {
+.h2 {
   font-size: 50px;
   text-align: center;
-  /* margin: 0 auto; */
 }
 
-h2::after {
+.h2::after {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .h1{
+    font-size: 175px;
+  }
+
+  .h2{
+    font-size: 40px;
+  }
 }

@@ -7,20 +7,20 @@ function Project(props) {
 
   return (
     <div className={styles["project-section"]} id="projects">
-      <div className={styles["container"]}>
-        <h2 className="h2">Projects</h2>
-        <p className={styles["para"]}>A glimpse into my completed projects:</p>
-        <div className={`row ${styles["project-container"]}`} id="project-container">
-        {data.map((project, index) => (
-          <ProjectCard key={index} project={project} />
-        ))}
+      <div className={styles.container}>
+        <h2 className={styles.heading}>Projects</h2>
+        <p className={styles.para}>A glimpse into my completed projects:</p>
+        <div
+          className={`row ${styles["project-container"]}`}
+          id="project-container"
+        >
+          {data.map((project, index) => (
+            <ProjectCard key={index} project={project} />
+          ))}
         </div>
       </div>
     </div>
-
-    
   );
 }
 
 export default Project;
-

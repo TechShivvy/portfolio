@@ -7,6 +7,7 @@
 #root {
   height: 100%;
 }
+
 * a,
 button {
   cursor: url("./../public/middle-finger.cur"), pointer;

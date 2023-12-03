@@ -61,26 +61,8 @@ function ContactForm() {
   return (
     <div className={styles["contact-section"]} id="contact">
       <div className={styles["container"]}>
-        <h2 className="h2">Contact</h2>
+        <h2 className={styles.h2}>Contact</h2>
         <div className={styles.gridContainer}>
-          {/* <div className={styles.gridItem}>
-            <div className={styles["text-above-image"]}>
-              <h3>Get in touch</h3>
-            </div>
-            <a
-              target="_blank"
-              href="https://pngtree.com/freepng/two-people-watching-the-phone_4762502.html"
-            >
-              <img src={contact} className={styles["contact-image"]} />
-            </a>
-            <div className={styles["text-below-image"]}>
-              <p>
-                Feel free to reach out and start a conversation. Let's discuss
-                your project and explore the possibilities together.
-              </p>
-            </div>
-          </div> */}
-
           <div className={styles.gridItem}>
             <div className={styles["text-wrapper"]}>
               <div className={styles["text-above-image"]}>
@@ -115,9 +97,9 @@ function ContactForm() {
                   required
                   placeholder="Name"
                   onChange={(e) => validateName(e.target.value)}
-                  style={{
-                    borderColor: nameValid ? "green" : "red",
-                  }}
+                  // style={{
+                  //   borderColor: nameValid ? "green" : "red",
+                  // }}
                 />
 
                 <input
@@ -127,18 +109,18 @@ function ContactForm() {
                   required
                   placeholder="Email Address"
                   onChange={(e) => validateEmail(e.target.value)}
-                  style={{
-                    borderColor: emailValid ? "green" : "red",
-                  }}
+                  // style={{
+                  //   borderColor: emailValid ? "green" : "red",
+                  // }}
                 />
                 <ValidationError
                   prefix="Email"
                   field="email"
                   errors={state.errors}
                   className={styles["validation-error"]}
-                  style={{
-                    display: emailValid ? "none" : "block",
-                  }}
+                  // style={{
+                  //   display: emailValid ? "none" : "block",
+                  // }}
                 />
 
                 <input
@@ -148,17 +130,18 @@ function ContactForm() {
                   pattern="[0-9]{10}"
                   placeholder="Phone (optional)"
                   onChange={(e) => validatePhone(e.target.value)}
-                  style={{
-                    borderColor: phoneValid ? "green" : "red",
-                  }}
+                  // style={{
+                  //   borderColor: phoneValid ? "green" : "red",
+                  // }}
                 />
                 <ValidationError
                   prefix="Phone"
                   field="phone"
                   errors={state.errors}
-                  style={{
-                    display: phoneValid ? "none" : "block",
-                  }}
+                  className={styles["validation-error"]}
+                  // style={{
+                  //   display: phoneValid ? "none" : "block",
+                  // }}
                 />
 
                 <textarea
@@ -168,7 +151,7 @@ function ContactForm() {
                   placeholder="Message"
                   onInput={(e) => validateMessage(e.target.value)}
                   style={{
-                    borderColor: messageValid ? "#001100" : "red",
+                    borderColor: messageValid ? "green" : "#a22b2b",
                   }}
                 />
                 <ValidationError
@@ -176,9 +159,9 @@ function ContactForm() {
                   field="message"
                   errors={state.errors}
                   className={styles["validation-error"]}
-                  style={{
-                    display: messageValid ? "none" : "block",
-                  }}
+                  // style={{
+                  //   display: messageValid ? "none" : "block",
+                  // }}
                 />
 
                 <input

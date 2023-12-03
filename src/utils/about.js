@@ -39,9 +39,9 @@ function AboutLines({ data }) {
     <div className={styles.fakeScreen} id="fakeScreen">
       {data.map((item, index) => (
         <div key={index}>
-          <p>&gt; {item.input}</p>
+          <p className={styles.lines}>&gt; {item.input}</p>
           {Array.isArray(item.return) ? (
-            <p>
+            <p className={styles.lines}>
               {item.return.length > 1 ? "[" : ""}
               {item.return.map((link, linkIndex) => (
                 <React.Fragment key={linkIndex}>
@@ -58,12 +58,12 @@ function AboutLines({ data }) {
               {item.return.length > 1 ? "]" : ""}
             </p>
           ) : (
-            <p>{item.return}</p>
+            <p className={styles.lines}>{item.return}</p>
           )}
         </div>
       ))}
       <div>
-        <p>&gt; <span className={styles.cursor}>&nbsp;</span></p>
+        <p className={styles.lines}>&gt; <span className={styles.cursor}>&nbsp;</span></p>
       </div>
     </div>
   );

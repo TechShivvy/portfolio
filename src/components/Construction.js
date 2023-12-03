@@ -1,5 +1,5 @@
 import React from "react";
-import yourImage from "../images/work-progress.png"
+import yourImage from "../images/work-progress.png";
 import styles from "./_Construction.module.css";
 
 function Construction() {

@@ -68,12 +68,16 @@
   color: #2ba2a2;
   text-decoration: none;
 }
-span.cursor {
+.cursor {
   background: hsla(0, 0%, 97%, 0.65);
   animation: caret 1s steps(1) infinite;
 }
 
-h2 {
+.lines {
+  font-size: 1rem;
+}
+
+.h2 {
   font-size: 24px;
 }
 
@@ -88,14 +92,15 @@ h2 {
   /* padding: 20px; */
 }
 .para {
-  font-size: 16px;
+  font-size: 1.2rem;
+  text-align: justify;
   /* width: 75%; */
   /* margin-left: 50px;; */
 }
-strong {
+.strong {
   font-weight: bolder;
 }
-h2::after {
+.h2::after {
   content: "";
   display: block;
   width: 25px;
@@ -126,8 +131,8 @@ a > img {
 
 .gridContainer {
   display: grid;
-  grid-template-columns: 2.5fr 1fr; /* Two columns */
-  gap: 20px; /* Adjust the gap as needed */
+  grid-template-columns: 2.5fr 1fr;
+  gap: 20px;
 }
 
 .gridItem:first-child {
@@ -149,21 +154,25 @@ a > img {
 
 @media (max-width: 768px) {
   .gridContainer {
-    grid-template-columns: 1fr; /* Change to a single column for smaller screens */
+    grid-template-columns: 1fr;
   }
 
   .gridItem {
-    /* Adjust styles for smaller screens if needed */
   }
 
-  /* Hide the default link for smaller screens */
   .default-link {
     display: none;
   }
 
-  /* Display the mobile link for smaller screens */
   .mobile-link {
     display: block;
-    /* Add any specific styles for the mobile link */
+  }
+
+  .para {
+    font-size: 0.9rem;
+  }
+
+  .lines{
+    font-size: 0.9rem;
   }
 }

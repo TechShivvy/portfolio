@@ -5,7 +5,7 @@ import { FaArrowUp } from "react-icons/fa";
 function ScrollUp() {
   const [showButton, setShowButton] = useState(false);
   const onScroll = () => {
-    window.scrollY > window.innerHeight ? setShowButton(true) : setShowButton(false);
+    setShowButton(window.scrollY > window.innerHeight);
   };
 
   useEffect(() => {
@@ -21,7 +21,7 @@ function ScrollUp() {
     <FaArrowUp
       className={showButton ? styles.showButton : styles.hidden}
       onClick={scrollToTop}
-      style={{ color: 'black',backgroundColor:'white',borderRadius: 0 }}
+      style={{ color: "black", backgroundColor: "white" }}
     />
   );
 }

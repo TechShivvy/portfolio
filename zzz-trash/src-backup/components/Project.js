@@ -5,7 +5,7 @@ function Project() {
     <div className="project-section" id="project">
       <h2>Projekts</h2>
       <p>A glimpse into my completed projects</p>
-      <div class="container" id="container"></div>
+      <div className="container" id="container"></div>
     </div>
   );
 }

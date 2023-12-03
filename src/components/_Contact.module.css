@@ -5,21 +5,17 @@
   box-sizing: border-box;
 }
 
-h2 {
-  font-size: 24px;
-}
-
 .container {
   box-sizing: border-box;
   width: 75%;
   margin: 0 auto;
 }
 
-strong {
-  font-weight: bolder;
+.h2 {
+  font-size: 24px;
 }
 
-h2::after {
+.h2::after {
   content: "";
   display: block;
   width: 25px;
@@ -28,17 +24,19 @@ h2::after {
 }
 
 .form-container {
-  max-width: 400px;
+  /* max-width: 400px; */
   margin: auto;
   padding: 20px;
   border: 2px solid #ccc;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* width: 400px; */
 }
 
 .contact-form {
-  max-width: 100%; /* Update to 100% to fill the container */
+  /* max-width: 100%; */
   margin: auto;
+  /* width: 100%; */
 }
 
 .contact-form input,
@@ -48,14 +46,18 @@ h2::after {
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 8px;
-  box-sizing: border-box; /* Include padding and border in element's total width and height */
+  box-sizing: border-box;
 }
 
-textarea {
+.contact-form textarea {
   width: 100%;
-  min-width: 200px; /* Set your desired minimum width */
+  min-width: 200px;
   min-height: 15em;
-  resize: vertical; /* Restrict resizing only vertically */
+  resize: vertical;
+
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 5px;
 }
 
 .contact-form button {
@@ -63,34 +65,37 @@ textarea {
   color: white;
   border: none;
   padding: 10px;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .contact-form button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
+.contact-form button:hover {
+  background-color: #28822b;
+}
 
 .validation-error {
-  color: #ff0000; /* Red color for error text */
+  color: #ff0000;
   font-size: 14px;
   margin-top: 5px;
+  display: none;
 }
 
 .valid-input {
   border: 1px solid green;
 }
 
-textarea:focus,
-input:focus {
+.contact-form textarea:focus,
+.contact-form input:focus {
   outline: none;
 }
 
-
 .gridContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Two columns */
-  gap: 20px; /* Adjust the gap as needed */
+  grid-template-columns: 1fr 1fr; 
+  gap: 20px; 
 }
 
 .gridItem {
@@ -108,35 +113,51 @@ input:focus {
 }
 
 .text-above-image *,
-.text-below-image *{
+.text-below-image * {
   margin: 0;
   padding: 0;
 }
 
-h3{
+.text-wrapper h3 {
   font-size: 3rem;
 }
 
-.text-below-image{
+.text-below-image {
   text-align: justify;
+  /* font-size: 1rem; */
 }
 
 .contact-image {
   width: 70%;
-  align-self: center; /* Center align the image */
-  max-width: 100%; /* Ensure the image doesn't exceed its container */
+  align-self: center;
+  max-width: 100%;
 }
+
+input {
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 5px;
+
+}
+
+input:valid {
+  border-color: green;
+}
+
+input:invalid {
+  border-color: #a22b2b;
+}
+
 
 @media (max-width: 768px) {
   .gridContainer {
-    grid-template-columns: 1fr; /* Change to a single column for smaller screens */
+    grid-template-columns: 1fr;
   }
 
   .gridItem {
-    /* Adjust styles for smaller screens if needed */
   }
 
-  .text-above-image{
+  .text-above-image {
     display: none;
   }
 }

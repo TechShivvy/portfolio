@@ -17,7 +17,6 @@ const task1 = () => {
   const maxIterations = originalText.length * 2;
   const isSmallScreen = window.innerWidth <= 768;
   const text = [];
-    // let hasRun;
   const hasRun = sessionStorage.getItem("hasRun");
 
   console.log(hasRun)

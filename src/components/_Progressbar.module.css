@@ -4,16 +4,15 @@
   top: 50px;
   left: 0;
   width: 100%;
-  height: 2px; 
-  background-color: #ccc; 
+  height: 2px;
+  background-color: #ccc;
   z-index: 9999;
 }
 
 .progress-bar {
   height: 100%;
   width: 0;
-  background-color: #2ba2a2; 
+  background-color: #2ba2a2;
   transition: width 0.05s ease 0s;
   color: #dad8d8;
 }
-

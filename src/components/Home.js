@@ -10,54 +10,6 @@ const Home = () => {
   useEffect(() => {
     async function loadTask1() {
       await task1();
-      // Now that task1 is complete, you can run the following code
-      // const [task1Complete, setTask1Complete] = useState(false);
-      //   const characters =
-      //     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      //   const charactersArray = characters.split("");
-
-      //   const fontSize = 16;
-      //   const canvas = canvasRef.current;
-      //   const context = canvas.getContext("2d");
-
-      //   canvas.width = window.innerWidth;
-      //   canvas.height = window.innerHeight;
-
-      //   const columns = Math.floor(canvas.width / fontSize);
-      //   const rows = Math.floor(canvas.height / fontSize);
-
-      //   const matrix = [];
-      //   for (let i = 0; i < columns; i++) {
-      //     matrix[i] = 1;
-      //   }
-
-      //   function drawMatrix() {
-      //     context.fillStyle = "rgba(0, 0, 0, 0.05)";
-      //     context.fillRect(0, 0, canvas.width, canvas.height);
-
-      //     context.fillStyle = "#00FF00";
-      //     context.font = fontSize + "px monospace";
-
-      //     for (let i = 0; i < matrix.length; i++) {
-      //       const text =
-      //         charactersArray[Math.floor(Math.random() * charactersArray.length)];
-      //       context.fillText(text, i * fontSize, matrix[i] * fontSize);
-
-      //       if (matrix[i] * fontSize > canvas.height && Math.random() > 0.975) {
-      //         matrix[i] = 0;
-      //       }
-
-      //       matrix[i]++;
-      //     }
-      //   }
-
-      //   function animateMatrix() {
-      //     // Check if the animation should start
-      //     drawMatrix();
-      //     requestAnimationFrame(animateMatrix);
-      //   }
-
-      //   animateMatrix();
       setStartAnimation(true);
     }
 
@@ -69,14 +21,12 @@ const Home = () => {
     const hasRun = sessionStorage.getItem("hasRun");
 
     if (hasRun && hasRun === "true") {
-      // Show a pop-up asking if the user wants to see the animation again
       swal({
         title: "Do you want to see the animation again?",
         icon: "info",
         buttons: ["No", "Yes"],
       }).then((value) => {
         if (value) {
-          // If user clicks "Yes", remove hasRun from sessionStorage and reload the page
           sessionStorage.removeItem("hasRun");
           window.location.reload();
         }
@@ -86,9 +36,8 @@ const Home = () => {
 
   return (
     <div className={styles["home-section"]} id="home">
-      {/* <MatrixAnimation /> */}
       <MatrixAnimation startAnimation={startAnimation} />
-      {/* <canvas className={styles["matrix"]} id="matrix" ref={canvasRef} /> */}
+      {/* <div className={`${styles["centered-content"]} ${styles["glitch"]}`}> */}
       <div className={styles["centered-content"]}>
         <h1 id="hackerText" onClick={handleH1Click}>
           S h i v c h a r a n

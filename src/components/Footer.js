@@ -4,10 +4,9 @@ function Footer() {
   return (
     <footer>
       <div className={styles["footer-content"]}>
-        {/* <p>Made by Shivi &copy; 2023 | All Rights Reserved</p> */}
         <p>
-          Made by <span className={styles["hover-text"]}/> &copy;
-          2023 | All Rights Reserved
+          Made by <span className={styles["hover-text"]} /> &copy; 2023 | All
+          Rights Reserved
         </p>
       </div>
     </footer>

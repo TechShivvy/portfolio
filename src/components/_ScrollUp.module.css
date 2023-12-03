@@ -1,31 +1,33 @@
 .hidden {
-    display: none;
+  display: none;
+}
+
+.showButton {
+  position: fixed;
+  background-color: lightgrey;
+  border: 1px solid black;
+  border-radius: 50%;
+  padding: 0.25rem;
+  right: 5%;
+  bottom: 5%;
+  font-size: 3vw; 
+  color: grey;
+  cursor: url("./../../public/middle-finger.cur"), pointer;
+  transform: translateX(-10%);
+  animation: slideLeft 1s;
+}
+
+@keyframes slideLeft {
+  0% {
+    transform: translateX(100%);
   }
-  
+  100% {
+    transform: translateX(-10%);
+  }
+}
+
+@media (max-width: 768px) {
   .showButton {
-    position: fixed;
-    background-color: lightgrey;
-    border-radius: 50%;
-    padding: 0.25rem;
-    right: -100px;
-    bottom: 50px;
-    font-size: 35px;
-    color: grey;
-    cursor: pointer;
-    transform: translateX(-150px);
-    animation: slideLeft 1s;
+    font-size: 6vw;
   }
-  
-  .scrollup-icon {
-    font-size: 1.5rem;
-    color: #2ecc71; /* Example container color */
-  }
-  
-  @keyframes slideLeft {
-    0% {
-      transform: translateX(-100px);
-    }
-    100% {
-      transform: translateX(-150px);
-    }
-  }
+}

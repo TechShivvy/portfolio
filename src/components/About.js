@@ -22,12 +22,12 @@ function About(props) {
     // </div>
     <div className={styles["about-section"]} id="about">
       <div className={styles["container"]}>
-        <h2 className="h2">About</h2>
+        <h2 className={styles.h2}>About</h2>
         <div className={styles.gridContainer}>
           <div className={styles.gridItem}>
             <p className={styles["para"]}>
               I'm Shivcharan Thirunavukkarasu. A{" "}
-              <strong className="text-success">CSE Grad</strong> who codes
+              <strong className="strong">CSE Grad</strong> who codes
               sometimes. I'm currently on a quest to locate the elusive missing
               semicolon ;)
             </p>
@@ -50,18 +50,16 @@ function About(props) {
             </div>
           </div>
           <div className={styles.gridItem}>
-            {/* Default (for screens wider than 768px) */}
             <a
               href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
-              class={styles["default-link"]}
+              className={styles["default-link"]}
             >
               <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true" />
             </a>
 
-            {/* For screens 768px and below */}
             <a
               href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
-              class={styles["mobile-link"]}
+              className={styles["mobile-link"]}
             >
               <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
             </a>
