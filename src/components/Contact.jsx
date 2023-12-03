@@ -3,6 +3,7 @@ import styles from "./_Contact.module.css";
 import swal from "sweetalert";
 import contact from "./../images/contact.png";
 import { useForm, ValidationError } from "@formspree/react";
+import Swal from "sweetalert2";
 
 function ContactForm() {
   const [state, handleSubmit] = useForm("mleyykdv");
@@ -50,12 +51,17 @@ function ContactForm() {
     setNameValid(false);
     setEmailValid(false);
     setMessageValid(false);
-    swal({
+    Swal.fire({
       title: "Message Sent!",
       text: "Thank you for reaching out. I've received your message. I'll get back to you asap.",
       icon: "success",
+      timer: 1500,
+      confirmButtonColor:"#2ba2a2"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        document.getElementById("contact-form").reset();
+      }
     });
-    document.getElementById("contact-form").reset();
   }
 
   return (

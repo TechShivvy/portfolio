@@ -75,6 +75,7 @@
 
 .lines {
   font-size: 1rem;
+  /* width: 15rem; */
 }
 
 .h2 {
@@ -174,5 +175,10 @@ a > img {
 
   .lines{
     font-size: 0.9rem;
+  }
+
+  .fakeScreen {
+    padding: 10px;
+    padding-left: 15px;
   }
 }

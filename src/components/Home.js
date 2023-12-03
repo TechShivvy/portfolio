@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
 import swal from "sweetalert";
+import Swal from "sweetalert2";
 import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
@@ -21,12 +22,19 @@ const Home = () => {
     const hasRun = sessionStorage.getItem("hasRun");
 
     if (hasRun && hasRun === "true") {
-      swal({
+      Swal.fire({
         title: "Do you want to see the animation again?",
-        icon: "info",
-        buttons: ["No", "Yes"],
-      }).then((value) => {
-        if (value) {
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        // confirmButtonColor: "#3085d6",
+        // cancelButtonColor: "#d33",
+        confirmButtonColor: "#2ba2a2",
+        cancelButtonColor: "#a22b2b",
+        // width: "300",
+      }).then((result) => {
+        if (result.isConfirmed) {
           sessionStorage.removeItem("hasRun");
           window.location.reload();
         }
