@@ -27,9 +27,9 @@ function About(props) {
           <div className={styles.gridItem}>
             <p className={styles["para"]}>
               I'm Shivcharan Thirunavukkarasu. A{" "}
-              <strong className="strong">CSE Grad</strong> who codes
-              sometimes. I'm currently on a quest to locate the elusive missing
-              semicolon ;)
+              <strong className="strong">CSE Grad</strong> who codes sometimes.
+              I'm currently on a quest to locate the elusive missing semicolon
+              ;)
             </p>
             <div className={styles["fakeMenu"]}>
               <div
@@ -64,6 +64,32 @@ function About(props) {
               <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
             </a>
           </div>
+          {/* <div className={styles.gridItem}>
+            <div className={styles.card}>
+            <div className={styles.cardInner} id="card">
+              <div className={styles.cardFront}>
+                Hover here to see my Spotify Activity
+              </div>
+              <div className={styles.cardBack}>
+                <a
+                  href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
+                  className={styles["default-link"]}
+                >
+                  <img
+                    src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true"
+                    alt="Spotify Listening Activity"
+                  />
+                </a>
+                <a
+                  href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
+                  className={styles["mobile-link"]}
+                >
+                  <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
+                </a>
+              </div>
+            </div>
+            </div>
+          </div> */}
         </div>
       </div>
     </div>
