@@ -136,6 +136,10 @@ a > img {
   gap: 45px;
 }
 
+.gridItem {
+  position: relative;
+}
+
 .gridItem:first-child {
 }
 
@@ -153,53 +157,56 @@ a > img {
   display: none;
 }
 
-.card {
+.flip-card {
+  background-color: transparent;
+  width: 100%;
+  /* height: 100%; */
+  height: 400px;
   perspective: 1000px;
-  width: auto;
 }
 
-.cardInner {
+.flip-card-inner {
+  position: relative;
   width: 100%;
   height: 100%;
+  text-align: center;
+  transition: transform 0.5s ease-in-out;
   transform-style: preserve-3d;
-  transition: transform 0.6s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 }
 
-.card:hover .cardInner{
-  transform: rotateY(180deg);
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(-180deg);
 }
 
-.cardFront,
-.cardBack {
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  position: absolute;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-.cardFront {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.flip-card-front {
+  /* background: #00d742; */
+  background: url("./../images/giphy.gif") center center;
+  background-size: cover;
+  color: white;
 }
 
-.cardBack {
+.flip-card-back {
   transform: rotateY(180deg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
-
-.card p {
-  text-align: center;
-}
-
 
 @media (max-width: 768px) {
   .gridContainer {
     grid-template-columns: 1fr;
   }
-
   .default-link {
     display: none;
   }
@@ -212,7 +219,7 @@ a > img {
     font-size: 0.9rem;
   }
 
-  .lines{
+  .lines {
     font-size: 0.9rem;
   }
 
@@ -220,4 +227,39 @@ a > img {
     padding: 10px;
     padding-left: 15px;
   }
+
+  .flip-card {
+    width: 100%;
+    height: 100px;
+  }
+  .flip-card:hover .flip-card-inner {
+    transform: rotateX(-180deg);
+  }
+  .flip-card-back {
+    transform: rotateX(180deg);
+  }
+}
+
+.flip-card-front {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  /* background: linear-gradient(45deg,#F17C58, #E94584, #00d742,#24AADB , #27DBB1,#FFDC18, #FF3706); */
+  background: linear-gradient(45deg,#4caf50,#2ba2a2,#a22b2b,#ffffff,#00d742,#165757);
+  background-size: 600% 100%;
+  animation: gradient 5s linear infinite;
+  animation-direction: alternate;
+
+  /* Text styles */
+  color: black; /* Text color */
+  font-weight: bold;
+}
+@keyframes gradient {
+  0% {background-position: 0%}
+  100% {background-position: 100%}
+}
+.spotifyHighlight {
+  color: #1DB954; /* Spotify green color */
+  font-weight: bold; /* Emphasize by making it bold */
+  text-decoration: underline; /* Add underline for further emphasis */
 }

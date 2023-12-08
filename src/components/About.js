@@ -49,7 +49,7 @@ function About(props) {
               <AboutLines data={props.data} />
             </div>
           </div>
-          <div className={styles.gridItem}>
+          {/* <div className={styles.gridItem}>
             <a
               href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
               className={styles["default-link"]}
@@ -63,33 +63,33 @@ function About(props) {
             >
               <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
             </a>
-          </div>
-          {/* <div className={styles.gridItem}>
-            <div className={styles.card}>
-            <div className={styles.cardInner} id="card">
-              <div className={styles.cardFront}>
-                Hover here to see my Spotify Activity
-              </div>
-              <div className={styles.cardBack}>
-                <a
-                  href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
-                  className={styles["default-link"]}
-                >
-                  <img
-                    src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true"
-                    alt="Spotify Listening Activity"
-                  />
-                </a>
-                <a
-                  href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
-                  className={styles["mobile-link"]}
-                >
-                  <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
-                </a>
-              </div>
-            </div>
-            </div>
           </div> */}
+          <div className={styles.gridItem}>
+            <div className={styles["flip-card"]}>
+              <div className={styles["flip-card-inner"]}>
+                <div className={styles["flip-card-front"]}>
+                  Hover here to see my <br/>SPOTIFY <br/> activity
+                </div>
+                <div className={styles["flip-card-back"]}>
+                  <a
+                    href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
+                    className={styles["default-link"]}
+                  >
+                    <img
+                      src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true"
+                      alt="Spotify Listening Activity"
+                    />
+                  </a>
+                  <a
+                    href="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
+                    className={styles["mobile-link"]}
+                  >
+                    <img src="https://spotify-github-profile.vercel.app/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
