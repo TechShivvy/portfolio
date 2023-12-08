@@ -7,6 +7,7 @@ import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
+  const [showArrow, setShowArrow] = useState(true);
   const canvasRef = useRef(null);
   useEffect(() => {
     async function loadTask1() {
@@ -15,6 +16,16 @@ const Home = () => {
     }
 
     loadTask1();
+
+    const handleScroll = () => {
+      setShowArrow(window.scrollY <= 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const handleH1Click = () => {
@@ -50,6 +61,9 @@ const Home = () => {
         <h1 id="hackerText" onClick={handleH1Click}>
           S h i v c h a r a n
         </h1>
+        {startAnimation && showArrow && (
+          <div className={styles["down-arrow"]}></div>
+        )}
       </div>
     </div>
   );
