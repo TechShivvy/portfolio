@@ -193,8 +193,7 @@ a > img {
 }
 
 .flip-card-front {
-  /* background: #00d742; */
-  background: url("./../images/giphy.gif") center center;
+  background: #00d742;
   background-size: cover;
   color: white;
 }
@@ -245,7 +244,7 @@ a > img {
   height: 100%;
   position: absolute;
   /* background: linear-gradient(45deg,#F17C58, #E94584, #00d742,#24AADB , #27DBB1,#FFDC18, #FF3706); */
-  background: linear-gradient(45deg,#4caf50,#2ba2a2,#a22b2b,#ffffff,#00d742,#165757);
+  background: linear-gradient(45deg,#4caf50,#2ba2a2,#ffffff,#a22b2b,#00d742,#165757);
   background-size: 600% 100%;
   animation: gradient 5s linear infinite;
   animation-direction: alternate;
