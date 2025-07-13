@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkportfolio=self.webpackChunkportfolio||[]).push([[516],{335:(s,r,e)=>{e.r(r),e.d(r,{default:()=>i});e(43);const o=e.p+"static/media/work-progress.dd729d59573462d4566c.png",t="_Construction_section__ysaIF",c="_Construction_centered-image__O2NRr";var n=e(579);const i=function(){return(0,n.jsx)("div",{className:t,children:(0,n.jsx)("img",{src:o,alt:"Work in progress",className:c})})}}}]);
+//# sourceMappingURL=516.e682aae4.chunk.js.map
