@@ -5,7 +5,7 @@ function Footer() {
     <footer>
       <div className={styles["footer-content"]}>
         <p>
-          Made by <span className={styles["hover-text"]} /> &copy; 2023 | All
+          Made by <span className={styles["hover-text"]} /> &copy; 2025 | All
           Rights Reserved
         </p>
       </div>
