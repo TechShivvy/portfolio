@@ -84,7 +84,7 @@ function About(props) {
                     href="https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true"
                     className={styles["mobile-link"]}
                   >
-                    <img src="https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" />
+                    <img src="https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false" alt="Spotify Listening Activity" />
                   </a>
                 </div>
               </div>

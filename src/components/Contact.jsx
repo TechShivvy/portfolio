@@ -78,9 +78,10 @@ function ContactForm() {
               </div>
               <a
                 target="_blank"
+                rel="noreferrer"
                 href="https://pngtree.com/freepng/two-people-watching-the-phone_4762502.html"
               >
-                <img src={contact} className={styles["contact-image"]} />
+                <img src={contact} alt="Two people looking at a phone" className={styles["contact-image"]} />
               </a>
               <div className={styles["text-below-image"]}>
                 <p>

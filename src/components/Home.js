@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
 import Swal from "sweetalert2";
@@ -8,7 +8,6 @@ import MatrixAnimation from "./Matrix.js";
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
   const [showArrow, setShowArrow] = useState(true);
-  const canvasRef = useRef(null);
   useEffect(() => {
     async function loadTask1() {
       await task1();

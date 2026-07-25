@@ -22,7 +22,6 @@ const MatrixAnimation = ({ startAnimation }) => {
     canvas.height = window.innerHeight;
 
     const columns = Math.floor(canvas.width / fontSize) + 10;
-    const rows = Math.floor(canvas.height / fontSize);
 
     const matrix = [];
     for (let i = 0; i < columns; i++) {
