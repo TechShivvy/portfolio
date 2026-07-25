@@ -39,7 +39,8 @@ function buildCommands(scrollToSection) {
       { text: "  history      — command history", type: "output" },
       { text: "  ls           — list... something", type: "output" },
       { text: "  sudo         — try it ;)", type: "output" },
-      { text: "  exit 8       — don't", type: "output" },
+      { text: "  exit 8       — the loop. 8 anomalies. you know the rules.", type: "output" },
+      { text: "  anomaly      — call this when something looks wrong (exit 8 only)", type: "output" },
       { text: "  suicide      — closes the tab. for real.", type: "output" },
     ],
 
@@ -118,8 +119,8 @@ function buildCommands(scrollToSection) {
 
     sudo: (args) => {
       if (args[0] === "suicide" || args[0] === "exit") {
-        setTimeout(() => window.close(), 400);
-        return [{ text: ">> bye o/  (if the tab is still open... that's on the browser, not me)", type: "info" }];
+        setTimeout(() => window.location.replace("about:blank"), 600);
+        return [{ text: ">> bye o/", type: "info" }];
       }
       const picks = [
         [
@@ -150,8 +151,8 @@ function buildCommands(scrollToSection) {
     },
 
     suicide: () => {
-      setTimeout(() => window.close(), 400);
-      return [{ text: ">> bye o/  (if the tab is still open... that's on the browser, not me)", type: "info" }];
+      setTimeout(() => window.location.replace("about:blank"), 600);
+      return [{ text: ">> bye o/", type: "info" }];
     },
 
     clear: () => [],
@@ -198,7 +199,10 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   const outputRef = useRef(null);
   const cmdScrollPos = useRef(null); // captures content bottom before each command
   const isCommandScroll = useRef(false); // true when scroll was triggered by a user command (not boot)
-  const exitLoopRef = useRef(null); // interval handle for `exit 8` doom loop
+  const exitScrollRef = useRef(null); // rAF handle for `exit 8` page scroll loop
+  const exitBarRef    = useRef(null); // floating bar DOM element during exit 8
+  const exitCloneRef  = useRef(null); // cloned #root appended below for seamless loop
+  const exitStateRef  = useRef({ anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null });
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ── Focus input when active ──────────────────────────────────────────────
@@ -292,7 +296,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
       // ── special: clear ──────────────────────────────────────────────────
       if (cmd === "clear") {
-        if (exitLoopRef.current) { clearInterval(exitLoopRef.current); exitLoopRef.current = null; }
+        exitStateRef.current.teardown?.();
+        window.scrollTo({ top: 0, behavior: "instant" });
         isCommandScroll.current = false;
         cmdScrollPos.current = null;
         setLines([]);
@@ -304,7 +309,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       if (cmd === "exit") {
         const exitEcho = { text: `> ${parts.join(" ")}`, type: "cmd" };
         if (args[0] === "0") {
-          if (exitLoopRef.current) { clearInterval(exitLoopRef.current); exitLoopRef.current = null; }
+          exitStateRef.current.teardown?.();
+          window.scrollTo({ top: 0, behavior: "instant" });
           isCommandScroll.current = false;
           cmdScrollPos.current = null;
           setLines([]);
@@ -312,38 +318,182 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           return;
         }
         if (args[0] === "8") {
-          const DOOM = [
-            ">> exit code 8: undefined behavior initiated",
-            ">> sending SIGTERM... (no response)",
-            ">> ok, SIGKILL",
-            ">> process: lol no",
-            ">> still running. actually thriving.",
-            ">> have you tried turning it off and on again",
-            ">> 8 8 8 8 8 8 8 8 8",
-            ">> ERROR: exit not found",
-            ">> you cannot leave. this is your life now.",
-            ">> type 'clear' to escape  // if you're brave enough",
-            ">> ... still here ...",
+          // ── Exit 8: seamless corridor loop + anomaly detection game ─────
+          // Effects are applied to #root (and its clone) ONLY — never to
+          // document.body — so the fixed floating bar (a body child) stays
+          // immune to transforms/filters and never drifts.
+          const rootEl = document.getElementById("root");
+
+          // Targets that visual effects apply to (real root + seamless clone).
+          const fxTargets = () => [rootEl, exitCloneRef.current].filter(Boolean);
+          const applyStyle = (prop, val) => {
+            const els = fxTargets();
+            els.forEach((el) => { el.style[prop] = val; });
+            return () => { els.forEach((el) => { el.style[prop] = ""; }); };
+          };
+
+          const EFFECTS = [
+            () => applyStyle("filter", "invert(1)"),
+            () => applyStyle("filter", "sepia(1) saturate(4) hue-rotate(300deg)"),
+            () => applyStyle("filter", "brightness(0.04)"),
+            () => applyStyle("filter", "blur(6px) saturate(0)"),
+            () => applyStyle("filter", "invert(0.6) hue-rotate(100deg) saturate(3)"),
+            () => applyStyle("filter", "contrast(20) brightness(0.3)"),
+            () => applyStyle("filter", "hue-rotate(180deg) saturate(5)"),
+            () => applyStyle("filter", "brightness(8)"),
+            () => applyStyle("transform", "scaleX(-1)"),
+            () => applyStyle("transform", "scaleY(-1)"),
+            () => applyStyle("transform", "rotate(5deg) scale(1.1)"),
+            () => applyStyle("fontFamily", '"Comic Sans MS", cursive'),
+            () => {
+              const s = document.createElement("style"); s.id = "_exit8shake";
+              s.textContent = "@keyframes _exit8shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-14px)}75%{transform:translateX(14px)}}";
+              document.head.appendChild(s);
+              const remove = applyStyle("animation", "_exit8shake 0.1s ease-in-out infinite");
+              return () => { remove(); s.remove(); };
+            },
           ];
-          let doomIdx = 0;
+
+          const st = exitStateRef.current;
+          st.score = 0;
+
+          // ── Corridor hero text: swap name for exit numbers ──────────────
+          const heroEl = document.getElementById("hackerText");
+          st.heroEl = heroEl;
+          st.heroOrig = heroEl ? heroEl.textContent : null;
+          if (heroEl) heroEl.textContent = "0  1  2  3  4  5  6  7  8";
+
+          // ── Seamless loop: clone #root below itself (fixed/sticky els
+          //    stripped so navbar/progressbar/scroll-up don't duplicate) ──
+          window.scrollTo({ top: 0, behavior: "instant" });
+          const rootHeight = rootEl.offsetHeight;
+          const liveEls = Array.from(rootEl.querySelectorAll("*"));
+          liveEls.forEach((el) => {
+            const pos = getComputedStyle(el).position;
+            if (pos === "fixed" || pos === "sticky") el.setAttribute("data-e8fx", "");
+          });
+          const clone = rootEl.cloneNode(true);
+          clone.id = "_exit8clone";
+          clone.setAttribute("aria-hidden", "true");
+          clone.style.position = "absolute";
+          clone.style.top = `${rootHeight}px`;
+          clone.style.left = "0";
+          clone.style.width = "100%";
+          clone.style.margin = "0";
+          clone.style.pointerEvents = "none";
+          clone.querySelectorAll("[data-e8fx]").forEach((el) => el.remove());
+          liveEls.forEach((el) => el.removeAttribute("data-e8fx"));
+          document.body.appendChild(clone);
+          exitCloneRef.current = clone;
+
+          // ── Floating bottom bar (input + score) ─────────────────────────
+          const bar = document.createElement("div");
+          bar.id = "_exit8bar";
+          bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#0d0d0d;border-top:2px solid #2ba2a2;padding:8px 16px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono,monospace);font-size:14px;color:#ccc;";
+          bar.innerHTML = `
+            <span style="color:#2ba2a2;white-space:nowrap;">EXIT 8 &gt;</span>
+            <input id="_exit8input" type="text" placeholder="type 'anomaly' when you see one..." autocomplete="off" style="flex:1;background:transparent;border:1px solid #333;border-radius:3px;padding:6px 10px;color:#eee;font-family:inherit;font-size:inherit;outline:none;" />
+            <span id="_exit8score" style="color:#2ba2a2;white-space:nowrap;">[0/8]</span>
+            <span style="color:#666;font-size:12px;white-space:nowrap;">'clear' = quit</span>
+          `;
+          document.body.appendChild(bar);
+          exitBarRef.current = bar;
+
+          const barInput = bar.querySelector("#_exit8input");
+          barInput.focus();
+          barInput.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter") return;
+            const val = barInput.value.trim().toLowerCase();
+            barInput.value = "";
+            if (val === "clear" || val === "exit 0") { runCommand(val); return; }
+            if (val === "anomaly") { runCommand("anomaly"); return; }
+          });
+
+          const updateScoreUI = () => {
+            const el = document.getElementById("_exit8score");
+            if (el) el.textContent = `[${st.score}/8]`;
+          };
+
+          // ── Shared teardown (used by clear / exit 0 / win) ──────────────
+          const teardown = () => {
+            if (exitScrollRef.current) { cancelAnimationFrame(exitScrollRef.current); exitScrollRef.current = null; }
+            if (st.anomalyTimer) { clearTimeout(st.anomalyTimer); st.anomalyTimer = null; }
+            if (st.expireTimer)  { clearTimeout(st.expireTimer);  st.expireTimer  = null; }
+            if (st.anomalyActive && st.removeEffect) { st.removeEffect(); }
+            if (exitCloneRef.current) { try { document.body.removeChild(exitCloneRef.current); } catch (_) {} exitCloneRef.current = null; }
+            if (exitBarRef.current)   { try { document.body.removeChild(exitBarRef.current);   } catch (_) {} exitBarRef.current = null; }
+            if (st.heroEl && st.heroOrig != null) { st.heroEl.textContent = st.heroOrig; }
+            rootEl.style.filter = ""; rootEl.style.transform = ""; rootEl.style.fontFamily = ""; rootEl.style.animation = "";
+            Object.assign(st, { anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null, heroEl: null, heroOrig: null });
+          };
+          st.teardown = teardown;
+
+          const winGame = () => {
+            teardown();
+            setLines((prev) => [
+              ...prev,
+              { text: ">> exit [8/8] — turned back.", type: "accent" },
+              { text: ">> EXIT 8.", type: "accent" },
+              { text: ">> you made it out. well played.", type: "info" },
+            ]);
+          };
+          st.winGame = winGame;
+
+          // ── Scroll loop: wrap by rootHeight for an invisible stitch ──────
+          const step = () => {
+            if (window.scrollY >= rootHeight) {
+              window.scrollTo({ top: window.scrollY - rootHeight, behavior: "instant" });
+            }
+            window.scrollBy(0, 4);
+            exitScrollRef.current = requestAnimationFrame(step);
+          };
+          exitScrollRef.current = requestAnimationFrame(step);
+
+          // ── Anomaly scheduling ──────────────────────────────────────────
+          const scheduleAnomaly = () => {
+            // 30% chance of a "clean pass" — no anomaly this corridor.
+            const noAnomaly = Math.random() < 0.3;
+            const waitMs = noAnomaly ? (9000 + Math.random() * 5000) : (6000 + Math.random() * 8000);
+            st.anomalyTimer = setTimeout(() => {
+              if (noAnomaly) {
+                // Survived a clean corridor with no false calls → advance.
+                st.score += 1;
+                updateScoreUI();
+                window.scrollTo({ top: 0, behavior: "instant" });
+                if (st.score >= 8) { winGame(); return; }
+                setLines((l) => [...l, { text: `>> exit ${st.score} — no anomaly, clean pass. [${st.score}/8]`, type: "accent" }]);
+                scheduleAnomaly();
+                return;
+              }
+              const effect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)];
+              st.removeEffect = effect();
+              st.anomalyActive = true;
+              // Auto-expire in 5s → missed anomaly resets progress.
+              st.expireTimer = setTimeout(() => {
+                if (st.anomalyActive) {
+                  st.removeEffect?.();
+                  st.anomalyActive = false;
+                  st.removeEffect  = null;
+                  st.score = 0;
+                  updateScoreUI();
+                  setLines((l) => [...l, { text: ">> anomaly missed — reset to exit 0.", type: "danger" }]);
+                  window.scrollTo({ top: 0, behavior: "instant" });
+                  scheduleAnomaly();
+                }
+              }, 5000);
+            }, waitMs);
+          };
+          st.scheduleAnomaly = scheduleAnomaly;
+          scheduleAnomaly();
+
           captureScrollPos();
           setLines((prev) => [
             ...prev,
             exitEcho,
-            { text: ">> exit code 8: undefined behavior initiated", type: "danger" },
-            { text: ">> type 'clear' to escape  // if you dare", type: "output" },
+            { text: ">> corridor initiated. something is wrong in here.", type: "danger" },
+            { text: ">> spot anomalies. type 'anomaly' in the bar below.", type: "output" },
+            { text: ">> reach exit 8 to escape. false calls reset you.  // 'clear' to quit", type: "output" },
           ]);
-          exitLoopRef.current = setInterval(() => {
-            doomIdx = (doomIdx + 1) % DOOM.length;
-            setLines((prev) => {
-              if (outputRef.current) {
-                setTimeout(() => {
-                  if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
-                }, 0);
-              }
-              return [...prev, { text: DOOM[doomIdx], type: doomIdx % 3 === 0 ? "danger" : "output" }];
-            });
-          }, 900);
           return;
         }
         captureScrollPos();
@@ -352,6 +502,53 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           exitEcho,
           { text: "shivi-shell: exit: this ain't bash. try 'clear' or close the terminal.", type: "danger" },
         ]);
+        return;
+      }
+
+      // ── special: anomaly ────────────────────────────────────────────────
+      if (cmd === "anomaly") {
+        const st   = exitStateRef.current;
+        const echo = { text: "> anomaly", type: "cmd" };
+        captureScrollPos();
+        if (!st.scheduleAnomaly) {
+          setLines((prev) => [...prev, echo, { text: "anomaly: no corridor active. run 'exit 8' first.", type: "danger" }]);
+          return;
+        }
+        if (!st.anomalyActive) {
+          const hadProgress = st.score > 0;
+          // Cancel the pending corridor timer so a queued clean-pass award
+          // can't sneak in after a false call, then restart fresh.
+          if (st.anomalyTimer) { clearTimeout(st.anomalyTimer); st.anomalyTimer = null; }
+          if (hadProgress) st.score = 0;
+          const scoreEl = document.getElementById("_exit8score");
+          if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
+          setLines((prev) => [...prev, echo, {
+            text: hadProgress
+              ? ">> no anomaly. you turned back for nothing — reset to exit 0."
+              : ">> no anomaly here. keep walking.",
+            type: hadProgress ? "danger" : "output",
+          }]);
+          // Turn back = snap to top
+          window.scrollTo({ top: 0, behavior: "instant" });
+          st.scheduleAnomaly?.();
+          return;
+        }
+        // Correct detection — turn back (snap to top)
+        if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+        st.removeEffect?.();
+        st.anomalyActive = false;
+        st.removeEffect  = null;
+        st.score += 1;
+        const scoreEl = document.getElementById("_exit8score");
+        if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (st.score >= 8) {
+          // WIN — full cleanup via shared teardown
+          st.winGame?.();
+        } else {
+          setLines((prev) => [...prev, echo, { text: `>> anomaly [${st.score}/8] — turned back. keep going.`, type: "accent" }]);
+          st.scheduleAnomaly?.();
+        }
         return;
       }
 
