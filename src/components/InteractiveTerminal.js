@@ -357,14 +357,25 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const st = exitStateRef.current;
           st.score = 0;
 
-          // ── Corridor hero text: swap name for exit numbers ──────────────
+          // ── Neutralise global scroll-behavior:smooth so instant teleport works ──
+          document.documentElement.style.scrollBehavior = "auto";
+          document.body.style.overflowX = "hidden";
+
+          // ── Fix heights so clone lands AFTER content, not at 100vh ───────
+          // body has height:100vh and #root has height:100%. Content overflows
+          // those boxes, so a sibling clone lands at y=100vh (middle of page!)
+          // Fix: set both to auto so they expand to fit content, and the clone
+          // appends at the actual bottom.
+          document.body.style.height = "auto";
+          rootEl.style.height = "auto";
+
+          // ── Change hero text to current level ───────────────────────────
           const heroEl = document.getElementById("hackerText");
           st.heroEl = heroEl;
           st.heroOrig = heroEl ? heroEl.textContent : null;
-          if (heroEl) heroEl.textContent = "0  1  2  3  4  5  6  7  8";
+          if (heroEl) heroEl.textContent = "0";
 
-          // ── Seamless loop: clone #root below itself (fixed/sticky els
-          //    stripped so navbar/progressbar/scroll-up don't duplicate) ──
+          // ── Seamless loop: clone #root in NORMAL FLOW below itself ───────
           window.scrollTo({ top: 0, behavior: "instant" });
           const rootHeight = rootEl.offsetHeight;
           const liveEls = Array.from(rootEl.querySelectorAll("*"));
@@ -375,14 +386,13 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const clone = rootEl.cloneNode(true);
           clone.id = "_exit8clone";
           clone.setAttribute("aria-hidden", "true");
-          clone.style.position = "absolute";
-          clone.style.top = `${rootHeight}px`;
-          clone.style.left = "0";
-          clone.style.width = "100%";
           clone.style.margin = "0";
           clone.style.pointerEvents = "none";
           clone.querySelectorAll("[data-e8fx]").forEach((el) => el.remove());
           liveEls.forEach((el) => el.removeAttribute("data-e8fx"));
+          // Set clone's hero text to match
+          const cloneHero = clone.querySelector("[id='hackerText']");
+          if (cloneHero) cloneHero.textContent = "0";
           document.body.appendChild(clone);
           exitCloneRef.current = clone;
 
@@ -410,9 +420,14 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           });
 
           const updateScoreUI = () => {
-            const el = document.getElementById("_exit8score");
-            if (el) el.textContent = `[${st.score}/8]`;
+            const scoreEl = document.getElementById("_exit8score");
+            if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
+            // Update hero text on live root and clone to show current level
+            if (st.heroEl) st.heroEl.textContent = String(st.score);
+            const ch = exitCloneRef.current?.querySelector("[id='hackerText']");
+            if (ch) ch.textContent = String(st.score);
           };
+          st.updateScoreUI = updateScoreUI;
 
           // ── Shared teardown (used by clear / exit 0 / win) ──────────────
           const teardown = () => {
@@ -422,9 +437,14 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             if (st.anomalyActive && st.removeEffect) { st.removeEffect(); }
             if (exitCloneRef.current) { try { document.body.removeChild(exitCloneRef.current); } catch (_) {} exitCloneRef.current = null; }
             if (exitBarRef.current)   { try { document.body.removeChild(exitBarRef.current);   } catch (_) {} exitBarRef.current = null; }
-            if (st.heroEl && st.heroOrig != null) { st.heroEl.textContent = st.heroOrig; }
+            // Restore hero text
+            if (st.heroEl && st.heroOrig != null) st.heroEl.textContent = st.heroOrig;
             rootEl.style.filter = ""; rootEl.style.transform = ""; rootEl.style.fontFamily = ""; rootEl.style.animation = "";
-            Object.assign(st, { anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null, heroEl: null, heroOrig: null });
+            rootEl.style.height = "";
+            document.body.style.height = "";
+            document.documentElement.style.scrollBehavior = "";
+            document.body.style.overflowX = "";
+            Object.assign(st, { anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null, updateScoreUI: null, winGame: null, heroEl: null, heroOrig: null });
           };
           st.teardown = teardown;
 
@@ -444,7 +464,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             if (window.scrollY >= rootHeight) {
               window.scrollTo({ top: window.scrollY - rootHeight, behavior: "instant" });
             }
-            window.scrollBy(0, 4);
+            window.scrollBy(0, 5);
             exitScrollRef.current = requestAnimationFrame(step);
           };
           exitScrollRef.current = requestAnimationFrame(step);
@@ -453,7 +473,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const scheduleAnomaly = () => {
             // 30% chance of a "clean pass" — no anomaly this corridor.
             const noAnomaly = Math.random() < 0.3;
-            const waitMs = noAnomaly ? (9000 + Math.random() * 5000) : (6000 + Math.random() * 8000);
+            const waitMs = noAnomaly ? (5000 + Math.random() * 4000) : (3500 + Math.random() * 4000);
             st.anomalyTimer = setTimeout(() => {
               if (noAnomaly) {
                 // Survived a clean corridor with no false calls → advance.
@@ -520,8 +540,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           // can't sneak in after a false call, then restart fresh.
           if (st.anomalyTimer) { clearTimeout(st.anomalyTimer); st.anomalyTimer = null; }
           if (hadProgress) st.score = 0;
-          const scoreEl = document.getElementById("_exit8score");
-          if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
+          st.updateScoreUI?.();
           setLines((prev) => [...prev, echo, {
             text: hadProgress
               ? ">> no anomaly. you turned back for nothing — reset to exit 0."
@@ -539,8 +558,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
         st.anomalyActive = false;
         st.removeEffect  = null;
         st.score += 1;
-        const scoreEl = document.getElementById("_exit8score");
-        if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
+        st.updateScoreUI?.();
         window.scrollTo({ top: 0, behavior: "instant" });
         if (st.score >= 8) {
           // WIN — full cleanup via shared teardown
