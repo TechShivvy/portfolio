@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+# Only run one deployment at a time; cancel any in-progress run for the same ref.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    # For PRs: only deploy when the PR was actually merged (not just closed).
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # GitHub Pages serves index.html only for the root path; copy it to
+      # 404.html so the React router can handle any deep-linked URL.
+      - name: Copy index.html → 404.html for SPA routing
+        run: cp build/index.html build/404.html
+
+      # Deploys the build/ folder to the gh-pages branch using the built-in
+      # GITHUB_TOKEN — no personal access token required.
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
+          # Keep the branch history clean — each deploy is a single commit.
+          force_orphan: true
+          # Preserve the SPA routing: copy index.html to 404.html so GitHub
+          # Pages serves the React app on any unknown path.
+          enable_jekyll: false
