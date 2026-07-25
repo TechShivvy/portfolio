@@ -14,3 +14,31 @@
   font-family: Courier, monospace;
   text-align: center;
 } */
+
+/* ─── Themed SweetAlert2 (hacker / terminal look) ─────────────────────────── */
+/* SweetAlert2 renders outside the React CSS-module scope, so these are global. */
+.shivi-swal-popup {
+  background: #0d0d0d !important;
+  border: 1px solid var(--color-accent) !important;
+  border-radius: 4px !important;
+  color: #fff !important;
+  font-family: var(--font-mono) !important;
+  box-shadow: 0 0 24px rgba(43, 162, 162, 0.25) !important;
+}
+
+.shivi-swal-title {
+  color: var(--color-accent) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.shivi-swal-confirm,
+.shivi-swal-cancel {
+  font-family: var(--font-mono) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  letter-spacing: 0.03em !important;
+}
+
