@@ -4,6 +4,19 @@
   width: 100%;
 }
 
+/* Matches the .h2::after underline pattern used in About and BeyondCode */
+.heading {
+  font-size: 24px;
+}
+
+.heading::after {
+  content: "";
+  display: block;
+  width: 25px;
+  margin-top: 20px;
+  border-bottom: 4px solid var(--color-accent);
+}
+
 .project-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

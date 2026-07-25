@@ -45,6 +45,9 @@ function Navbar() {
           <a href="#projects">&nbsp;projects&nbsp;</a>
         </li>
         <li>
+          <a href="#beyond-code">&nbsp;beyond&nbsp;</a>
+        </li>
+        <li>
           <a href="#contact">&nbsp;contact&nbsp;</a>
         </li>
       </ul>

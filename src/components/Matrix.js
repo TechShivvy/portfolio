@@ -48,11 +48,21 @@ const MatrixAnimation = ({ startAnimation }) => {
       }
     }
 
-    function animateMatrix() {
-      drawMatrix();
+    function animateMatrix(timestamp) {
       rafId = requestAnimationFrame(animateMatrix);
+      // If a target FPS is set (via the terminal `matrix fps <n>` command),
+      // throttle to that rate; otherwise run at the display's native refresh.
+      const targetFps = window.__matrixFps || 0;
+      if (targetFps > 0) {
+        const interval = 1000 / targetFps;
+        const elapsed = timestamp - lastTime;
+        if (elapsed < interval) return;
+        lastTime = timestamp - (elapsed % interval);
+      }
+      drawMatrix();
     }
 
+    let lastTime = 0;
     let rafId = requestAnimationFrame(animateMatrix);
 
     return () => cancelAnimationFrame(rafId);

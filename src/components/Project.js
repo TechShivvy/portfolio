@@ -1,12 +1,14 @@
 import React from "react";
 import styles from "./_Project.module.css";
 import ProjectCard from "../utils/project";
+import useFadeIn from "../utils/useFadeIn";
 
 function Project(props) {
+  const fadeRef = useFadeIn();
   const { data } = props;
 
   return (
-    <div className={styles["project-section"]} id="projects">
+    <div className={styles["project-section"]} id="projects" ref={fadeRef}>
       <div className={styles.container}>
         <h2 className={styles.heading}>Projects</h2>
         <p className={styles.para}>A glimpse into my completed projects:</p>
