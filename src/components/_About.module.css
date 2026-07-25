@@ -149,11 +149,6 @@ a > img {
   /* justify-self: end; */
 }
 
-.mobile-link {
-  width: 100%;
-  display: none;
-}
-
 .flip-card {
   /* replaced by .mosaicCard */
   display: none;
@@ -255,14 +250,6 @@ a > img {
   .gridContainer {
     grid-template-columns: 1fr;
   }
-  .default-link {
-    display: none;
-  }
-
-  .mobile-link {
-    display: block;
-  }
-
   .para {
     font-size: 0.9rem;
   }

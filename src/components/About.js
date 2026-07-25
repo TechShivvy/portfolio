@@ -16,9 +16,9 @@ const TILES = Array.from({ length: COLS * ROWS }, (_, idx) => {
   return { idx, col, row, chess, wave };
 });
 
-const HREF = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true";
-const IMG_DESKTOP = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true";
-const IMG_MOBILE  = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=natemoo-re&show_offline=false&background_color=121212&interchange=true&bar_color=53b14f&bar_color_cover=false";
+const HREF     = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true";
+const IMG_SRC  = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=121212&interchange=true&profanity=false&hide_remaster=false&bar_color=53b14f&bar_color_cover=true";
+const IMG_MOBILE = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=novatorem&show_offline=false&background_color=121212&interchange=true&profanity=false&hide_remaster=false&bar_color=53b14f&bar_color_cover=true";
 
 function SpotifyMosaic() {
   const [hovered, setHovered]     = useState(false);
@@ -50,22 +50,16 @@ function SpotifyMosaic() {
             <span className={styles.spotifyFallbackText}>couldn't reach spotify right now</span>
           </div>
         ) : (
-          <>
-            <a href={HREF} className={styles["default-link"]} target="_blank" rel="noopener noreferrer">
+          <a href={HREF} target="_blank" rel="noopener noreferrer">
+            <picture>
+              <source media="(max-width: 768px)" srcSet={IMG_MOBILE} />
               <img
-                src={IMG_DESKTOP}
+                src={IMG_SRC}
                 alt="Spotify Listening Activity"
                 onError={() => setImgFailed(true)}
               />
-            </a>
-            <a href={HREF} className={styles["mobile-link"]} target="_blank" rel="noopener noreferrer">
-              <img
-                src={IMG_MOBILE}
-                alt="Spotify Listening Activity"
-                onError={() => setImgFailed(true)}
-              />
-            </a>
-          </>
+            </picture>
+          </a>
         )}
       </div>
 
