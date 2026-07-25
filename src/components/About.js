@@ -113,15 +113,55 @@ function About(props) {
         <h2 className={styles.h2}>About</h2>
         <div className={styles.gridContainer}>
           <div className={styles.gridItem}>
-            <p className={styles["para"]}>
-              I'm Shivcharan Thirunavukkarasu. A <strong className="strong">CSE Grad</strong>{" "}
-              <span className={styles.diffInlineMinus}>who</span>
-              <span className={styles.diffInlinePlus}>. MLE2 @ Comcast.</span>
-              {" "}codes{" "}
-              <span className={styles.diffInlineMinus}>sometimes</span>
-              {" "}<span className={styles.diffInlinePlus}>all the time now (unfortunately)</span>.
-              {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
-            </p>
+            {/* === BIO STYLE VARIANTS — pick one, delete the rest === */}
+
+            {/* ① strikethrough (full opacity) */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>① strikethrough</span>
+              <p className={styles["para"]}>
+                I'm Shivcharan Thirunavukkarasu. A <strong className="strong">CSE Grad</strong>{" "}
+                <span className={styles.diff1Minus}>who</span><span className={styles.diff1Plus}>. MLE2 @ Comcast.</span>{" "}
+                codes{" "}
+                <span className={styles.diff1Minus}>sometimes</span>{" "}<span className={styles.diff1Plus}>all the time now (unfortunately)</span>.
+                {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
+              </p>
+            </div>
+
+            {/* ② bg highlight pill */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>② bg highlight</span>
+              <p className={styles["para"]}>
+                I'm Shivcharan Thirunavukkarasu. A <strong className="strong">CSE Grad</strong>{" "}
+                <span className={styles.diff2Minus}>who</span><span className={styles.diff2Plus}>. MLE2 @ Comcast.</span>{" "}
+                codes{" "}
+                <span className={styles.diff2Minus}>sometimes</span>{" "}<span className={styles.diff2Plus}>all the time now (unfortunately)</span>.
+                {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
+              </p>
+            </div>
+
+            {/* ③ bracket notation [-old-]{+new+} */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>③ bracket notation</span>
+              <p className={styles["para"]}>
+                I'm Shivcharan Thirunavukkarasu. A <strong className="strong">CSE Grad</strong>{" "}
+                <span className={styles.diff3Minus}>who</span><span className={styles.diff3Plus}>. MLE2 @ Comcast.</span>{" "}
+                codes{" "}
+                <span className={styles.diff3Minus}>sometimes</span>{" "}<span className={styles.diff3Plus}>all the time now (unfortunately)</span>.
+                {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
+              </p>
+            </div>
+
+            {/* ④ italic removed / bold added */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>④ typography</span>
+              <p className={styles["para"]}>
+                I'm Shivcharan Thirunavukkarasu. A <strong className="strong">CSE Grad</strong>{" "}
+                <span className={styles.diff4Minus}>who</span><span className={styles.diff4Plus}>. MLE2 @ Comcast.</span>{" "}
+                codes{" "}
+                <span className={styles.diff4Minus}>sometimes</span>{" "}<span className={styles.diff4Plus}>all the time now (unfortunately)</span>.
+                {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
+              </p>
+            </div>
 
             {/* Fake macOS-style terminal chrome */}
             <div className={styles["fakeMenu"]}>

@@ -96,13 +96,47 @@
   /* margin-left: 50px;; */
 }
 
-/* ── Bio inline diff ────────────────────────────────────── */
-.diffInlineMinus {
-  color: #ff6b6b;
-  text-decoration: line-through;
-  opacity: 0.75;
+/* ── Bio diff variants ──────────────────────────────────── */
+.diffBlock { margin-bottom: 1.6rem; }
+.diffLabel {
+  display: block;
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
 }
-.diffInlinePlus { color: #69db7c; }
+
+/* ① strikethrough — full opacity */
+.diff1Minus { color: #ff6b6b; text-decoration: line-through; }
+.diff1Plus  { color: #69db7c; }
+
+/* ② bg highlight pill */
+.diff2Minus {
+  background: rgba(255,107,107,0.2);
+  color: #ffaaaa;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.diff2Plus {
+  background: rgba(105,219,124,0.2);
+  color: #a9f0b4;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ③ bracket notation [-old-]{+new+} */
+.diff3Minus { color: #ff6b6b; font-family: var(--font-mono); }
+.diff3Minus::before { content: "[-"; }
+.diff3Minus::after  { content: "-]"; }
+.diff3Plus  { color: #69db7c; font-family: var(--font-mono); }
+.diff3Plus::before  { content: "{+"; }
+.diff3Plus::after   { content: "+}"; }
+
+/* ④ italic removed / bold added */
+.diff4Minus { font-style: italic; color: #888; text-decoration: line-through; }
+.diff4Plus  { font-weight: bold; }
 .strong {
   font-weight: bolder;
 }
