@@ -39,6 +39,8 @@ function buildCommands(scrollToSection) {
       { text: "  history      — command history", type: "output" },
       { text: "  ls           — list... something", type: "output" },
       { text: "  sudo         — try it ;)", type: "output" },
+      { text: "  exit 8       — don't", type: "output" },
+      { text: "  suicide      — closes the tab. for real.", type: "output" },
     ],
 
     whoami: () => [
@@ -114,11 +116,43 @@ function buildCommands(scrollToSection) {
       { text: "-rw-r--r--  .secrets  (permission denied)", type: "danger" },
     ],
 
-    sudo: () => [
-      { text: "[sudo] password for shivi:", type: "output" },
-      { text: "Sorry, try again.", type: "danger" },
-      { text: "sudo: 3 incorrect password attempts", type: "danger" },
-    ],
+    sudo: (args) => {
+      if (args[0] === "suicide" || args[0] === "exit") {
+        setTimeout(() => window.close(), 400);
+        return [{ text: ">> bye o/  (if the tab is still open... that's on the browser, not me)", type: "info" }];
+      }
+      const picks = [
+        [
+          { text: "[sudo] password for shivi:", type: "output" },
+          { text: "Sorry, try again.", type: "danger" },
+          { text: "Sorry, try again.", type: "danger" },
+          { text: "sudo: 3 incorrect password attempts. nice try bestie.", type: "danger" },
+        ],
+        [
+          { text: "[sudo] lmao no", type: "danger" },
+        ],
+        [
+          { text: "sudo: unable to locate your audacity", type: "danger" },
+        ],
+        [
+          { text: "sudo: permission denied (and also who are you)", type: "danger" },
+        ],
+        [
+          { text: "[sudo] authenticating...", type: "output" },
+          { text: "sudo: nah", type: "danger" },
+        ],
+        [
+          { text: "sudo: you are not in the sudoers file", type: "danger" },
+          { text: "      this incident will be reported. (it won't)", type: "output" },
+        ],
+      ];
+      return picks[Math.floor(Math.random() * picks.length)];
+    },
+
+    suicide: () => {
+      setTimeout(() => window.close(), 400);
+      return [{ text: ">> bye o/  (if the tab is still open... that's on the browser, not me)", type: "info" }];
+    },
 
     clear: () => [],
     history: () => [],
@@ -164,6 +198,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   const outputRef = useRef(null);
   const cmdScrollPos = useRef(null); // captures content bottom before each command
   const isCommandScroll = useRef(false); // true when scroll was triggered by a user command (not boot)
+  const exitLoopRef = useRef(null); // interval handle for `exit 8` doom loop
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ── Focus input when active ──────────────────────────────────────────────
@@ -257,10 +292,66 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
       // ── special: clear ──────────────────────────────────────────────────
       if (cmd === "clear") {
+        if (exitLoopRef.current) { clearInterval(exitLoopRef.current); exitLoopRef.current = null; }
         isCommandScroll.current = false;
         cmdScrollPos.current = null;
         setLines([]);
         if (outputRef.current) outputRef.current.scrollTop = 0;
+        return;
+      }
+
+      // ── special: exit ────────────────────────────────────────────────────
+      if (cmd === "exit") {
+        const exitEcho = { text: `> ${parts.join(" ")}`, type: "cmd" };
+        if (args[0] === "0") {
+          if (exitLoopRef.current) { clearInterval(exitLoopRef.current); exitLoopRef.current = null; }
+          isCommandScroll.current = false;
+          cmdScrollPos.current = null;
+          setLines([]);
+          if (outputRef.current) outputRef.current.scrollTop = 0;
+          return;
+        }
+        if (args[0] === "8") {
+          const DOOM = [
+            ">> exit code 8: undefined behavior initiated",
+            ">> sending SIGTERM... (no response)",
+            ">> ok, SIGKILL",
+            ">> process: lol no",
+            ">> still running. actually thriving.",
+            ">> have you tried turning it off and on again",
+            ">> 8 8 8 8 8 8 8 8 8",
+            ">> ERROR: exit not found",
+            ">> you cannot leave. this is your life now.",
+            ">> type 'clear' to escape  // if you're brave enough",
+            ">> ... still here ...",
+          ];
+          let doomIdx = 0;
+          captureScrollPos();
+          setLines((prev) => [
+            ...prev,
+            exitEcho,
+            { text: ">> exit code 8: undefined behavior initiated", type: "danger" },
+            { text: ">> type 'clear' to escape  // if you dare", type: "output" },
+          ]);
+          exitLoopRef.current = setInterval(() => {
+            doomIdx = (doomIdx + 1) % DOOM.length;
+            setLines((prev) => {
+              if (outputRef.current) {
+                setTimeout(() => {
+                  if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
+                }, 0);
+              }
+              return [...prev, { text: DOOM[doomIdx], type: doomIdx % 3 === 0 ? "danger" : "output" }];
+            });
+          }, 900);
+          return;
+        }
+        captureScrollPos();
+        setLines((prev) => [
+          ...prev,
+          exitEcho,
+          { text: "shivi-shell: exit: this ain't bash. try 'clear' or close the terminal.", type: "danger" },
+        ]);
         return;
       }
 
