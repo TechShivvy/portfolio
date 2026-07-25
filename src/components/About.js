@@ -140,18 +140,30 @@ function About(props) {
             </div>
 
             <div
-              className={`px-4 pt-5 my-5 text-center border-bottom ${styles["fakeScreen"]}`}
+              className={`my-5 text-center border-bottom ${styles["fakeScreen"]}`}
               id="fakeScreen"
             >
-              {interactive ? (
-                <InteractiveTerminal
-                  isActive={interactive}
-                  hasBooted={hasBooted}
-                  onBooted={() => setHasBooted(true)}
-                />
-              ) : (
-                <AboutLines data={props.data} />
-              )}
+              {/* Both terminals are always mounted so the container height is
+                  the natural max of the two — no fixed pixel anchoring needed.
+                  The inactive one is hidden from view and interaction. */}
+              <div className={styles.terminalGrid}>
+                <div
+                  className={interactive ? styles.terminalHidden : undefined}
+                  aria-hidden={interactive || undefined}
+                >
+                  <AboutLines data={props.data} />
+                </div>
+                <div
+                  className={interactive ? undefined : styles.terminalHidden}
+                  aria-hidden={!interactive || undefined}
+                >
+                  <InteractiveTerminal
+                    isActive={interactive}
+                    hasBooted={hasBooted}
+                    onBooted={() => setHasBooted(true)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

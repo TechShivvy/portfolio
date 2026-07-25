@@ -363,16 +363,32 @@ a > img {
   color: #000;
 }
 
+/* ─── Terminal grid — stacks fake + interactive in the same cell so the
+       container height is always the natural max of the two modes. ─── */
+.terminalGrid {
+  display: grid;
+}
+.terminalGrid > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+.terminalHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ─── Interactive terminal output area ─── */
 .interactiveTerminal {
   width: 100%;
+  height: 100%;  /* fill the grid cell set by the fake terminal's natural height */
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
 .termOutput {
-  height: 340px;
+  flex: 1;        /* grow to fill whatever height the grid cell gives */
+  min-height: 0;  /* allow shrinking below content size */
   overflow-y: auto;
   padding-bottom: 0.5rem;
   text-align: left;
