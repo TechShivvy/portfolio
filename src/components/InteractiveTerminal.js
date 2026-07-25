@@ -98,8 +98,7 @@ function buildCommands(scrollToSection) {
         window.__matrixFps = val;
         return [
           { text: `>> matrix fps set to ${val === 0 ? "native refresh rate" : `${val} fps`}`, type: "info" },
-          { text: val > 0 ? "   (takes effect immediately on the running canvas)" : "", type: "output" },
-        ].filter((l) => l.text);
+        ];
       }
       sessionStorage.removeItem("hasRun");
       window.location.reload();
