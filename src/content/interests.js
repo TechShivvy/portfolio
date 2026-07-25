@@ -1,0 +1,59 @@
+// Placeholder content — fill in your own details later.
+// This file is the single source of truth shared between:
+//   • the interactive terminal (terminal commands)
+//   • the Beyond Code section (interest cards)
+
+export const INTERESTS = {
+  games: {
+    label: "Games",
+    icon: "(ง'̀-'́)ง",
+    blurb: "Currently playing: [add your game here]",
+    favorites: [
+      "Watch Dogs series",
+      "// add more",
+    ],
+  },
+  anime: {
+    label: "Anime",
+    icon: "(ﾟДﾟ)",
+    blurb: "Currently watching: [add title here]",
+    favorites: [
+      "// add your top picks",
+    ],
+  },
+  cycling: {
+    label: "Cycling",
+    icon: "ᕕ( ᐛ )ᕗ",
+    blurb: "// km logged so far: TBD",
+    favorites: [
+      "// add your favourite routes",
+    ],
+  },
+  rubik: {
+    label: "Rubik's Cube",
+    icon: "(°ロ°)",
+    blurb: "Personal best: [add your PB here]",
+    favorites: [
+      "3x3",
+      "// add other variants",
+    ],
+  },
+  tech: {
+    label: "Tech",
+    icon: "( ͡° ͜ʖ ͡°)",
+    blurb: "Tinkering with: [add current side-project / interest]",
+    favorites: [
+      "// add your tech rabbit holes",
+    ],
+  },
+  music: {
+    label: "Music",
+    icon: "(ノ◕ヮ◕)ノ",
+    blurb: "Currently looping: check the Spotify widget ->",
+    favorites: [
+      "// add your go-to genres or artists",
+    ],
+  },
+};
+
+export default INTERESTS;
