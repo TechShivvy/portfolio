@@ -13,7 +13,7 @@
 }
 
 .centered-content h1 {
-  cursor: url("./../../public/middle-finger.cur"), auto;
+  cursor: var(--cursor-pointer, auto);
 }
 
 .home-section {
@@ -95,50 +95,55 @@
   }
 }
 
-.down-arrow {
+/* Scroll-down hint anchored to the bottom of the hero.
+   JS delays mount by 3.5s, then a double-RAF fires the opacity transition
+   so it fades in smoothly. Fades out on scroll, fades back in on scroll-up. */
+.scroll-hint {
   position: absolute;
-  left: calc(50%);
-  top: calc(55vh);
-  width: 0;
-  height: 30px;
-  border: 2px solid;
-  border-radius: 2px;
-  animation: jumpInfinite 1.5s infinite, fadeInOut 6s infinite;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+  /* Single duration — no animation, just a clean CSS transition */
+  transition: opacity 0.6s ease;
 }
 
-.down-arrow:after {
-  content: " ";
-  position: absolute;
-  top: 12px;
-  left: -10px;
+.scroll-hint--visible {
+  opacity: 1;
+}
+
+/* Double-chevron — CSS bounce loop (travels +6px → -14px → +6px over 2s). */
+.down-arrow {
+  width: 20px;
+  height: 44px;
+  pointer-events: none;
+  animation: arrowBounce 2s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(6px); }
+  50%      { transform: translateY(-14px); }
+}
+
+.down-arrow::before,
+.down-arrow::after {
+  content: '';
+  display: block;
   width: 16px;
   height: 16px;
-  border-bottom: 4px solid;
-  border-right: 4px solid;
-  border-radius: 4px;
-  transform: rotateZ(45deg);
+  margin: 0 auto;
+  border-right: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  transform: rotate(45deg);
 }
 
-@keyframes jumpInfinite {
-  0% {
-    margin-top: 0;
-  }
-  50% {
-    margin-top: 20px;
-  }
-  100% {
-    margin-top: 0;
-  }
-}
-
-@keyframes fadeInOut {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
+.down-arrow::after {
+  margin-top: 8px;
 }
 
 @media (max-width: 768px) {
@@ -146,7 +151,7 @@
     font-size: 1.3rem;
   }
 
-  .down-arrow {
-    top: calc(40vh);
+  .scroll-hint {
+    bottom: 5vh;
   }
 }
