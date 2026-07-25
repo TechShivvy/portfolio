@@ -9,7 +9,7 @@
 /coverage
 
 # production
-# /build
+/build
 
 # misc
 .DS_Store
@@ -27,3 +27,5 @@ yarn-error.log*
 /zzz1
 
 /src-backup
+
+pr-description.md

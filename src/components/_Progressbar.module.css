@@ -19,6 +19,5 @@
   height: 100%;
   width: 0;
   background-color: var(--color-accent);
-  transition: width 0.05s ease 0s;
   color: #dad8d8;
 }

@@ -13,36 +13,34 @@
   height: 10px;
   width: 10px;
   border-radius: 50%;
-  border: 1px solid #000;
-  position: relative;
-  top: 6px;
-  left: 6px;
   background-color: #ff3b47;
-  border-color: #9d252b;
-  display: inline-block;
+  border: 1px solid #9d252b;
+  flex-shrink: 0;
   z-index: 1;
 }
 
 .fakeMinimize {
-  left: 11px;
   background-color: #ffc100;
   border-color: #9d802c;
 }
 
 .fakeZoom {
-  left: 16px;
   background-color: #00d742;
   border-color: #049931;
 }
 
 .fakeMenu {
-  /* width: 75%; */
   box-sizing: border-box;
   height: 25px;
   background-color: #bbb;
   margin: 0 auto;
   border-top-right-radius: 5px;
   border-top-left-radius: 5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  gap: 5px;
 }
 
 .fakeScreen {
@@ -73,8 +71,8 @@
 }
 
 .lines {
-  font-size: 1rem;
-  /* width: 15rem; */
+  margin: 0;
+  line-height: 1.5;
 }
 
 .h2 {
@@ -157,48 +155,100 @@ a > img {
 }
 
 .flip-card {
-  background-color: transparent;
-  width: 100%;
-  /* height: 100%; */
-  height: 400px;
-  perspective: 1000px;
+  /* replaced by .mosaicCard */
+  display: none;
 }
 
-.flip-card-inner {
+/* ─── Spotify mosaic card ──────────────────────────────────── */
+.mosaicCard {
   position: relative;
   width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.5s ease-in-out;
-  transform-style: preserve-3d;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  height: 400px;
+  overflow: hidden;
+  border: 1px solid #1DB954; /* Spotify green */
+  box-shadow: 0 0 12px 1px rgba(29, 185, 84, 0.4),
+              inset 0 0 30px rgba(29, 185, 84, 0.04);
+  border-radius: 2px;
+  cursor: pointer;
 }
 
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(-180deg);
+/* When pinned (clicked), tighten the glow so the user knows it's locked */
+.mosaicCardPinned {
+  box-shadow: 0 0 20px 3px rgba(29, 185, 84, 0.6),
+              inset 0 0 30px rgba(29, 185, 84, 0.06);
 }
 
-.flip-card-front,
-.flip-card-back {
+.mosaicBack {
   position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  text-align: center;
   justify-content: center;
+  background: #0d0d0d;
+  z-index: 0;
+}
+
+/* Suppress browser alt-text / broken-image rendering so a failed Spotify
+   request doesn't bleed through sub-pixel tile gaps at high zoom levels. */
+.mosaicBack a {
+  display: block;
+  width: 100%;
+  font-size: 0;    /* hides inline alt text */
+  color: transparent;
+  overflow: hidden;
+}
+
+.mosaicBack a > img { width: 100%; display: block; }
+
+/* Fallback shown when the Spotify image fails to load (bad response / offline) */
+.spotifyFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  font-family: var(--font-mono);
+  color: #1DB954; /* Spotify green */
 }
 
-.flip-card-front {
-  background: #00d742;
-  background-size: cover;
-  color: white;
+.spotifyFallbackFace {
+  font-size: 2rem;
+  letter-spacing: 0.1em;
 }
 
-.flip-card-back {
-  transform: rotateY(180deg);
+.spotifyFallbackText {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+}
+
+/* individual mosaic tiles that dissolve to reveal the Spotify image */
+.mosaicTile {
+  position: absolute;
+  z-index: 2;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  will-change: transform, opacity;
+  /* 0.5 px outline covers sub-pixel rounding gaps that appear on zoom */
+  outline: 0.5px solid transparent;
+}
+
+/* slight colour contrast makes the chess-board grid visible before/during dissolve */
+.mosaicTileEven {
+  background: #1c1c1c;
+  transform-origin: top left;
+  outline-color: #1c1c1c; /* match bg so outline seals sub-pixel gaps */
+}
+.mosaicTileOdd {
+  background: #090909;
+  transform-origin: bottom right;
+  outline-color: #090909;
+}
+
+.mosaicTileOut {
+  transform: scale(0);
+  opacity: 0;
 }
 
 @media (max-width: 768px) {
@@ -228,36 +278,236 @@ a > img {
 
   .flip-card {
     width: 100%;
-    height: 100px;
+    height: 200px; /* kept for if flip-card is ever used again */
   }
-  .flip-card:hover .flip-card-inner {
-    transform: rotateX(-180deg);
-  }
-  .flip-card-back {
-    transform: rotateX(180deg);
+  .mosaicCard {
+    /* On mobile hover isn't available; tap-to-reveal (onClick) toggles the
+       tiles. Use aspect-ratio so it scales with the viewport on zoom. */
+    height: auto;
+    aspect-ratio: 16 / 9;
+    min-height: 160px;
   }
 }
 
-.flip-card-front {
-  width: 100%;
-  height: 100%;
+/* ─── Spotify card — terminal-themed front face ─── */
+/* .flip-card-front is replaced by the mosaic tile system above */
+
+.spotifyFront {
   position: absolute;
-  /* background: linear-gradient(45deg,#F17C58, #E94584, #00d742,#24AADB , #27DBB1,#FFDC18, #FF3706); */
-  background: linear-gradient(45deg,#4caf50,#2ba2a2,#ffffff,#a22b2b,#00d742,#165757);
-  background-size: 600% 100%;
-  animation: gradient 5s linear infinite;
-  animation-direction: alternate;
+  inset: 0;
+  z-index: 3; /* above tiles (z:2) so text is always readable */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 1.5rem;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(29, 185, 84, 0.03) 2px,
+    rgba(29, 185, 84, 0.03) 4px
+  );
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
 
-  /* Text styles */
-  color: black; /* Text color */
-  font-weight: bold;
+.spotifyPrompt {
+  color: #1DB954; /* Spotify green */
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
 }
+
+.spotifyHint {
+  color: #1DB954; /* Spotify green, dimmed */
+  opacity: 0.55;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: blink 2s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
 @keyframes gradient {
-  0% {background-position: 0%}
-  100% {background-position: 100%}
+  0%   { background-position: 0%; }
+  100% { background-position: 100%; }
 }
-.spotifyHighlight {
-  color: #1DB954; /* Spotify green color */
-  font-weight: bold; /* Emphasize by making it bold */
-  text-decoration: underline; /* Add underline for further emphasis */
+
+/* ─── [ run ] / [ exit ] toggle button ─── */
+.termToggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1e1e1e; /* dark so it pops against the grey (#bbb) menu bar */
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 1px 8px;
+  border-radius: 2px;
+  line-height: 1.6;
+  transition: background 0.15s, color 0.15s;
+}
+
+.termToggle:hover,
+.termToggleActive {
+  background: var(--color-accent);
+  color: #000;
+}
+
+/* ─── Interactive terminal output area ─── */
+.interactiveTerminal {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.termOutput {
+  height: 340px;
+  overflow-y: auto;
+  padding-bottom: 0.5rem;
+  text-align: left;
+}
+
+/* output line types — cmd stands out; output/info/danger are smaller & indented */
+/* ─ cmd: accent, bold, group-separator top margin ─ */
+.line-cmd {
+  color: var(--color-accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 0.65rem;
+  letter-spacing: 0.02em;
+}
+.line-cmd:first-child { margin-top: 0; }
+
+.line-boot   { color: var(--color-matrix);       font-size: 0.8rem;  padding-left: 4px; }
+.line-accent { color: var(--color-accent);        font-size: 0.82rem; padding-left: 4px; }
+.line-info   { color: var(--color-accent); opacity: 0.75; font-size: 0.78rem; font-style: italic; padding-left: 4px; }
+.line-output { color: #999;                       font-size: 0.76rem; padding-left: 10px; }
+.line-danger { color: var(--color-accent-danger); font-size: 0.76rem; padding-left: 10px; }
+.line-link   {                                    font-size: 0.76rem; padding-left: 10px; }
+.line-link a { color: var(--color-accent); text-decoration: none; }
+.line-link a:hover { text-decoration: underline; }
+
+/* // comment fragment inside a terminal output line */
+.lineComment {
+  font-style: italic;
+  opacity: 0.45;
+}
+
+.bootCursor {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  background: var(--color-accent);
+  animation: caret 0.8s steps(1) infinite;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+}
+
+/* ─── Input row ─── */
+.termInputRow {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  border-top: 1px solid #1a1a1a;
+  padding-top: 6px;
+}
+
+.termPrompt {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  white-space: pre;
+}
+
+.termInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  width: 100%;
+  /* Native caret hidden — the fake block cursor below stands in for it */
+  caret-color: transparent;
+}
+
+/* Wrapper lets the fake cursor sit right after the typed text */
+.termInputWrap {
+  position: relative;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Invisible text mirror that positions the blinking block cursor after input */
+.termInputMirror {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: transparent;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.inputCursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--color-accent);
+  animation: caret 1s steps(1) infinite;
+  vertical-align: text-bottom;
+}
+
+/* ─── Mobile command chips ─── */
+.termChips {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1a1a1a;
+}
+
+.termChip {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 2px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.termChip:hover {
+  background: rgba(43,162,162,0.1);
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 768px) {
+  .termChips {
+    display: flex;
+  }
+  .termInput {
+    font-size: 0.85rem;
+  }
+  .termPrompt {
+    font-size: 0.85rem;
+  }
 }
