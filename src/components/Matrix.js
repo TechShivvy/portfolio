@@ -50,10 +50,12 @@ const MatrixAnimation = ({ startAnimation }) => {
 
     function animateMatrix() {
       drawMatrix();
-      requestAnimationFrame(animateMatrix);
+      rafId = requestAnimationFrame(animateMatrix);
     }
 
-    animateMatrix();
+    let rafId = requestAnimationFrame(animateMatrix);
+
+    return () => cancelAnimationFrame(rafId);
   }, [startAnimation]);
 
   return <canvas className={styles["matrix"]} id="matrix" ref={canvasRef} />;

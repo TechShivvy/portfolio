@@ -1,5 +1,14 @@
 /* @import url("https://fonts.cdnfonts.com/css/hackers"); */
 
+:root {
+  --color-bg:            #000;
+  --color-text:          #fff;
+  --color-accent:        #2ba2a2;
+  --color-accent-danger: #a22b2b;
+  --color-matrix:        #626e5e;
+  --font-mono:           source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
 * {
   cursor: url("./../public/wd-cursor.png"), auto;
 }
@@ -21,25 +30,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale; */
 
-  background-color: #000;
+  background-color: var(--color-bg);
   margin: 0;
   /* overflow: hidden; */
   height: 100vh;
   display: block;
 
   align-items: center;
-  color: white;
+  color: var(--color-text);
   /* font-family: Courier, monospace; */
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: var(--font-mono);
   /* font-family: "Bitter","Roboto Slab","Cambria",Georgia,serif; */
   /* font-family: Camphor,Open Sans,Segoe UI,sans-serif; */
   /* font-family: "Rubik","Poppins","Hel­vetica",Arial,sans-serif; */
 }
 
 code,input,button {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: var(--font-mono);
 }
 
 html {
@@ -57,22 +64,22 @@ html {
 }
 
 ::-moz-selection {
-  background: white;
-  color: #2ba2a2;
+  background: var(--color-text);
+  color: var(--color-accent);
 }
 
 ::selection {
-  background: white;
-  color: #2ba2a2;
+  background: var(--color-text);
+  color: var(--color-accent);
 }
 
 ::-moz-selection {
-  color: white;
-  background: #2ba2a2;
+  color: var(--color-text);
+  background: var(--color-accent);
 }
 ::selection {
-  color: white;
-  background: #2ba2a2;
+  color: var(--color-text);
+  background: var(--color-accent);
 }
 
 

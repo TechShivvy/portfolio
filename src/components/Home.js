@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
-import swal from "sweetalert";
 import Swal from "sweetalert2";
 import MatrixAnimation from "./Matrix.js";
 

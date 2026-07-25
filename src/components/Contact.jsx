@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./_Contact.module.css";
-import swal from "sweetalert";
 import contact from "./../images/contact.png";
 import { useForm, ValidationError } from "@formspree/react";
 import Swal from "sweetalert2";
@@ -41,28 +40,30 @@ function ContactForm() {
     return isValid;
   };
 
-  if (
-    nameValid &&
-    emailValid &&
-    phoneValid &&
-    messageValid &&
-    state.succeeded
-  ) {
-    setNameValid(false);
-    setEmailValid(false);
-    setMessageValid(false);
-    Swal.fire({
-      title: "Message Sent!",
-      text: "Thank you for reaching out. I've received your message. I'll get back to you asap.",
-      icon: "success",
-      timer: 1500,
-      confirmButtonColor:"#2ba2a2"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        document.getElementById("contact-form").reset();
-      }
-    });
-  }
+  useEffect(() => {
+    if (
+      nameValid &&
+      emailValid &&
+      phoneValid &&
+      messageValid &&
+      state.succeeded
+    ) {
+      setNameValid(false);
+      setEmailValid(false);
+      setMessageValid(false);
+      Swal.fire({
+        title: "Message Sent!",
+        text: "Thank you for reaching out. I've received your message. I'll get back to you asap.",
+        icon: "success",
+        timer: 1500,
+        confirmButtonColor: "#2ba2a2",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById("contact-form").reset();
+        }
+      });
+    }
+  }, [state.succeeded, nameValid, emailValid, phoneValid, messageValid]);
 
   return (
     <div className={styles["contact-section"]} id="contact">

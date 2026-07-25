@@ -50,24 +50,22 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.addEventListener("visibilitychange", () => {
+    const handleVisibilityChange = () => {
       setIsTabActive(!document.hidden);
-    });
+    };
 
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     updateTitle();
 
     return () => {
-      document.removeEventListener("visibilitychange", () => {
-        setIsTabActive(!document.hidden);
-      });
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isTabActive]);
 
   return (
     <Router>
       <Suspense fallback={<div></div>}>
-        <Suspense fallback={<div></div>}>
-          <Routes>
+        <Routes>
             <Route
               exact
               path="/portfolio"
@@ -87,7 +85,6 @@ function App() {
             />
             <Route path="*" element={<Error404 />} />
           </Routes>
-        </Suspense>
       </Suspense>
     </Router>
   );

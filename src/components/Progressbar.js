@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import styles from "./_Progressbar.module.css";
-import $ from "jquery";
 
 function Progressbar() {
   const [scrollPercentage, setScrollPercentage] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isVisible, setIsVisible] = useState(false);
 
   function updateProgressBar() {
     const scrollTop =
@@ -24,11 +24,7 @@ function Progressbar() {
   }
 
   function showProgressBar() {
-    if (window.scrollY > window.innerHeight) {
-      $("#progress-container").fadeIn(400);
-    } else {
-      $("#progress-container").fadeOut(0);
-    }
+    setIsVisible(window.scrollY > window.innerHeight);
   }
 
   useEffect(() => {
@@ -36,20 +32,24 @@ function Progressbar() {
     updateProgressBar();
     updateWindowWidth();
 
-    $(window).on("resize scroll", showProgressBar);
-    $(window).on("resize scroll", updateProgressBar);
-    $(window).on("resize", updateWindowWidth);
+    window.addEventListener("scroll", showProgressBar);
+    window.addEventListener("scroll", updateProgressBar);
+    window.addEventListener("resize", showProgressBar);
+    window.addEventListener("resize", updateProgressBar);
+    window.addEventListener("resize", updateWindowWidth);
 
     return () => {
-      $(window).off("resize scroll", showProgressBar);
-      $(window).off("resize scroll", updateProgressBar);
-      $(window).off("resize", updateWindowWidth);
+      window.removeEventListener("scroll", showProgressBar);
+      window.removeEventListener("scroll", updateProgressBar);
+      window.removeEventListener("resize", showProgressBar);
+      window.removeEventListener("resize", updateProgressBar);
+      window.removeEventListener("resize", updateWindowWidth);
     };
   }, []);
 
   return (
     <div
-      className={styles["progress-container"]}
+      className={`${styles["progress-container"]} ${isVisible ? styles["progress-container--visible"] : ""}`}
       id="progress-container"
       style={windowWidth >= 768 ? { top: "50px" } : { top: "0px" }}
     >

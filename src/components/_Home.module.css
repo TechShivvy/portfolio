@@ -3,7 +3,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #a22b2b;
+  color: var(--color-accent-danger);
   font-family: "Hacked", Courier, monospace;
   font-size: 2.5rem;
   text-align: center;
