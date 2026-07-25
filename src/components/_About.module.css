@@ -372,8 +372,7 @@ a > img {
 }
 
 .termOutput {
-  min-height: 180px;
-  max-height: 340px;
+  height: 340px;
   overflow-y: auto;
   padding-bottom: 0.5rem;
   text-align: left;

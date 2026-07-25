@@ -40,7 +40,6 @@ function buildCommands(scrollToSection) {
       { text: "  ls           — list... something", type: "output" },
       { text: "  sudo         — try it ;)", type: "output" },
       { text: "  exit 8       — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
-      { text: "  anomaly      — alias for the [!] button (exit 8 only)", type: "output" },
       { text: "  suicide      — closes the tab. for real.", type: "output" },
     ],
 
@@ -296,8 +295,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
       // ── special: clear ──────────────────────────────────────────────────
       if (cmd === "clear") {
+        const wasInGame = !!exitStateRef.current.teardown;
         exitStateRef.current.teardown?.();
-        window.scrollTo({ top: 0, behavior: "instant" });
+        if (wasInGame) window.scrollTo({ top: 0, behavior: "instant" });
         isCommandScroll.current = false;
         cmdScrollPos.current = null;
         setLines([]);
@@ -309,8 +309,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       if (cmd === "exit") {
         const exitEcho = { text: `> ${parts.join(" ")}`, type: "cmd" };
         if (args[0] === "0") {
+          const wasInGame = !!exitStateRef.current.teardown;
           exitStateRef.current.teardown?.();
-          window.scrollTo({ top: 0, behavior: "instant" });
+          if (wasInGame) window.scrollTo({ top: 0, behavior: "instant" });
           isCommandScroll.current = false;
           cmdScrollPos.current = null;
           setLines([]);
@@ -832,16 +833,6 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
         return;
       }
 
-      // ── special: anomaly ────────────────────────────────────────────────
-      if (cmd === "anomaly") {
-        captureScrollPos();
-        setLines((prev) => [...prev,
-          { text: "> anomaly", type: "cmd" },
-          { text: "anomaly: command removed. use the [!] button or press Enter during exit 8.", type: "danger" },
-        ]);
-        return;
-      }
-
       // ── special: history ────────────────────────────────────────────────
       if (cmd === "history") {
         const histLines = newHistory.length
@@ -894,7 +885,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   };
 
   // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "whoami", "skills", "interests", "games", "anime", "cycling", "rubik", "spotify", "ls", "sudo", "clear"];
+  const CHIPS = ["help", "whoami", "skills", "projects", "contact", "resume", "interests", "games", "anime", "cycling", "rubik", "tech", "spotify", "matrix", "ls", "sudo", "exit 8", "clear"];
 
   return (
     <div className={styles.interactiveTerminal}>
