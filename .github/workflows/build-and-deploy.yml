@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy
 
 on:
   push:
@@ -11,6 +11,10 @@ on:
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
+
+# Scope GITHUB_TOKEN to the minimum permissions required.
+permissions:
+  contents: write   # push commits to gh-pages branch
 
 jobs:
   build-and-deploy:
@@ -39,16 +43,18 @@ jobs:
       - name: Copy index.html → 404.html for SPA routing
         run: cp build/index.html build/404.html
 
-      # Deploys the build/ folder to the gh-pages branch using the built-in
-      # GITHUB_TOKEN — no personal access token required.
+      # Deploys build/ to the gh-pages branch using the built-in GITHUB_TOKEN.
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
           publish_branch: gh-pages
-          # Keep the branch history clean — each deploy is a single commit.
-          force_orphan: true
-          # Preserve the SPA routing: copy index.html to 404.html so GitHub
-          # Pages serves the React app on any unknown path.
           enable_jekyll: false
+
+      # Post a clickable summary to the Actions run page.
+      - name: Job summary
+        run: |
+          echo "### Deployed to GitHub Pages 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "**Live URL:** https://techshivvy.github.io/portfolio/" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
