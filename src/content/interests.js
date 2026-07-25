@@ -1,57 +1,78 @@
-// Placeholder content — fill in your own details later.
-// This file is the single source of truth shared between:
-//   • the interactive terminal (terminal commands)
-//   • the Beyond Code section (interest cards)
+// Single source of truth shared between the Beyond Code section and
+// the interactive terminal commands.
 
 export const INTERESTS = {
   games: {
     label: "Games",
     icon: "(ง'̀-'́)ง",
-    blurb: "Currently playing: [add your game here]",
+    blurb: "currently in: Los Santos. again. obviously.",
     favorites: [
-      "Watch Dogs series",
-      "// add more",
+      "GTA V  ← current mission: 100%",
+      "GTA Vice City  // nostalgia damage +100",
+      "GTA San Andreas  // CJ is the GOAT, no debate",
+      "Watch Dogs  // inspired the cursor on this site ;)",
+      "G-Force  // childhood speedrun unlocked",
+      "Split Fiction  // this game broke me (in a good way)",
+      "It Takes Two  // cooperative chaos therapy",
+      "A Way Out  // did NOT see that ending coming",
     ],
   },
   anime: {
     label: "Anime",
     icon: "(ﾟДﾟ)",
-    blurb: "Currently watching: [add title here]",
+    blurb: "rewatching Demon Slayer for reasons I cannot explain",
     favorites: [
-      "// add your top picks",
+      "Demon Slayer  // still hits differently on rewatch",
+      "Dandadan  // chaotic energy, certified unhinged",
+      "Bungo Stray Dogs  // BSD when you're feeling pretentious",
+      "Haikyuu  // made me care about volleyball. VOLLEYBALL.",
+      "Death Note  // L > Light, I will not elaborate",
     ],
   },
   cycling: {
     label: "Cycling",
     icon: "ᕕ( ᐛ )ᕗ",
-    blurb: "// km logged so far: TBD",
+    blurb: "2,513 km logged and counting  // send help",
     favorites: [
-      "// add your favourite routes",
+      "60 km  — the warm-up that doesn't feel like one",
+      "100 km  — century ride, certified suffering",
+      "58 km  — favourite chill route, no hills pls",
+      "80 km  — the sweet spot between lazy and ambitious",
     ],
   },
   rubik: {
     label: "Rubik's Cube",
     icon: "(°ロ°)",
-    blurb: "Personal best: [add your PB here]",
+    blurb: "3x3 PB: 26.05s  // still chasing sub-20",
     favorites: [
-      "3x3",
-      "// add other variants",
+      "3x3  — main event, 26.05s PB",
+      "2x2  — warmup cube, deceptively hard",
+      "4x4  — parity errors are personal attacks",
+      "Pyraminx  — triangles, somehow more cursed",
+      "Ghost cube  — pure masochism, no regrets",
     ],
   },
   tech: {
     label: "Tech",
     icon: "( ͡° ͜ʖ ͡°)",
-    blurb: "Tinkering with: [add current side-project / interest]",
+    blurb: "down various rabbit holes, no signs of surfacing",
     favorites: [
-      "// add your tech rabbit holes",
+      "mrwhosetheboss  — gadget brain rot, premium tier",
+      "anthonywritescode  — niche dev stuff that's genuinely good",
+      "logging & observability  — making invisible things visible",
+      "terminal tooling  — if it doesn't have a CLI I don't trust it",
+      "// always watching: random niche channels you've never heard of",
     ],
   },
   music: {
     label: "Music",
     icon: "(ノ◕ヮ◕)ノ",
-    blurb: "Currently looping: check the Spotify widget ->",
+    blurb: "Travis Scott on repeat but honestly? anything goes",
     favorites: [
-      "// add your go-to genres or artists",
+      "Travis Scott  // UTOPIA lives rent-free in my head",
+      "rap / hip-hop  — default genre, no further questions",
+      "// but real talk I'll listen to anything. rec me sumn.",
+      "check the Spotify card above ↑  // if it loads lol",
     ],
   },
 };
