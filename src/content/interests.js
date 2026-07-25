@@ -20,13 +20,13 @@ export const INTERESTS = {
   anime: {
     label: "Anime",
     icon: "(ﾟДﾟ)",
-    blurb: "rewatching Demon Slayer for reasons I cannot explain",
+    blurb: "rewatching Demon Slayer for reasons i cannot explain",
     favorites: [
       "Demon Slayer",
       "Dandadan",
       "Bungo Stray Dogs",
       "Haikyuu  // made me care about volleyball. VOLLEYBALL.",
-      "Death Note  // L > Light, I will not elaborate",
+      "Death Note",
     ],
   },
   cycling: {
@@ -60,7 +60,7 @@ export const INTERESTS = {
       "mrwhosetheboss",
       "anthonywritescode  // niche dev stuff thats genuinely good",
       "logging & observability",
-      "terminal tooling  // if it doesnt have a CLI I dont trust it",
+      "terminal tooling  // if it doesnt have a CLI i dont trust it",
       "// always watching: channels you've never heard of",
     ],
   },
@@ -71,12 +71,12 @@ export const INTERESTS = {
     favorites: [
       "Travis Scott",
       "rap / hip-hop",
-      "// but real talk I'll listen to anything. rec me sumn.",
+      "// but real talk ill listen to anything. rec me sumn.",
       "check the Spotify card above ↑  // if it loads lol",
     ],
   },
 };
 
-Objects.freeze(INTERESTS);
+Object.freeze(INTERESTS);
 
 export default INTERESTS;
