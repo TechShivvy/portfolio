@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
 import Swal from "sweetalert2";
+import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
@@ -40,8 +41,8 @@ const Home = () => {
         cancelButtonText: "No",
         // confirmButtonColor: "#3085d6",
         // cancelButtonColor: "#d33",
-        confirmButtonColor: "#2ba2a2",
-        cancelButtonColor: "#a22b2b",
+        confirmButtonColor: COLOR_ACCENT,
+        cancelButtonColor: COLOR_ACCENT_DANGER,
         // width: "300",
       }).then((result) => {
         if (result.isConfirmed) {

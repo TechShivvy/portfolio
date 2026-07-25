@@ -1,4 +1,5 @@
 import styles from "./../components/_Home.module.css";
+import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "./tokens";
 
 const task1 = () => {
   const textElement = document.getElementById("hackerText");
@@ -23,7 +24,7 @@ const task1 = () => {
   if (hasRun) {
     // sessionStorage.setItem("hasRunOnce", "true");
     isAnimationComplete = true;
-    centeredContentElement.style.color = "#2ba2a2";
+    centeredContentElement.style.color = COLOR_ACCENT;
   }
 
   function getRandomChar() {
@@ -81,7 +82,7 @@ const task1 = () => {
         console.log("'" + textElement.innerHTML + "'");
       } else {
         isAnimationComplete = true;
-        centeredContentElement.style.color = "#2ba2a2";
+        centeredContentElement.style.color = COLOR_ACCENT;
         sessionStorage.setItem("hasRun","true");
         clearInterval(inst);
         resolve();
@@ -112,7 +113,7 @@ const task1 = () => {
       if (isAnimationComplete) {
         isHovered = true;
         clearInterval(inst);
-        centeredContentElement.style.color = "#a22b2b";
+        centeredContentElement.style.color = COLOR_ACCENT_DANGER;
         inst = setInterval(scrambleTextEndless, 100);
       }
     });
@@ -121,7 +122,7 @@ const task1 = () => {
       if (isAnimationComplete) {
         isHovered = false;
         textElement.innerHTML = originalText;
-        centeredContentElement.style.color = "#2ba2a2";
+        centeredContentElement.style.color = COLOR_ACCENT;
       }
     });
 

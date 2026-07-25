@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./_Contact.module.css";
 import contact from "./../images/contact.png";
+import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import { useForm, ValidationError } from "@formspree/react";
 import Swal from "sweetalert2";
 
@@ -56,7 +57,7 @@ function ContactForm() {
         text: "Thank you for reaching out. I've received your message. I'll get back to you asap.",
         icon: "success",
         timer: 1500,
-        confirmButtonColor: "#2ba2a2",
+        confirmButtonColor: COLOR_ACCENT,
       }).then((result) => {
         if (result.isConfirmed) {
           document.getElementById("contact-form").reset();
@@ -158,7 +159,7 @@ function ContactForm() {
                   placeholder="Message"
                   onInput={(e) => validateMessage(e.target.value)}
                   style={{
-                    borderColor: messageValid ? "green" : "#a22b2b",
+                    borderColor: messageValid ? "green" : COLOR_ACCENT_DANGER,
                   }}
                 />
                 <ValidationError

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./_Home.module.css";
+import { COLOR_MATRIX } from "../utils/tokens";
 
 const MatrixAnimation = ({ startAnimation }) => {
   const canvasRef = useRef(null);
@@ -32,7 +33,7 @@ const MatrixAnimation = ({ startAnimation }) => {
       context.fillStyle = "rgba(0, 0, 0, 0.05)";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.fillStyle = "#626e5e";
+      context.fillStyle = COLOR_MATRIX;
       context.font = fontSize + "px monospace";
 
       for (let i = 0; i < matrix.length; i++) {
