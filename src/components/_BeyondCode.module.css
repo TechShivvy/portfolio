@@ -126,6 +126,20 @@
   color: var(--color-matrix);
 }
 
+/* Lines that are entirely a // comment — no bullet, dim + italic */
+.listItemComment {
+  font-style: italic;
+  opacity: 0.5;
+  list-style: none;
+  padding-left: 2px;
+}
+
+/* Inline // comment fragment at the end of a list item */
+.listComment {
+  font-style: italic;
+  opacity: 0.5;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .tabs {

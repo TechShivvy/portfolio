@@ -399,6 +399,12 @@ a > img {
 .line-link a { color: var(--color-accent); text-decoration: none; }
 .line-link a:hover { text-decoration: underline; }
 
+/* // comment fragment inside a terminal output line */
+.lineComment {
+  font-style: italic;
+  opacity: 0.45;
+}
+
 .bootCursor {
   display: inline-block;
   width: 8px;

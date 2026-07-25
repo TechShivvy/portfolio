@@ -7,14 +7,14 @@ export const INTERESTS = {
     icon: "(ง'̀-'́)ง",
     blurb: "currently in: Los Santos. again. obviously.",
     favorites: [
-      "GTA V  ← current mission: 100%",
-      "GTA Vice City  // nostalgia damage +100",
-      "GTA San Andreas  // CJ is the GOAT, no debate",
+      "GTA V",
+      "GTA Vice City",
+      "GTA San Andreas",
       "Watch Dogs  // inspired the cursor on this site ;)",
-      "G-Force  // childhood speedrun unlocked",
-      "Split Fiction  // this game broke me (in a good way)",
-      "It Takes Two  // cooperative chaos therapy",
-      "A Way Out  // did NOT see that ending coming",
+      "G-Force",
+      "Split Fiction",
+      "It Takes Two",
+      "A Way Out",
     ],
   },
   anime: {
@@ -22,9 +22,9 @@ export const INTERESTS = {
     icon: "(ﾟДﾟ)",
     blurb: "rewatching Demon Slayer for reasons I cannot explain",
     favorites: [
-      "Demon Slayer  // still hits differently on rewatch",
-      "Dandadan  // chaotic energy, certified unhinged",
-      "Bungo Stray Dogs  // BSD when you're feeling pretentious",
+      "Demon Slayer",
+      "Dandadan",
+      "Bungo Stray Dogs",
       "Haikyuu  // made me care about volleyball. VOLLEYBALL.",
       "Death Note  // L > Light, I will not elaborate",
     ],
@@ -34,10 +34,10 @@ export const INTERESTS = {
     icon: "ᕕ( ᐛ )ᕗ",
     blurb: "2,513 km logged and counting  // send help",
     favorites: [
-      "60 km  — the warm-up that doesn't feel like one",
-      "100 km  — century ride, certified suffering",
-      "58 km  — favourite chill route, no hills pls",
-      "80 km  — the sweet spot between lazy and ambitious",
+      "60 km",
+      "100 km  // the century",
+      "58 km",
+      "80 km",
     ],
   },
   rubik: {
@@ -45,11 +45,11 @@ export const INTERESTS = {
     icon: "(°ロ°)",
     blurb: "3x3 PB: 26.05s  // still chasing sub-20",
     favorites: [
-      "3x3  — main event, 26.05s PB",
-      "2x2  — warmup cube, deceptively hard",
-      "4x4  — parity errors are personal attacks",
-      "Pyraminx  — triangles, somehow more cursed",
-      "Ghost cube  — pure masochism, no regrets",
+      "3x3  — 26.05s PB",
+      "2x2",
+      "4x4  // parity errors are personal attacks",
+      "Pyraminx",
+      "Ghost cube",
     ],
   },
   tech: {
@@ -57,11 +57,11 @@ export const INTERESTS = {
     icon: "( ͡° ͜ʖ ͡°)",
     blurb: "down various rabbit holes, no signs of surfacing",
     favorites: [
-      "mrwhosetheboss  — gadget brain rot, premium tier",
-      "anthonywritescode  — niche dev stuff that's genuinely good",
-      "logging & observability  — making invisible things visible",
-      "terminal tooling  — if it doesn't have a CLI I don't trust it",
-      "// always watching: random niche channels you've never heard of",
+      "mrwhosetheboss",
+      "anthonywritescode",
+      "logging & observability",
+      "terminal tooling",
+      "// always watching: channels you've never heard of",
     ],
   },
   music: {
@@ -69,12 +69,14 @@ export const INTERESTS = {
     icon: "(ノ◕ヮ◕)ノ",
     blurb: "Travis Scott on repeat but honestly? anything goes",
     favorites: [
-      "Travis Scott  // UTOPIA lives rent-free in my head",
-      "rap / hip-hop  — default genre, no further questions",
+      "Travis Scott",
+      "rap / hip-hop",
       "// but real talk I'll listen to anything. rec me sumn.",
       "check the Spotify card above ↑  // if it loads lol",
     ],
   },
 };
+
+Objects.freeze(INTERESTS);
 
 export default INTERESTS;

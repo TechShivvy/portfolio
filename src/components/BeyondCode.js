@@ -38,9 +38,27 @@ export default function BeyondCode() {
           </div>
           <p className={styles.cardBlurb}>{item.blurb}</p>
           <ul className={styles.list}>
-            {item.favorites.map((f, i) => (
-              <li key={i} className={styles.listItem}>&gt; {f}</li>
-            ))}
+            {item.favorites.map((f, i) => {
+              // Lines that start with // are pure comments; others may have // mid-line
+              const commentStart = f.indexOf(' // ');
+              const isFullComment = f.startsWith('//');
+              if (isFullComment) {
+                return (
+                  <li key={i} className={`${styles.listItem} ${styles.listItemComment}`}>
+                    {f}
+                  </li>
+                );
+              }
+              if (commentStart !== -1) {
+                return (
+                  <li key={i} className={styles.listItem}>
+                    &gt; {f.slice(0, commentStart)}
+                    <span className={styles.listComment}>{f.slice(commentStart)}</span>
+                  </li>
+                );
+              }
+              return <li key={i} className={styles.listItem}>&gt; {f}</li>;
+            })}
           </ul>
         </div>
       </div>
