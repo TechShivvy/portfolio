@@ -39,8 +39,8 @@ function buildCommands(scrollToSection) {
       { text: "  history      — command history", type: "output" },
       { text: "  ls           — list... something", type: "output" },
       { text: "  sudo         — try it ;)", type: "output" },
-      { text: "  exit 8       — the loop. 8 anomalies. you know the rules.", type: "output" },
-      { text: "  anomaly      — call this when something looks wrong (exit 8 only)", type: "output" },
+      { text: "  exit 8       — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
+      { text: "  anomaly      — alias for the [!] button (exit 8 only)", type: "output" },
       { text: "  suicide      — closes the tab. for real.", type: "output" },
     ],
 
@@ -323,196 +323,503 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           // document.body — so the fixed floating bar (a body child) stays
           // immune to transforms/filters and never drifts.
           const rootEl = document.getElementById("root");
-
-          // Targets that visual effects apply to (real root + seamless clone).
-          const fxTargets = () => [rootEl, exitCloneRef.current].filter(Boolean);
-          const applyStyle = (prop, val) => {
-            const els = fxTargets();
-            els.forEach((el) => { el.style[prop] = val; });
-            return () => { els.forEach((el) => { el.style[prop] = ""; }); };
-          };
-
-          const EFFECTS = [
-            () => applyStyle("filter", "invert(1)"),
-            () => applyStyle("filter", "sepia(1) saturate(4) hue-rotate(300deg)"),
-            () => applyStyle("filter", "brightness(0.04)"),
-            () => applyStyle("filter", "blur(6px) saturate(0)"),
-            () => applyStyle("filter", "invert(0.6) hue-rotate(100deg) saturate(3)"),
-            () => applyStyle("filter", "contrast(20) brightness(0.3)"),
-            () => applyStyle("filter", "hue-rotate(180deg) saturate(5)"),
-            () => applyStyle("filter", "brightness(8)"),
-            () => applyStyle("transform", "scaleX(-1)"),
-            () => applyStyle("transform", "scaleY(-1)"),
-            () => applyStyle("transform", "rotate(5deg) scale(1.1)"),
-            () => applyStyle("fontFamily", '"Comic Sans MS", cursive'),
-            () => {
-              const s = document.createElement("style"); s.id = "_exit8shake";
-              s.textContent = "@keyframes _exit8shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-14px)}75%{transform:translateX(14px)}}";
-              document.head.appendChild(s);
-              const remove = applyStyle("animation", "_exit8shake 0.1s ease-in-out infinite");
-              return () => { remove(); s.remove(); };
-            },
-          ];
-
           const st = exitStateRef.current;
-          st.score = 0;
 
-          // ── Neutralise global scroll-behavior:smooth so instant teleport works ──
-          document.documentElement.style.scrollBehavior = "auto";
-          document.body.style.overflowX = "hidden";
-
-          // ── Fix heights so clone lands AFTER content, not at 100vh ───────
-          // body has height:100vh and #root has height:100%. Content overflows
-          // those boxes, so a sibling clone lands at y=100vh (middle of page!)
-          // Fix: set both to auto so they expand to fit content, and the clone
-          // appends at the actual bottom.
+          // ── Global style overrides ────────────────────────────────────────
+          document.documentElement.style.scrollBehavior = "auto";          document.documentElement.style.overflowX = "hidden"; // clip rotated/scaled elements on mobile          document.body.style.overflowX = "hidden";
           document.body.style.height = "auto";
           rootEl.style.height = "auto";
 
-          // ── Change hero text to current level ───────────────────────────
-          const heroEl = document.getElementById("hackerText");
-          st.heroEl = heroEl;
-          st.heroOrig = heroEl ? heroEl.textContent : null;
-          if (heroEl) heroEl.textContent = "0";
+          // Turn progress bar white (keep it visible but neutral during the game)
+          const progressEl = document.querySelector('[class*="progress-container"]');
+          if (progressEl) {
+            st.progressEl = progressEl;
+            progressEl.style.background = "#fff"; // solid white strip, no tracking
+            const progressBarEl = progressEl.querySelector('[class*="progress-bar"]');
+            if (progressBarEl) { st.progressBarEl = progressBarEl; progressBarEl.style.background = "transparent"; }
+          }
 
-          // ── Seamless loop: clone #root in NORMAL FLOW below itself ───────
+          // ── Hero text: current level indicator ───────────────────────────
+          const heroEl = document.getElementById("hackerText");
+          st.heroEl  = heroEl;
+          st.heroOrig = heroEl ? heroEl.textContent : null;
+          if (heroEl) {
+            heroEl.textContent = "0 \u2193";
+            heroEl.style.color = "#2ba2a2";
+            heroEl.style.pointerEvents = "none"; // prevent scramble mouseover from resetting
+            if (heroEl.parentElement) heroEl.parentElement.style.zIndex = "1";
+          }
+
+          // ── Game state ────────────────────────────────────────────────────
+          Object.assign(st, {
+            score: 0, clones: [], cloneMatrixRafs: [], lastCorridor: 0, corridorFoundAnomaly: false,
+            scrollingBack: false, cancelBackScroll: null,
+            anomalyActive: false, removeEffect: null, expireTimer: null,
+            anomalyFiredThisCorridor: false, isCurrentCorridorClean: true,
+            anomalyTriggerY: Infinity, scorePredictedThisCorridor: false,
+          });
+
           window.scrollTo({ top: 0, behavior: "instant" });
           const rootHeight = rootEl.offsetHeight;
-          const liveEls = Array.from(rootEl.querySelectorAll("*"));
-          liveEls.forEach((el) => {
-            const pos = getComputedStyle(el).position;
-            if (pos === "fixed" || pos === "sticky") el.setAttribute("data-e8fx", "");
-          });
-          const clone = rootEl.cloneNode(true);
-          clone.id = "_exit8clone";
-          clone.setAttribute("aria-hidden", "true");
-          clone.style.margin = "0";
-          clone.style.pointerEvents = "none";
-          clone.querySelectorAll("[data-e8fx]").forEach((el) => el.remove());
-          liveEls.forEach((el) => el.removeAttribute("data-e8fx"));
-          // Set clone's hero text to match
-          const cloneHero = clone.querySelector("[id='hackerText']");
-          if (cloneHero) cloneHero.textContent = "0";
-          document.body.appendChild(clone);
-          exitCloneRef.current = clone;
+          st.rootHeight = rootHeight;
 
-          // ── Floating bottom bar (input + score) ─────────────────────────
-          const bar = document.createElement("div");
-          bar.id = "_exit8bar";
-          bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#0d0d0d;border-top:2px solid #2ba2a2;padding:8px 16px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono,monospace);font-size:14px;color:#ccc;";
-          bar.innerHTML = `
-            <span style="color:#2ba2a2;white-space:nowrap;">EXIT 8 &gt;</span>
-            <input id="_exit8input" type="text" placeholder="type 'anomaly' when you see one..." autocomplete="off" style="flex:1;background:transparent;border:1px solid #333;border-radius:3px;padding:6px 10px;color:#eee;font-family:inherit;font-size:inherit;outline:none;" />
-            <span id="_exit8score" style="color:#2ba2a2;white-space:nowrap;">[0/8]</span>
-            <span style="color:#666;font-size:12px;white-space:nowrap;">'clear' = quit</span>
-          `;
-          document.body.appendChild(bar);
-          exitBarRef.current = bar;
+          // ── Effects: per-target (applied only to the current corridor clone) ─
+          // Coarse-pointer / narrow devices exclude the two "heavy" geometric
+          // effects (rotate+scale, shake). On the full-height #root/clone those
+          // overflow the element, which on Android grows the scroll area (causing
+          // scroll drift on the way back) and thrashes the GPU layer (making the
+          // fixed control buttons jitter and disappear). Filters + in-place mirrors
+          // don't change geometry, so they stay safe everywhere.
+          const _isMobile =
+            (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) ||
+            window.innerWidth < 768;
+          const EFFECTS_SAFE = [
+            (t) => { t.style.filter = "invert(1)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "sepia(1) saturate(4) hue-rotate(300deg)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "brightness(0.04)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "blur(6px) saturate(0)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "invert(0.6) hue-rotate(100deg) saturate(3)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "contrast(20) brightness(0.3)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "hue-rotate(180deg) saturate(5)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.filter = "brightness(8)"; return () => { t.style.filter = ""; }; },
+            (t) => { t.style.transform = "scaleX(-1)"; return () => { t.style.transform = ""; }; },
+            (t) => { t.style.transform = "scaleY(-1)"; return () => { t.style.transform = ""; }; },
+            (t) => { t.style.fontFamily = '"Comic Sans MS",cursive'; return () => { t.style.fontFamily = ""; }; },
+          ];
+          const EFFECTS_HEAVY = [
+            (t) => { t.style.transform = "rotate(5deg) scale(1.1)"; return () => { t.style.transform = ""; }; },
+            (t) => {
+              const s = document.createElement("style"); s.id = "_exit8shake";
+              s.textContent = "@keyframes _e8s{0%,100%{transform:translateX(0)}25%{transform:translateX(-14px)}75%{transform:translateX(14px)}}";
+              document.head.appendChild(s);
+              t.style.animation = "_e8s 0.1s ease-in-out infinite";
+              return () => { t.style.animation = ""; s.remove(); };
+            },
+          ];
+          const EFFECTS = _isMobile ? EFFECTS_SAFE : [...EFFECTS_SAFE, ...EFFECTS_HEAVY];
+          // ── Clone factory ─────────────────────────────────────────────────
+          const createAndAppendClone = () => {
+            const snapEls = Array.from(rootEl.querySelectorAll("*"));
+            snapEls.forEach((el) => {
+              const pos = getComputedStyle(el).position;
+              if (pos === "fixed" || pos === "sticky") el.setAttribute("data-e8fx", "");
+            });
+            const c = rootEl.cloneNode(true);
+            c.removeAttribute("id");
+            c.setAttribute("aria-hidden", "true");
+            c.style.cssText = "margin:0;pointer-events:none;";
+            // Reveal fade-in-on-scroll sections that hadn't entered the viewport
+            // when cloned — their inline opacity:0 would render the clone blank on mobile.
+            c.querySelectorAll("*").forEach((el) => {
+              if (el.style && el.style.opacity === "0") {
+                el.style.opacity = "1";
+                el.style.transform = "translateY(0)";
+              }
+            });
+            // Canvas pixels don’t survive cloneNode — run a live matrix animation on the clone
+            const _origCanvas = rootEl.querySelector("canvas");
+            const _cloneCanvas = c.querySelector("canvas");
+            if (_origCanvas && _cloneCanvas) {
+              _cloneCanvas.width  = _origCanvas.width;
+              _cloneCanvas.height = _origCanvas.height;
+              const _ctx = _cloneCanvas.getContext("2d");
+              if (_ctx) {
+                const _chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                const _fs = 14;
+                const _cols = Math.floor(_cloneCanvas.width / _fs) + 10;
+                const _drops = Array.from({ length: _cols }, () =>
+                  Math.floor(Math.random() * (_cloneCanvas.height / _fs)));
+                let _mRafId;
+                const _drawMatrix = () => {
+                  _ctx.fillStyle = "rgba(0,0,0,0.05)";
+                  _ctx.fillRect(0, 0, _cloneCanvas.width, _cloneCanvas.height);
+                  _ctx.fillStyle = "#626e5e";
+                  _ctx.font = `${_fs}px monospace`;
+                  for (let _i = 0; _i < _drops.length; _i++) {
+                    _ctx.fillText(_chars[Math.floor(Math.random() * _chars.length)], _i * _fs, _drops[_i] * _fs);
+                    if (_drops[_i] * _fs > _cloneCanvas.height && Math.random() > 0.975) _drops[_i] = 0;
+                    _drops[_i]++;
+                  }
+                  _mRafId = requestAnimationFrame(_drawMatrix);
+                };
+                _mRafId = requestAnimationFrame(_drawMatrix);
+                st.cloneMatrixRafs.push(() => cancelAnimationFrame(_mRafId));
+              }
+            }
+            c.querySelectorAll("[data-e8fx]").forEach((el) => el.remove());
+            snapEls.forEach((el) => el.removeAttribute("data-e8fx"));
+            const ch = c.querySelector("#hackerText");
+            if (ch) {
+              ch.textContent = `${st.score} \u2193`;
+              ch.style.color = "#2ba2a2";
+              if (ch.parentElement) ch.parentElement.style.zIndex = "1";
+            }
+            document.body.appendChild(c);
+            st.clones.push(c);
+            return c;
+          };
+          createAndAppendClone(); // pre-fetch corridor 1
+          exitCloneRef.current = st.clones[0];
 
-          const barInput = bar.querySelector("#_exit8input");
-          barInput.focus();
-          barInput.addEventListener("keydown", (e) => {
-            if (e.key !== "Enter") return;
-            const val = barInput.value.trim().toLowerCase();
-            barInput.value = "";
-            if (val === "clear" || val === "exit 0") { runCommand(val); return; }
-            if (val === "anomaly") { runCommand("anomaly"); return; }
-          });
-
+          // ── Score UI ──────────────────────────────────────────────────────
           const updateScoreUI = () => {
             const scoreEl = document.getElementById("_exit8score");
             if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
-            // Update hero text on live root and clone to show current level
-            if (st.heroEl) st.heroEl.textContent = String(st.score);
-            const ch = exitCloneRef.current?.querySelector("[id='hackerText']");
-            if (ch) ch.textContent = String(st.score);
+            if (st.heroEl) { st.heroEl.textContent = `${st.score} \u2193`; st.heroEl.style.color = "#2ba2a2"; }
+            (st.clones || []).forEach((c) => {
+              const ch = c.querySelector("#hackerText");
+              if (ch) { ch.textContent = `${st.score} \u2193`; ch.style.color = "#2ba2a2"; }
+            });
           };
           st.updateScoreUI = updateScoreUI;
 
-          // ── Shared teardown (used by clear / exit 0 / win) ──────────────
+          // ── Scroll-back animation ─────────────────────────────────────────
+          // Locks onto the corridor element's LIVE position each frame (via
+          // getBoundingClientRect) rather than a precomputed Y from st.rootHeight,
+          // which goes stale (clone height variance, reflows, mobile URL-bar
+          // resize) and caused drift on the way back to the corridor top.
+          const scrollBack = (corridorEl) => {
+            st.cancelBackScroll?.();
+            st.scrollingBack = true;
+            let backRaf;
+            const tick = () => {
+              const top = corridorEl.getBoundingClientRect().top; // corridor top offset from viewport top
+              if (top >= -1) {
+                // At (or just past) the corridor top — snap it exactly to viewport top
+                window.scrollTo({ top: window.scrollY + top, left: 0, behavior: "instant" });
+                st.scrollingBack = false; st.cancelBackScroll = null; return;
+              }
+              // Corridor top is above the viewport — scroll up toward it (no overshoot)
+              const stepPx = Math.min(28, -top);
+              window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
+              backRaf = requestAnimationFrame(tick);
+            };
+            backRaf = requestAnimationFrame(tick);
+            st.cancelBackScroll = () => { cancelAnimationFrame(backRaf); st.scrollingBack = false; };
+          };
+
+          // ── Corridor geometry helpers (real positions, drift-proof) ───────
+          const corridorElFor = (idx) => (idx === 0 ? rootEl : (st.clones[idx - 1] || rootEl));
+          const corridorRealTop = (idx) =>
+            corridorElFor(idx).getBoundingClientRect().top + window.scrollY;
+          // Current corridor = highest clone whose real top has reached the viewport top.
+          const currentCorridorIdx = () => {
+            let idx = 0;
+            for (let i = 0; i < st.clones.length; i++) {
+              if (st.clones[i].getBoundingClientRect().top <= 1) idx = i + 1;
+              else break;
+            }
+            return idx;
+          };
+
+          // ── Per-corridor anomaly reset ────────────────────────────────
+          const resetForCorridor = (corridorIdx) => {
+            const isClean = Math.random() < 0.3;
+            st.isCurrentCorridorClean = isClean;
+            st.anomalyFiredThisCorridor = false;
+            st.scorePredictedThisCorridor = false;
+            // Anchor the trigger to the corridor's REAL top so it never fires the
+            // instant we scroll back (the old grid coord drifted from real layout).
+            st.anomalyTriggerY = isClean
+              ? Infinity
+              : corridorRealTop(corridorIdx) + (0.1 + Math.random() * 0.3) * st.rootHeight;
+          };
+
+          // ── Anomaly check: immediate score + scrollback ───────────────────
+          const triggerAnomalyCheck = () => {
+            const currentCorridor = currentCorridorIdx();
+            const corridorEl = corridorElFor(currentCorridor);
+
+            // Always clear the expire timer
+            if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+
+            const wasActive = st.anomalyActive;
+            if (st.anomalyActive) {
+              st.removeEffect?.();
+              st.anomalyActive = false; st.removeEffect = null;
+            }
+
+            if (wasActive) {
+              // Correct — score immediately
+              st.score = Math.min(st.score + 1, 9);
+              updateScoreUI();
+              if (st.score >= 9) { st.winGame?.(); return; }
+              setLines((prev) => [...prev, {
+                text: `>> anomaly spotted \u2014 exit ${st.score} clear. [${st.score}/8]`,
+                type: "accent",
+              }]);
+            } else {
+              // False call — reset immediately
+              const hadProgress = st.score > 0;
+              if (hadProgress) { st.score = 0; updateScoreUI(); }
+              setLines((prev) => [...prev, {
+                text: hadProgress
+                  ? ">> false alarm \u2014 reset."
+                  : ">> nothing here. keep walking.",
+                type: hadProgress ? "danger" : "output",
+              }]);
+            }
+
+            // Fresh anomaly for same corridor, then scroll back to its top
+            resetForCorridor(currentCorridor);
+            scrollBack(corridorEl);
+          };
+          st.triggerAnomalyCheck = triggerAnomalyCheck;
+
+          // ── Shared teardown ───────────────────────────────────────────────
           const teardown = () => {
             if (exitScrollRef.current) { cancelAnimationFrame(exitScrollRef.current); exitScrollRef.current = null; }
-            if (st.anomalyTimer) { clearTimeout(st.anomalyTimer); st.anomalyTimer = null; }
-            if (st.expireTimer)  { clearTimeout(st.expireTimer);  st.expireTimer  = null; }
+            st.cancelBackScroll?.();
+            if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
             if (st.anomalyActive && st.removeEffect) { st.removeEffect(); }
-            if (exitCloneRef.current) { try { document.body.removeChild(exitCloneRef.current); } catch (_) {} exitCloneRef.current = null; }
-            if (exitBarRef.current)   { try { document.body.removeChild(exitBarRef.current);   } catch (_) {} exitBarRef.current = null; }
-            // Restore hero text
-            if (st.heroEl && st.heroOrig != null) st.heroEl.textContent = st.heroOrig;
+            if (st.heroEl) {
+              if (st.heroOrig != null) st.heroEl.textContent = st.heroOrig;
+              st.heroEl.style.pointerEvents = ""; st.heroEl.style.color = "";
+              if (st.heroEl.parentElement) st.heroEl.parentElement.style.zIndex = "";
+            }
+            (st.cloneMatrixRafs || []).forEach((cancel) => cancel());
+            (st.clones || []).forEach((c) => { try { document.body.removeChild(c); } catch (_) {} });
+            exitCloneRef.current = null;
+            if (st.progressEl) { st.progressEl.style.backgroundColor = ""; }
+            if (st.progressBarEl) { st.progressBarEl.style.background = ""; }
+            if (st.scrollUpEl) { st.scrollUpEl.style.visibility = ""; st.scrollUpEl.style.pointerEvents = ""; }
+            if (st.anomalyBtn) { try { document.body.removeChild(st.anomalyBtn); } catch (_) {} }
+            if (st.exitBtn)    { try { document.body.removeChild(st.exitBtn);    } catch (_) {} }
+            if (st.keyHandler) { document.removeEventListener("keydown", st.keyHandler); }
+            if (st.preventScroll) {
+              document.removeEventListener("wheel",     st.preventScroll);
+              document.removeEventListener("touchmove", st.preventScroll);
+            }
+            if (exitBarRef.current) { try { document.body.removeChild(exitBarRef.current); } catch (_) {} exitBarRef.current = null; }
             rootEl.style.filter = ""; rootEl.style.transform = ""; rootEl.style.fontFamily = ""; rootEl.style.animation = "";
-            rootEl.style.height = "";
-            document.body.style.height = "";
+            rootEl.style.height = ""; document.body.style.height = "";
             document.documentElement.style.scrollBehavior = "";
+            document.documentElement.style.overflowX = "";
             document.body.style.overflowX = "";
-            Object.assign(st, { anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null, updateScoreUI: null, winGame: null, heroEl: null, heroOrig: null });
+            Object.assign(st, {
+              anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null,
+              score: 0, scheduleAnomaly: null, teardown: null, updateScoreUI: null,
+              winGame: null, triggerAnomalyCheck: null, clones: [], cloneMatrixRafs: [], heroEl: null, heroOrig: null,
+              progressEl: null, scrollUpEl: null, anomalyBtn: null, exitBtn: null, keyHandler: null,
+              preventScroll: null,
+              scrollingBack: false, cancelBackScroll: null, rootHeight: 0, lastCorridor: 0,
+              corridorFoundAnomaly: false, progressBarEl: null,
+              anomalyFiredThisCorridor: false, isCurrentCorridorClean: true, anomalyTriggerY: Infinity,
+              scorePredictedThisCorridor: false,
+            });
           };
           st.teardown = teardown;
 
+          // ── Win sequence ──────────────────────────────────────────────────
           const winGame = () => {
+            const escapedHeroEl = st.heroEl;
+            const heroOrigText  = st.heroOrig ?? "SHIVCHARAN";
             teardown();
-            setLines((prev) => [
-              ...prev,
-              { text: ">> exit [8/8] — turned back.", type: "accent" },
-              { text: ">> EXIT 8.", type: "accent" },
-              { text: ">> you made it out. well played.", type: "info" },
+
+            if (escapedHeroEl) {
+              const WITTY = ["Damn you made it.", "u escaped bruv.", "u broke da loop.", "EXIT 8 CLEAR.", "congratulations."];
+              let idx    = Math.floor(Math.random() * WITTY.length);
+              let active = true;
+
+              // Scroll WITTY text into view first (rAF so browser reflows after clone removal)
+              requestAnimationFrame(() => {
+                escapedHeroEl.scrollIntoView({ behavior: "smooth", block: "center" });
+              });
+
+              // Slide-in-from-left keyframe for each message cycle
+              const winStyle = document.createElement("style");
+              winStyle.id    = "_e8winStyle";
+              winStyle.textContent = "@keyframes _e8winSlide{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}";
+              document.head.appendChild(winStyle);
+
+              // Show one random WITTY message — no cycling
+              escapedHeroEl.style.animation = "none";
+              void escapedHeroEl.offsetHeight; // force reflow
+              escapedHeroEl.textContent = WITTY[idx];
+              escapedHeroEl.style.color = "#2ba2a2";
+              escapedHeroEl.style.animation = "_e8winSlide 0.5s ease forwards";
+
+              // User interacted — restore hero, stay on page (no terminal focus)
+              const restoreHero = () => {
+                if (!active) return;
+                active = false;
+                clearTimeout(focusTimer); // eslint-disable-line no-use-before-define
+                escapedHeroEl.textContent = heroOrigText;
+                escapedHeroEl.style.color = "";
+                escapedHeroEl.style.animation = "";
+                winStyle.remove();
+              };
+
+              // No interaction for 4s — restore hero + focus terminal
+              let focusTimer = setTimeout(() => {
+                if (!active) return;
+                active = false;
+                escapedHeroEl.textContent = heroOrigText;
+                escapedHeroEl.style.color = "";
+                escapedHeroEl.style.animation = "";
+                winStyle.remove();
+                if (inputRef.current) {
+                  inputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+                  inputRef.current.focus({ preventScroll: true });
+                }
+              }, 4000);
+
+              // 500ms grace — prevents winning gesture from immediately clearing win text
+              setTimeout(() => {
+                document.addEventListener("mousemove",   restoreHero, { once: true });
+                document.addEventListener("pointerdown", restoreHero, { once: true });
+                document.addEventListener("touchmove",   restoreHero, { once: true });
+              }, 500);
+            }
+
+            setLines((prev) => [...prev,
+              { text: ">> you made it out. congrats :)", type: "accent" },
             ]);
           };
           st.winGame = winGame;
 
-          // ── Scroll loop: wrap by rootHeight for an invisible stitch ──────
-          const step = () => {
-            if (window.scrollY >= rootHeight) {
-              window.scrollTo({ top: window.scrollY - rootHeight, behavior: "instant" });
-            }
-            window.scrollBy(0, 5);
-            exitScrollRef.current = requestAnimationFrame(step);
-          };
-          exitScrollRef.current = requestAnimationFrame(step);
+          // ── Controls ──────────────────────────────────────────────────────
+          // Hide real scroll-up button; overlay anomaly (!) and EXIT buttons.
+          const scrollUpEl = document.querySelector('[aria-label="Scroll to top"]');
+          if (scrollUpEl) {
+            st.scrollUpEl = scrollUpEl;
+            scrollUpEl.style.visibility = "hidden";
+            scrollUpEl.style.pointerEvents = "none";
+          }
+          const anomalyBtn = document.createElement("button");
+          anomalyBtn.id = "_exit8anomalyBtn";
+          anomalyBtn.textContent = "!";
+          anomalyBtn.title = "Report anomaly (Enter)";
+          anomalyBtn.style.cssText = "position:fixed;bottom:24px;right:24px;width:42px;height:42px;z-index:99998;background:#2ba2a2;border:1px solid #2ba2a2;border-radius:50%;color:#000;font-weight:900;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono,monospace);";
+          anomalyBtn.addEventListener("click", triggerAnomalyCheck);
+          document.body.appendChild(anomalyBtn);
+          st.anomalyBtn = anomalyBtn;
 
-          // ── Anomaly scheduling ──────────────────────────────────────────
-          const scheduleAnomaly = () => {
-            // 30% chance of a "clean pass" — no anomaly this corridor.
-            const noAnomaly = Math.random() < 0.3;
-            const waitMs = noAnomaly ? (5000 + Math.random() * 4000) : (3500 + Math.random() * 4000);
-            st.anomalyTimer = setTimeout(() => {
-              if (noAnomaly) {
-                // Survived a clean corridor with no false calls → advance.
-                st.score += 1;
-                updateScoreUI();
-                window.scrollTo({ top: 0, behavior: "instant" });
-                if (st.score >= 8) { winGame(); return; }
-                setLines((l) => [...l, { text: `>> exit ${st.score} — no anomaly, clean pass. [${st.score}/8]`, type: "accent" }]);
-                scheduleAnomaly();
-                return;
+          const exitBtn = document.createElement("button");
+          exitBtn.id = "_exit8exitBtn";
+          exitBtn.textContent = "EXIT";
+          exitBtn.title = "Quit corridor (Esc)";
+          exitBtn.style.cssText = "position:fixed;bottom:24px;left:-120px;z-index:99998;background:#a22b2b;border:1px solid #a22b2b;color:#fff;padding:0 18px;height:42px;cursor:pointer;font-family:var(--font-mono,monospace);font-size:13px;transition:left 0.4s cubic-bezier(0.22,0.61,0.36,1);border-radius:4px;";
+          exitBtn.addEventListener("click", () => runCommand("exit 0"));
+          document.body.appendChild(exitBtn);
+          st.exitBtn = exitBtn;
+          setTimeout(() => { exitBtn.style.left = "24px"; }, 50);
+
+          const keyHandler = (e) => {
+            if (!exitStateRef.current.triggerAnomalyCheck) return;
+            // Block all browser-native scroll keys during the game
+            if ([" ", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key)) {
+              e.preventDefault();
+            }
+            if (e.key === "Enter") {
+              e.preventDefault();
+              // Release terminal input focus so it doesn't swallow the action
+              if (inputRef.current && document.activeElement === inputRef.current) inputRef.current.blur();
+              exitStateRef.current.triggerAnomalyCheck?.();
+            }
+            if (e.key === "Escape") { runCommand("exit 0"); }
+          };
+          document.addEventListener("keydown", keyHandler);
+          st.keyHandler = keyHandler;
+
+          // Block mouse-wheel and touch-drag scroll — only the auto-scroll in step() moves the page
+          const preventScroll = (e) => { e.preventDefault(); };
+          document.addEventListener("wheel",     preventScroll, { passive: false });
+          document.addEventListener("touchmove", preventScroll, { passive: false });
+          st.preventScroll = preventScroll;
+
+          // Blur terminal input so the very first Enter goes to the game, not the terminal
+          if (inputRef.current) inputRef.current.blur();
+
+          // ── Main scroll loop ────────────────────────────────────────────────────────────
+          resetForCorridor(0); // prime corridor 0 anomaly
+          const step = () => {
+            const currentCorridor = currentCorridorIdx();
+
+            // Natural corridor exit — score the corridor we just LEFT, set up the new one
+            if (currentCorridor > st.lastCorridor) {
+              st.lastCorridor = currentCorridor;
+
+              if (!st.corridorFoundAnomaly) {
+                if (st.isCurrentCorridorClean) {
+                  // No anomaly, player didn’t press → CLEAN PASS → score++
+                  st.score = Math.min(st.score + 1, 9);
+                  updateScoreUI();
+                  if (st.score >= 9) { st.winGame?.(); return; }
+                } else if (st.anomalyFiredThisCorridor) {
+                  // Anomaly appeared but player scrolled past without calling → MISSED
+                  st.score = 0;
+                  updateScoreUI();
+                  setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
+                }
               }
-              const effect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)];
-              st.removeEffect = effect();
+
+              // Clean up any still-active effect before the new corridor
+              if (st.anomalyActive) {
+                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+                st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
+              }
+
+              st.corridorFoundAnomaly = false;   // reset for new corridor
+              resetForCorridor(currentCorridor);
+            }
+
+            // Fire anomaly at the trigger scroll-point (never while scrolling back)
+            if (!st.scrollingBack && !st.anomalyFiredThisCorridor && window.scrollY >= st.anomalyTriggerY) {
+              st.anomalyFiredThisCorridor = true;
+              const targetEl = corridorElFor(currentCorridor);
+              st.removeEffect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)](targetEl);
               st.anomalyActive = true;
-              // Auto-expire in 5s → missed anomaly resets progress.
+              // 5-second display window — effect disappears but no scroll-back here;
+              // scoring consequence comes when player exits the corridor without pressing.
               st.expireTimer = setTimeout(() => {
                 if (st.anomalyActive) {
                   st.removeEffect?.();
-                  st.anomalyActive = false;
-                  st.removeEffect  = null;
-                  st.score = 0;
-                  updateScoreUI();
-                  setLines((l) => [...l, { text: ">> anomaly missed — reset to exit 0.", type: "danger" }]);
-                  window.scrollTo({ top: 0, behavior: "instant" });
-                  scheduleAnomaly();
+                  st.anomalyActive = false; st.removeEffect = null;
                 }
               }, 5000);
-            }, waitMs);
+            }
+
+            // At 70% of corridor: expire anomaly effect + pre-update next clone’s score display
+            if (!st.scrollingBack && window.scrollY >= corridorRealTop(currentCorridor) + 0.7 * st.rootHeight) {
+              if (st.anomalyActive) {
+                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+                st.removeEffect?.();
+                st.anomalyActive = false;
+                st.removeEffect = null;
+              }
+              if (!st.scorePredictedThisCorridor) {
+                st.scorePredictedThisCorridor = true;
+                const _nextClone = st.clones[currentCorridor]; // corridor currentCorridor+1's clone
+                if (_nextClone) {
+                  let _pred = st.score;
+                  if (!st.corridorFoundAnomaly) {
+                    if (st.isCurrentCorridorClean) _pred = Math.min(st.score + 1, 9);
+                    else if (st.anomalyFiredThisCorridor) _pred = 0;
+                  }
+                  const _ch = _nextClone.querySelector("#hackerText");
+                  if (_ch) { _ch.textContent = `${_pred} \u2193`; _ch.style.color = "#2ba2a2"; }
+                }
+              }
+            }
+
+            // Append new clone when within 600px of the bottom
+            if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 600) {
+              createAndAppendClone();
+            }
+
+            if (!st.scrollingBack) window.scrollTo({ top: window.scrollY + 8, left: 0, behavior: "instant" });
+            exitScrollRef.current = requestAnimationFrame(step);
           };
-          st.scheduleAnomaly = scheduleAnomaly;
-          scheduleAnomaly();
+          exitScrollRef.current = requestAnimationFrame(step);
 
           captureScrollPos();
           setLines((prev) => [
             ...prev,
             exitEcho,
             { text: ">> corridor initiated. something is wrong in here.", type: "danger" },
-            { text: ">> spot anomalies. type 'anomaly' in the bar below.", type: "output" },
-            { text: ">> reach exit 8 to escape. false calls reset you.  // 'clear' to quit", type: "output" },
+            { text: ">> spot anomalies. press ENTER or tap [!] to call them.", type: "output" },
+            { text: ">> reach exit 8. ESC or EXIT to quit.  // false calls reset you.", type: "output" },
           ]);
           return;
         }
@@ -527,46 +834,11 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
       // ── special: anomaly ────────────────────────────────────────────────
       if (cmd === "anomaly") {
-        const st   = exitStateRef.current;
-        const echo = { text: "> anomaly", type: "cmd" };
         captureScrollPos();
-        if (!st.scheduleAnomaly) {
-          setLines((prev) => [...prev, echo, { text: "anomaly: no corridor active. run 'exit 8' first.", type: "danger" }]);
-          return;
-        }
-        if (!st.anomalyActive) {
-          const hadProgress = st.score > 0;
-          // Cancel the pending corridor timer so a queued clean-pass award
-          // can't sneak in after a false call, then restart fresh.
-          if (st.anomalyTimer) { clearTimeout(st.anomalyTimer); st.anomalyTimer = null; }
-          if (hadProgress) st.score = 0;
-          st.updateScoreUI?.();
-          setLines((prev) => [...prev, echo, {
-            text: hadProgress
-              ? ">> no anomaly. you turned back for nothing — reset to exit 0."
-              : ">> no anomaly here. keep walking.",
-            type: hadProgress ? "danger" : "output",
-          }]);
-          // Turn back = snap to top
-          window.scrollTo({ top: 0, behavior: "instant" });
-          st.scheduleAnomaly?.();
-          return;
-        }
-        // Correct detection — turn back (snap to top)
-        if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-        st.removeEffect?.();
-        st.anomalyActive = false;
-        st.removeEffect  = null;
-        st.score += 1;
-        st.updateScoreUI?.();
-        window.scrollTo({ top: 0, behavior: "instant" });
-        if (st.score >= 8) {
-          // WIN — full cleanup via shared teardown
-          st.winGame?.();
-        } else {
-          setLines((prev) => [...prev, echo, { text: `>> anomaly [${st.score}/8] — turned back. keep going.`, type: "accent" }]);
-          st.scheduleAnomaly?.();
-        }
+        setLines((prev) => [...prev,
+          { text: "> anomaly", type: "cmd" },
+          { text: "anomaly: command removed. use the [!] button or press Enter during exit 8.", type: "danger" },
+        ]);
         return;
       }
 
