@@ -188,12 +188,27 @@ a > img {
 .mosaicBack a {
   display: block;
   width: 100%;
+  height: 100%;    /* fill the absolute-positioned mosaicBack (400px) */
   font-size: 0;    /* hides inline alt text */
   color: transparent;
   overflow: hidden;
 }
 
-.mosaicBack a > img { width: 100%; display: block; }
+/* <picture> sits between <a> and <img> — must pass height through */
+.mosaicBack a > picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mosaicBack a > img,
+.mosaicBack a > picture > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;    /* fit the whole image inside the card, no cropping */
+  object-position: center; /* center both axes so empty space is even */
+  display: block;
+}
 
 /* Fallback shown when the Spotify image fails to load (bad response / offline) */
 .spotifyFallback {
