@@ -113,12 +113,38 @@ function About(props) {
         <h2 className={styles.h2}>About</h2>
         <div className={styles.gridContainer}>
           <div className={styles.gridItem}>
-            <p className={styles["para"]}>
-              I'm Shivcharan Thirunavukkarasu. A{" "}
-              <strong className="strong">CSE Grad</strong> who codes sometimes.
-              I'm currently on a quest to locate the elusive missing semicolon
-              ;)
-            </p>
+            {/* === BIO DIFF VARIANTS — pick one, delete the rest === */}
+
+            {/* ① Terminal (-/+) */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>① terminal</span>
+              <pre className={styles.diffTerminal}><div className={styles.diffMinus}>- CSE Grad who codes sometimes.</div><div className={styles.diffPlus}>+ CSE Grad. MLE2 @ Comcast. codes all the time now (unfortunately).</div></pre>
+            </div>
+
+            {/* ② GitHub highlight */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>② highlight</span>
+              <div><div className={styles.diffHighMinus}>CSE Grad who codes sometimes.</div><div className={styles.diffHighPlus}>CSE Grad. MLE2 @ Comcast. codes all the time now (unfortunately).</div></div>
+            </div>
+
+            {/* ③ Side by side */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>③ side-by-side</span>
+              <div className={styles.diffSplit}>
+                <span className={styles.diffSplitOld}>CSE Grad who codes sometimes.</span>
+                <span className={styles.diffSplitNew}>CSE Grad. MLE2 @ Comcast. codes all the time now (unfortunately).</span>
+              </div>
+            </div>
+
+            {/* ④ Inline strikethrough */}
+            <div className={styles.diffBlock}>
+              <span className={styles.diffLabel}>④ inline</span>
+              <p className={styles["para"]}>
+                I'm Shivcharan Thirunavukkarasu. A <span className={styles.diffInlineMinus}>CSE Grad who codes sometimes.</span>{" "}
+                <span className={styles.diffInlinePlus}>CSE Grad. MLE2 @ Comcast. codes all the time now (unfortunately).</span>{" "}
+                I'm currently on a quest to locate the elusive missing semicolon ;)
+              </p>
+            </div>
 
             {/* Fake macOS-style terminal chrome */}
             <div className={styles["fakeMenu"]}>

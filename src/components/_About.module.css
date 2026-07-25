@@ -95,6 +95,65 @@
   /* width: 75%; */
   /* margin-left: 50px;; */
 }
+
+/* ── Bio diff variants ─────────────────────────────────── */
+.diffBlock {
+  margin-bottom: 1.4rem;
+  font-family: var(--font-mono);
+}
+.diffLabel {
+  display: block;
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+/* ① terminal */
+.diffTerminal { margin: 0; background: transparent; font-size: 0.95rem; }
+.diffMinus { color: #ff6b6b; }
+.diffPlus  { color: #69db7c; }
+/* ② highlight */
+.diffHighMinus {
+  background: rgba(255,107,107,0.15);
+  border-left: 3px solid #ff6b6b;
+  padding: 3px 8px;
+  color: #ffaaaa;
+  margin-bottom: 2px;
+  font-size: 0.95rem;
+}
+.diffHighPlus {
+  background: rgba(105,219,124,0.15);
+  border-left: 3px solid #69db7c;
+  padding: 3px 8px;
+  color: #a9f0b4;
+  font-size: 0.95rem;
+}
+/* ③ side-by-side */
+.diffSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.diffSplitOld {
+  background: rgba(255,107,107,0.1);
+  color: #ff9999;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+.diffSplitNew {
+  background: rgba(105,219,124,0.1);
+  color: #a9f0b4;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+/* ④ inline */
+.diffInlineMinus {
+  color: #ff6b6b;
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+.diffInlinePlus { color: #69db7c; }
 .strong {
   font-weight: bolder;
 }
