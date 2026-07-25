@@ -55,17 +55,16 @@
   border-bottom-right-radius: 5px;
   /* font-family: Monaco,Consola,"Lucida Console",monospace; */
   /* font-family: Monaco,Consolas, "Lucida Console", monospace; */
-  font-family: "Menlo", "Monaco", "Andale Mono", "lucida console", "Courier New",
-    monospace;
+  font-family: var(--font-mono);
 }
 
 .fakeScreen > div:not(:last-child) p:nth-child(even) {
-  color: #a22b2b;
+  color: var(--color-accent-danger);
   padding-bottom: 20px;
 }
 
 .fakeScreen a {
-  color: #2ba2a2;
+  color: var(--color-accent);
   text-decoration: none;
 }
 .cursor {

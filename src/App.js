@@ -1,11 +1,10 @@
 import "./App.css";
-import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import aboutData from "./content/about";
 import projectData from "./content/projects";
 
 const About = lazy(() => import("./components/About"));
-const Construction = lazy(() => import("./components/Construction"));
 const ContactForm = lazy(() => import("./components/Contact"));
 const Error404 = lazy(() => import("./components/Error404"));
 const Footer = lazy(() => import("./components/Footer"));
@@ -17,12 +16,6 @@ const ScrollUp = lazy(() => import("./components/ScrollUp"));
 
 function App() {
   const [isTabActive, setIsTabActive] = useState(true);
-  const activeTitle = "Shivi";
-  const inactiveTitle = "Shh...secret tab";
-
-  const updateTitle = () => {
-    document.title = isTabActive ? activeTitle : inactiveTitle;
-  };
 
   useEffect(() => {
     document.addEventListener("DOMContentLoaded", function (event) {
@@ -50,24 +43,22 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.addEventListener("visibilitychange", () => {
+    const handleVisibilityChange = () => {
       setIsTabActive(!document.hidden);
-    });
+    };
 
-    updateTitle();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.title = isTabActive ? "Shivi" : "Shh...secret tab";
 
     return () => {
-      document.removeEventListener("visibilitychange", () => {
-        setIsTabActive(!document.hidden);
-      });
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isTabActive]);
 
   return (
     <Router>
       <Suspense fallback={<div></div>}>
-        <Suspense fallback={<div></div>}>
-          <Routes>
+        <Routes>
             <Route
               exact
               path="/portfolio"
@@ -87,7 +78,6 @@ function App() {
             />
             <Route path="*" element={<Error404 />} />
           </Routes>
-        </Suspense>
       </Suspense>
     </Router>
   );

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./_Home.module.css";
+import { COLOR_MATRIX } from "../utils/tokens";
 
 const MatrixAnimation = ({ startAnimation }) => {
   const canvasRef = useRef(null);
@@ -21,7 +22,6 @@ const MatrixAnimation = ({ startAnimation }) => {
     canvas.height = window.innerHeight;
 
     const columns = Math.floor(canvas.width / fontSize) + 10;
-    const rows = Math.floor(canvas.height / fontSize);
 
     const matrix = [];
     for (let i = 0; i < columns; i++) {
@@ -32,7 +32,7 @@ const MatrixAnimation = ({ startAnimation }) => {
       context.fillStyle = "rgba(0, 0, 0, 0.05)";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.fillStyle = "#626e5e";
+      context.fillStyle = COLOR_MATRIX;
       context.font = fontSize + "px monospace";
 
       for (let i = 0; i < matrix.length; i++) {
@@ -50,10 +50,12 @@ const MatrixAnimation = ({ startAnimation }) => {
 
     function animateMatrix() {
       drawMatrix();
-      requestAnimationFrame(animateMatrix);
+      rafId = requestAnimationFrame(animateMatrix);
     }
 
-    animateMatrix();
+    let rafId = requestAnimationFrame(animateMatrix);
+
+    return () => cancelAnimationFrame(rafId);
   }, [startAnimation]);
 
   return <canvas className={styles["matrix"]} id="matrix" ref={canvasRef} />;

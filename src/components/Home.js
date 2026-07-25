@@ -1,14 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
-import swal from "sweetalert";
 import Swal from "sweetalert2";
+import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
 
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
   const [showArrow, setShowArrow] = useState(true);
-  const canvasRef = useRef(null);
   useEffect(() => {
     async function loadTask1() {
       await task1();
@@ -41,8 +40,8 @@ const Home = () => {
         cancelButtonText: "No",
         // confirmButtonColor: "#3085d6",
         // cancelButtonColor: "#d33",
-        confirmButtonColor: "#2ba2a2",
-        cancelButtonColor: "#a22b2b",
+        confirmButtonColor: COLOR_ACCENT,
+        cancelButtonColor: COLOR_ACCENT_DANGER,
         // width: "300",
       }).then((result) => {
         if (result.isConfirmed) {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import styles from "./_Navbar.module.css";
-import $ from "jquery";
 
 function Navbar() {
   const [isNavbarVisible, setIsNavbarVisible] = useState(false);
@@ -9,14 +8,7 @@ function Navbar() {
 
   useEffect(() => {
     function showNavbar() {
-      if (window.scrollY > window.innerHeight) {
-        setIsNavbarVisible(true);
-        $("#navbar").fadeIn(300);
-      } else {
-        setIsNavbarVisible(false);
-        $("#navbar").fadeOut(0);
-        // $("#navbar, #progress-container").slideUp(250);
-      }
+      setIsNavbarVisible(window.scrollY > window.innerHeight);
     }
 
     function updateWindowWidth() {
@@ -24,28 +16,23 @@ function Navbar() {
     }
 
     updateWindowWidth();
+    showNavbar();
 
-    $(window).on("scroll resize", showNavbar);
-    $(window).on("resize", updateWindowWidth);
+    window.addEventListener("scroll", showNavbar);
+    window.addEventListener("resize", showNavbar);
+    window.addEventListener("resize", updateWindowWidth);
 
     return () => {
-      $(window).off("scroll resize", showNavbar);
-      $(window).off("resize", updateWindowWidth);
+      window.removeEventListener("scroll", showNavbar);
+      window.removeEventListener("resize", showNavbar);
+      window.removeEventListener("resize", updateWindowWidth);
     };
   }, []);
 
   return (
     <nav
-      className={styles.navbar}
-      // style={
-      //   isNavbarVisible ? { visibility: "visible" } : { visibility: "hidden" }
-      // }
+      className={`${styles.navbar} ${isNavbarVisible && windowWidth >= 768 ? styles.navbarVisible : ""}`}
       id="navbar"
-      style={
-        windowWidth >= 768
-          ? { visibility: "visible" }
-          : { visibility: "hidden" }
-      }
     >
       <ul>
         <li>

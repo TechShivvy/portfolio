@@ -1,14 +1,22 @@
 .navbar {
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
   position: fixed;
   top: 0;
   width: 100%;
-  background-color: black;
-  color: #fff;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   text-align: center;
   z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.navbarVisible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .navbar ul {
@@ -21,13 +29,13 @@
 
 .navbar a {
   text-decoration: none;
-  color: #fff;
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .navbar a {
   text-decoration: none;
-  color: #fff;
+  color: var(--color-text);
   display: inline-block;
   position: relative;
 }
@@ -46,12 +54,12 @@
 }
 
 .navbar a:hover::before {
-  color: #2ba2a2;
+  color: var(--color-accent);
   transform: translateX(-5px);
 }
 
 .navbar a:hover::after {
-  color: #2ba2a2;
+  color: var(--color-accent);
   transform: translateX(5px);
 }
 

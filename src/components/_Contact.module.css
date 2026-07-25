@@ -20,7 +20,7 @@
   display: block;
   width: 25px;
   margin-top: 20px;
-  border-bottom: 4px solid #2ba2a2;
+  border-bottom: 4px solid var(--color-accent);
 }
 
 .form-container {
