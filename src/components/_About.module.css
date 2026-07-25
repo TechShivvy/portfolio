@@ -201,27 +201,27 @@ a > img {
    request doesn't bleed through sub-pixel tile gaps at high zoom levels. */
 .mosaicBack a {
   display: block;
-  width: 100%;
-  height: 100%;    /* fill the absolute-positioned mosaicBack (400px) */
-  font-size: 0;    /* hides inline alt text */
+  max-width: 100%;  /* don't overflow card horizontally */
+  font-size: 0;     /* hides inline alt text */
   color: transparent;
   overflow: hidden;
+  /* width/height intentionally omitted — shrinks to image size so genuine
+     gaps around the image fall outside <a> and can toggle the pin state */
 }
 
-/* <picture> sits between <a> and <img> — must pass height through */
+/* <picture> sits between <a> and <img> */
 .mosaicBack a > picture {
   display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .mosaicBack a > img,
 .mosaicBack a > picture > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;    /* fit the whole image inside the card, no cropping */
-  object-position: center; /* center both axes so empty space is even */
   display: block;
+  max-height: 400px; /* cap at card height */
+  max-width: 100%;   /* cap at card width */
+  width: auto;
+  height: auto;
+  /* Natural sizing: gaps around the image are real DOM space outside <a> */
 }
 
 /* Fallback shown when the Spotify image fails to load (bad response / offline) */
