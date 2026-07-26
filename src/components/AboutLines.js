@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "../components/_About.module.css";
+import styles from "./_About.module.css";
 
 function AboutLines({ data }) {
   // data=data.aboutData
