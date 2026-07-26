@@ -33,8 +33,9 @@ const MatrixAnimation = ({ startAnimation }) => {
       canvas.height = cssH;
       const columns = Math.floor(cssW / fontSize) + 1;
       if (columns > matrix.length) {
-        // grew wider - seed the new columns at the top
-        for (let i = matrix.length; i < columns; i++) matrix[i] = 1;
+        // grew wider - seed new columns at 0 so first char draws at y=0
+        // (no gap at the top of the viewport on first frame)
+        for (let i = matrix.length; i < columns; i++) matrix[i] = 0;
       } else {
         // shrank - drop the extra columns
         matrix.length = columns;
