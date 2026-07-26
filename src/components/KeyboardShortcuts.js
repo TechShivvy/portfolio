@@ -22,6 +22,14 @@ const ACTIONS = {
   a: { label: "replay all", run: () => replay({ splash: true, matrix: true }) },
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
+  6: { label: "67", run: () => {
+    if (document.body.classList.contains("sixseven")) {
+      document.body.classList.remove("sixseven");
+    } else {
+      document.body.classList.add("sixseven");
+      setTimeout(() => document.body.classList.remove("sixseven"), 6700);
+    }
+  }},
   q: { label: "suicide", run: () => window.location.replace("about:blank") },
 };
 
@@ -35,6 +43,7 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "a"], desc: "replay all (splash + matrix)" },
   { keys: ["Ctrl+K", "r"], desc: "raw HTML portfolio (no CSS)" },
   { keys: ["Ctrl+K", "x"], desc: "tenet (reverse intro + close tab)" },
+  { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 6.7s)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },
   { keys: ["Enter"], desc: "run command" },

@@ -101,3 +101,19 @@ body {
 body::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
 }
+
+/* ── 67 easter egg - full-site skew (Six Seven / Google easter egg) ───────── */
+/* The Google 67 effect is a diagonal skew: the page shears so the top slides
+   one way while the bottom slides the other, making it look diagonally
+   elongated like a parallelogram — not a hanging swing, not a head-bob. */
+@keyframes sixseven {
+  0%   { transform: skewY(0deg);   }
+  25%  { transform: skewY(7deg);   }
+  50%  { transform: skewY(0deg);   }
+  75%  { transform: skewY(-7deg);  }
+  100% { transform: skewY(0deg);   }
+}
+body.sixseven {
+  animation: sixseven 0.32s ease-in-out infinite;
+  transform-origin: center center;
+}

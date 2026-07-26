@@ -287,6 +287,19 @@ function buildCommands(scrollToSection) {
       ];
     },
 
+    "67": () => {
+      if (document.body.classList.contains("sixseven")) {
+        document.body.classList.remove("sixseven");
+        return [{ text: ">> 67 off.", type: "info" }];
+      }
+      document.body.classList.add("sixseven");
+      setTimeout(() => document.body.classList.remove("sixseven"), 6700);
+      return [
+        { text: ">> 67.", type: "danger" },
+        { text: "ride or die.", type: "output" },
+      ];
+    },
+
     spotify: (args) => {
       if (args[0] === "-h" || args[0] === "--help")
         return [{ text: "spotify --now-playing - what i'm grooving to right now", type: "info" }];
