@@ -140,6 +140,7 @@
 
 .hint {
   margin: 12px 0 0;
+  padding-top: 12px;
   opacity: 0.45;
   font-size: 0.65rem;
   text-align: center;
