@@ -33,14 +33,19 @@ function buildCommands(scrollToSection) {
       { text: "  tech         — current tech rabbit holes", type: "output" },
       { text: "  music        — what's playing", type: "output" },
       { text: "  spotify      — same as music", type: "output" },
-      { text: "  matrix       — replay the matrix", type: "output" },
-      { text: "  matrix fps N — set matrix rain to N fps (0 = native)", type: "output" },
-      { text: "  clear        — clear terminal", type: "output" },
-      { text: "  history      — command history", type: "output" },
-      { text: "  ls           — list... something", type: "output" },
-      { text: "  sudo         — try it ;)", type: "output" },
-      { text: "  exit 8       — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
-      { text: "  suicide      — closes the tab. for real.", type: "output" },
+      { text: "  matrix           — replay the matrix", type: "output" },
+      { text: "  matrix fps N     — set matrix rain to N fps (0 = native)", type: "output" },
+      { text: "  matrix rainbow   — enable rainbow matrix mode", type: "output" },
+      { text: "  matrix reset     — restore default matrix color", type: "output" },
+      { text: "  git log          — career timeline as git commits", type: "output" },
+      { text: "  timeline         — jump to timeline section", type: "output" },
+      { text: "  portfolio --no-css — brutalist HTML version (1997 edition)", type: "output" },
+      { text: "  clear            — clear terminal", type: "output" },
+      { text: "  history          — command history", type: "output" },
+      { text: "  ls               — list... something", type: "output" },
+      { text: "  sudo             — try it ;)", type: "output" },
+      { text: "  exit 8           — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
+      { text: "  suicide          — closes the tab. for real.", type: "output" },
     ],
 
     whoami: () => [
@@ -102,9 +107,57 @@ function buildCommands(scrollToSection) {
           { text: `>> matrix fps set to ${val === 0 ? "native refresh rate" : `${val} fps`}`, type: "info" },
         ];
       }
+      if (args.length && args[0] === "rainbow") {
+        window.__matrixRainbow = true;
+        return [{ text: ">> matrix: rainbow mode enabled. you're a person of culture.", type: "info" }];
+      }
+      if (args.length && args[0] === "reset") {
+        window.__matrixRainbow = false;
+        return [{ text: ">> matrix: color reset to default.", type: "info" }];
+      }
       sessionStorage.removeItem("hasRun");
       window.location.reload();
       return [{ text: ">> reloading matrix...", type: "info" }];
+    },
+
+    git: (args) => {
+      if (args[0] !== "log") {
+        return [{ text: `git: '${args[0] || ""}' is not a git command. Try 'git log'.`, type: "danger" }];
+      }
+      return [
+        { text: "commit 0f1a2b3  (HEAD -> main)", type: "accent" },
+        { text: "Date:   Jun 2025", type: "output" },
+        { text: "    chore: still shipping. semicolon still missing.", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit f2a0c81", type: "accent" },
+        { text: "Date:   Jan 2025", type: "output" },
+        { text: "    feat(career): promoted → MLE2 @ Comcast", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit 9c3d77e", type: "accent" },
+        { text: "Date:   Jan 2024", type: "output" },
+        { text: "    feat(career): joined Comcast as MLE1", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit 4f8e21b  (tag: v4.0.0)", type: "accent" },
+        { text: "Date:   May 2023", type: "output" },
+        { text: "    feat: graduated. shipped to production.", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit a1b2c3d", type: "accent" },
+        { text: "Date:   Sep 2019", type: "output" },
+        { text: "    Initial commit: enrolled in B.E. CSE, SSNCE", type: "output" },
+      ];
+    },
+
+    portfolio: (args) => {
+      if (args[0] === "--no-css") {
+        setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
+        return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
+      }
+      return [{ text: "usage: portfolio --no-css", type: "danger" }];
+    },
+
+    timeline: () => {
+      scrollToSection("timeline");
+      return [{ text: ">> scrolling to timeline...", type: "info" }];
     },
 
     ls: () => [
@@ -156,6 +209,11 @@ function buildCommands(scrollToSection) {
 
     clear: () => [],
     history: () => [],
+
+    "--no-css": () => {
+      setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
+      return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
+    },
   };
 }
 
@@ -214,17 +272,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   // ── Scroll ONLY within the output div (not the whole page) ───────────────
   useEffect(() => {
     if (!outputRef.current) return;
-    if (isCommandScroll.current) {
-      // After a command: scroll so the "> cmd" line sits at the top of the pane.
-      // Use the captured content-bottom position (not scrollHeight, which can
-      // equal clientHeight when content doesn't overflow before the command).
-      outputRef.current.scrollTop = cmdScrollPos.current;
-      isCommandScroll.current = false;
-      cmdScrollPos.current = null;
-    } else {
-      // Boot sequence: always follow the latest line (scroll to bottom)
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
-    }
+    // Always follow the latest line — the newest output sits at the bottom of
+    // the fixed-height pane, just like a real terminal.
+    outputRef.current.scrollTop = outputRef.current.scrollHeight;
   }, [lines]);
 
   // ── Boot sequence ─────────────────────────────────────────────────────────
@@ -357,7 +407,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             scrollingBack: false, cancelBackScroll: null,
             anomalyActive: false, removeEffect: null, expireTimer: null,
             anomalyFiredThisCorridor: false, isCurrentCorridorClean: true,
-            anomalyTriggerY: Infinity, scorePredictedThisCorridor: false,
+            anomalyTriggerY: Infinity, scorePredictedThisCorridor: false, verdictLocked: false,
+            _lastForwardT: null, // used by step() to normalise speed to real wall-clock time
           });
 
           window.scrollTo({ top: 0, behavior: "instant" });
@@ -377,7 +428,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const EFFECTS_SAFE = [
             (t) => { t.style.filter = "invert(1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "sepia(1) saturate(4) hue-rotate(300deg)"; return () => { t.style.filter = ""; }; },
-            (t) => { t.style.filter = "brightness(0.04)"; return () => { t.style.filter = ""; }; },
+            // brightness(0.04) is invisible on this dark (#000) theme — use a stark desaturated
+            // contrast instead that clearly reads as "wrong" even on a black background.
+            (t) => { t.style.filter = "saturate(0) contrast(6) brightness(1.8)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "blur(6px) saturate(0)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "invert(0.6) hue-rotate(100deg) saturate(3)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "contrast(20) brightness(0.3)"; return () => { t.style.filter = ""; }; },
@@ -385,6 +438,10 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             (t) => { t.style.filter = "brightness(8)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.transform = "scaleX(-1)"; return () => { t.style.transform = ""; }; },
             (t) => { t.style.transform = "scaleY(-1)"; return () => { t.style.transform = ""; }; },
+            // fontFamily on #root doesn't change canvas text (drawn with 'monospace' in JS)
+            // and most elements inherit the CSS variable explicitly — barely noticeable.
+            // Replace with a strong drop-shadow glitch that's always visible.
+            (t) => { t.style.filter = "hue-rotate(260deg) saturate(15) brightness(1.1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.fontFamily = '"Comic Sans MS",cursive'; return () => { t.style.fontFamily = ""; }; },
           ];
           const EFFECTS_HEAVY = [
@@ -482,16 +539,19 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const scrollBack = (corridorEl) => {
             st.cancelBackScroll?.();
             st.scrollingBack = true;
+            st._lastForwardT = null; // reset forward-speed clock so there's no big jump on resume
             let backRaf;
             const tick = () => {
               const top = corridorEl.getBoundingClientRect().top; // corridor top offset from viewport top
-              if (top >= -1) {
-                // At (or just past) the corridor top — snap it exactly to viewport top
-                window.scrollTo({ top: window.scrollY + top, left: 0, behavior: "instant" });
+              // Terminate within 3px — sub-pixel BoundingClientRect values can make the
+              // old ">= -1" threshold loop forever (stepPx rounds to 0, no progress).
+              if (top >= -3) {
+                if (top < 0) window.scrollTo({ top: Math.round(window.scrollY + top), left: 0, behavior: "instant" });
                 st.scrollingBack = false; st.cancelBackScroll = null; return;
               }
-              // Corridor top is above the viewport — scroll up toward it (no overshoot)
-              const stepPx = Math.min(28, -top);
+              // Eased deceleration: 35% of remaining distance per frame, min 4 px, max 60 px.
+              // Feels much smoother than a fixed step and never micro-loops at fractional px.
+              const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
               window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
               backRaf = requestAnimationFrame(tick);
             };
@@ -519,6 +579,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             st.isCurrentCorridorClean = isClean;
             st.anomalyFiredThisCorridor = false;
             st.scorePredictedThisCorridor = false;
+            st.verdictLocked = false;
             // Anchor the trigger to the corridor's REAL top so it never fires the
             // instant we scroll back (the old grid coord drifted from real layout).
             st.anomalyTriggerY = isClean
@@ -526,22 +587,50 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               : corridorRealTop(corridorIdx) + (0.1 + Math.random() * 0.3) * st.rootHeight;
           };
 
-          // ── Anomaly check: immediate score + scrollback ───────────────────
+          // ── Lock the verdict for the corridor we're leaving ───────────────
+          // Called when the next homescreen's number is about to become readable
+          // (its hero text touches the viewport bottom edge) OR at corridor exit —
+          // whichever comes first. After this the anomaly is no longer callable, so a
+          // player can't read the pre-set number and then decide. Idempotent.
+          // Returns true if this pushed the score to a win.
+          const lockCorridorVerdict = () => {
+            if (st.verdictLocked) return false;
+            st.verdictLocked = true;
+            if (st.isCurrentCorridorClean) {
+              // No anomaly, player didn't call → CLEAN PASS → score++
+              st.score = Math.min(st.score + 1, 9);
+              updateScoreUI();
+            } else if (st.anomalyFiredThisCorridor) {
+              // Anomaly appeared but was never called in time → MISSED
+              st.score = 0;
+              updateScoreUI();
+              setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
+            }
+            if (st.anomalyActive) {
+              if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+              st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
+            }
+            return st.score >= 9;
+          };
+
+          // ── Anomaly check: score + scrollback ─────────────────────────────
+          // A real anomaly is callable until its verdict locks — i.e. until the next
+          // corridor's homescreen number is about to enter view (hero touches the
+          // bottom edge). The 5s effect is only a visual flash; you can still call it
+          // after it fades, as long as the verdict hasn't locked.
           const triggerAnomalyCheck = () => {
             const currentCorridor = currentCorridorIdx();
             const corridorEl = corridorElFor(currentCorridor);
 
-            // Always clear the expire timer
+            // Clear the visual-expire timer + wipe any lingering effect
             if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-
-            const wasActive = st.anomalyActive;
             if (st.anomalyActive) {
               st.removeEffect?.();
               st.anomalyActive = false; st.removeEffect = null;
             }
 
-            if (wasActive) {
-              // Correct — score immediately
+            if (st.anomalyFiredThisCorridor && !st.verdictLocked) {
+              // Correct — a real anomaly fired in this corridor and is still callable
               st.score = Math.min(st.score + 1, 9);
               updateScoreUI();
               if (st.score >= 9) { st.winGame?.(); return; }
@@ -550,7 +639,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
                 type: "accent",
               }]);
             } else {
-              // False call — reset immediately
+              // False call (or too late — verdict already locked) — reset immediately
               const hadProgress = st.score > 0;
               if (hadProgress) { st.score = 0; updateScoreUI(); }
               setLines((prev) => [...prev, {
@@ -561,7 +650,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }]);
             }
 
-            // Fresh anomaly for same corridor, then scroll back to its top
+            // Fresh anomaly for the same corridor, then scroll back to its top
             resetForCorridor(currentCorridor);
             scrollBack(corridorEl);
           };
@@ -606,7 +695,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               scrollingBack: false, cancelBackScroll: null, rootHeight: 0, lastCorridor: 0,
               corridorFoundAnomaly: false, progressBarEl: null,
               anomalyFiredThisCorridor: false, isCurrentCorridorClean: true, anomalyTriggerY: Infinity,
-              scorePredictedThisCorridor: false,
+              scorePredictedThisCorridor: false, verdictLocked: false, _lastForwardT: null,
             });
           };
           st.teardown = teardown;
@@ -734,34 +823,26 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
           // ── Main scroll loop ────────────────────────────────────────────────────────────
           resetForCorridor(0); // prime corridor 0 anomaly
-          const step = () => {
+          const step = (now) => {
             const currentCorridor = currentCorridorIdx();
 
-            // Natural corridor exit — score the corridor we just LEFT, set up the new one
+            // Lock the verdict the instant the NEXT corridor's homescreen number is about
+            // to become readable — the moment its hero text touches the viewport bottom
+            // edge. After this the anomaly is no longer callable, so the player can't read
+            // the pre-set number and then turn back to game it.
+            if (!st.verdictLocked && !st.scrollingBack) {
+              const _nextClone = st.clones[currentCorridor]; // corridor currentCorridor+1's clone
+              const _nextHero = _nextClone && _nextClone.querySelector("#hackerText");
+              if (_nextHero && _nextHero.getBoundingClientRect().top <= window.innerHeight) {
+                if (lockCorridorVerdict()) { st.winGame?.(); return; }
+              }
+            }
+
+            // Natural corridor exit — set up the new corridor. The verdict for the corridor
+            // we left is normally already locked (above); this is just a safety fallback.
             if (currentCorridor > st.lastCorridor) {
               st.lastCorridor = currentCorridor;
-
-              if (!st.corridorFoundAnomaly) {
-                if (st.isCurrentCorridorClean) {
-                  // No anomaly, player didn’t press → CLEAN PASS → score++
-                  st.score = Math.min(st.score + 1, 9);
-                  updateScoreUI();
-                  if (st.score >= 9) { st.winGame?.(); return; }
-                } else if (st.anomalyFiredThisCorridor) {
-                  // Anomaly appeared but player scrolled past without calling → MISSED
-                  st.score = 0;
-                  updateScoreUI();
-                  setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
-                }
-              }
-
-              // Clean up any still-active effect before the new corridor
-              if (st.anomalyActive) {
-                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-                st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
-              }
-
-              st.corridorFoundAnomaly = false;   // reset for new corridor
+              if (lockCorridorVerdict()) { st.winGame?.(); return; }
               resetForCorridor(currentCorridor);
             }
 
@@ -771,8 +852,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               const targetEl = corridorElFor(currentCorridor);
               st.removeEffect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)](targetEl);
               st.anomalyActive = true;
-              // 5-second display window — effect disappears but no scroll-back here;
-              // scoring consequence comes when player exits the corridor without pressing.
+              // 5-second VISUAL flash only — the anomaly stays *callable* for the rest of
+              // the corridor (via anomalyFiredThisCorridor) even after the effect fades.
               st.expireTimer = setTimeout(() => {
                 if (st.anomalyActive) {
                   st.removeEffect?.();
@@ -781,23 +862,21 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }, 5000);
             }
 
-            // At 70% of corridor: expire anomaly effect + pre-update next clone’s score display
+            // At 70% of corridor: pre-set the next clone's homescreen number to its FINAL
+            // settled value before it scrolls into view — a clean pass shows +1, an
+            // uncalled anomaly shows 0 (a miss). The next homescreen isn't visible yet at
+            // 70%, so this leaks nothing; if the player calls the anomaly after 70% they
+            // turn back (away from that clone) and a re-walk re-predicts. Only mark
+            // predicted once the clone actually exists so it retries for tall corridors
+            // whose next clone is appended after the 70% mark.
             if (!st.scrollingBack && window.scrollY >= corridorRealTop(currentCorridor) + 0.7 * st.rootHeight) {
-              if (st.anomalyActive) {
-                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-                st.removeEffect?.();
-                st.anomalyActive = false;
-                st.removeEffect = null;
-              }
               if (!st.scorePredictedThisCorridor) {
-                st.scorePredictedThisCorridor = true;
                 const _nextClone = st.clones[currentCorridor]; // corridor currentCorridor+1's clone
                 if (_nextClone) {
+                  st.scorePredictedThisCorridor = true;
                   let _pred = st.score;
-                  if (!st.corridorFoundAnomaly) {
-                    if (st.isCurrentCorridorClean) _pred = Math.min(st.score + 1, 9);
-                    else if (st.anomalyFiredThisCorridor) _pred = 0;
-                  }
+                  if (st.isCurrentCorridorClean) _pred = Math.min(st.score + 1, 9);
+                  else if (st.anomalyFiredThisCorridor) _pred = 0;
                   const _ch = _nextClone.querySelector("#hackerText");
                   if (_ch) { _ch.textContent = `${_pred} \u2193`; _ch.style.color = "#2ba2a2"; }
                 }
@@ -809,7 +888,16 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               createAndAppendClone();
             }
 
-            if (!st.scrollingBack) window.scrollTo({ top: window.scrollY + 8, left: 0, behavior: "instant" });
+            if (!st.scrollingBack) {
+              // Normalise scroll speed to wall-clock time so it's the same at 60 Hz,
+              // 90 Hz, and 120 Hz (without this, speed doubles on high-refresh displays).
+              const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
+              st._lastForwardT = now;
+              const px = Math.max(1, Math.round(500 * dt / 1000)); // target 500 px/s
+              window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
+            } else {
+              st._lastForwardT = null; // reset while paused so first forward frame isn't a big jump
+            }
             exitScrollRef.current = requestAnimationFrame(step);
           };
           exitScrollRef.current = requestAnimationFrame(step);

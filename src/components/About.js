@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./_About.module.css";
 import AboutLines from "../utils/about";
 import InteractiveTerminal from "./InteractiveTerminal";
 import useFadeIn from "../utils/useFadeIn";
+import aboutData from "../content/about";
 
 // ─── Spotify mosaic-reveal card ──────────────────────────────────────────────
 const COLS = 24;
@@ -17,14 +18,39 @@ const TILES = Array.from({ length: COLS * ROWS }, (_, idx) => {
 });
 
 const HREF     = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&redirect=true";
-const IMG_SRC  = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true";
-const IMG_MOBILE = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=novatorem&show_offline=false&background_color=transparent&interchange=true&bar_color=53b14f&bar_color_cover=true";
+// Two Spotify widget themes with very different natural shapes:
+//   default   → 320×445 tall "cover" card  → suits a narrow card
+//   novatorem → 320×100 wide "now playing" bar → suits a wide card
+const IMG_TALL = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=default&show_offline=false&background_color=transparent&text_color=cdd6f4&icon_color=cba6f7&title_color=94e2d5&interchange=true&bar_color_cover=true";
+const IMG_WIDE = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gshy2wa8eeq8clpv8sgghh4p&cover_image=true&theme=novatorem&show_offline=false&background_color=transparent&interchange=true&bar_color=53b14f&bar_color_cover=true";
+
+// Above this rendered card width a tall cover would become unreasonably large,
+// so switch to the wide "now playing" bar instead. Driven by the card's actual
+// measured width (stable — width is set by the column, not the aspect ratio),
+// so it always matches the card's real shape at any zoom or viewport.
+const WIDE_THRESHOLD = 420;
 
 function SpotifyMosaic() {
+  const cardRef = useRef(null);
   const [hovered, setHovered]     = useState(false);
   // false = follow hover (default); true = pinned revealed (click to stick)
   const [pinned, setPinned]       = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
+  const [wide, setWide]           = useState(false);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => {
+      setWide(entry.contentRect.width >= WIDE_THRESHOLD);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const spotifySrc = wide ? IMG_WIDE : IMG_TALL;
+  // Match the card's aspect ratio to the chosen theme so the artwork fills it.
+  const cardStyle = { aspectRatio: wide ? "320 / 100" : "320 / 445" };
 
   // Reveal when hovering OR when pinned; pinning just keeps hover's effect locked
   const revealed = pinned || hovered;
@@ -37,6 +63,8 @@ function SpotifyMosaic() {
 
   return (
     <div
+      ref={cardRef}
+      style={cardStyle}
       className={`${styles.mosaicCard} ${pinned ? styles.mosaicCardPinned : ""}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -51,18 +79,11 @@ function SpotifyMosaic() {
           </div>
         ) : (
           <a href={HREF} target="_blank" rel="noopener noreferrer">
-            <picture>
-              {/* ≥1920px: card approaches square (col ≈ 400px wide) → default (wide) theme */}
-              <source media="(min-width: 1920px)" srcSet={IMG_SRC} />
-              {/* ≤768px: card is landscape 16:9 → default (wide) theme */}
-              <source media="(max-width: 768px)" srcSet={IMG_SRC} />
-              {/* 769px–1919px: card is portrait rectangle → novatorem (tall) theme */}
-              <img
-                src={IMG_MOBILE}
-                alt="Spotify Listening Activity"
-                onError={() => setImgFailed(true)}
-              />
-            </picture>
+            <img
+              src={spotifySrc}
+              alt="Spotify Listening Activity"
+              onError={() => setImgFailed(true)}
+            />
           </a>
         )}
       </div>
@@ -96,7 +117,7 @@ function SpotifyMosaic() {
   );
 }
 
-function About(props) {
+function About() {
   const fadeRef = useFadeIn();
   // Toggle between dummy (static) and interactive (real) terminal
   const [interactive, setInteractive] = useState(false);
@@ -150,10 +171,10 @@ function About(props) {
                   className={interactive ? styles.terminalHidden : undefined}
                   aria-hidden={interactive || undefined}
                 >
-                  <AboutLines data={props.data} />
+                  <AboutLines data={aboutData} />
                 </div>
                 <div
-                  className={interactive ? undefined : styles.terminalHidden}
+                  className={`${styles.terminalSlot} ${interactive ? "" : styles.terminalHidden}`}
                   aria-hidden={!interactive || undefined}
                 >
                   <InteractiveTerminal

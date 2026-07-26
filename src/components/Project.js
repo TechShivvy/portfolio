@@ -2,10 +2,10 @@ import React from "react";
 import styles from "./_Project.module.css";
 import ProjectCard from "../utils/project";
 import useFadeIn from "../utils/useFadeIn";
+import projectData from "../content/projects";
 
-function Project(props) {
+function Project() {
   const fadeRef = useFadeIn();
-  const { data } = props;
 
   return (
     <div className={styles["project-section"]} id="projects" ref={fadeRef}>
@@ -16,7 +16,7 @@ function Project(props) {
           className={`row ${styles["project-container"]}`}
           id="project-container"
         >
-          {data.map((project, index) => (
+          {projectData.map((project, index) => (
             <ProjectCard key={index} project={project} />
           ))}
         </div>

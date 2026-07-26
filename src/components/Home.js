@@ -1,15 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
 import Swal from "sweetalert2";
 import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
+import useKonami from "../utils/konami";
 
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
   const [showArrow, setShowArrow] = useState(true);
   const [showHint, setShowHint] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
+  const [rainbowToast, setRainbowToast] = useState(null);
+
+  const handleKonami = useCallback(() => {
+    const next = !window.__matrixRainbow;
+    window.__matrixRainbow = next;
+    setRainbowToast(next ? ">> rainbow matrix: ON" : ">> rainbow matrix: OFF");
+    setTimeout(() => setRainbowToast(null), 2200);
+  }, []);
+
+  useKonami(handleKonami);
 
   useEffect(() => {
     async function loadTask1() {
@@ -94,6 +105,14 @@ const Home = () => {
           S h i v c h a r a n
         </h1>
       </div>
+      {rainbowToast && (
+        <div style={{
+          position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
+          background: "rgba(0,0,0,0.85)", color: "#fff", padding: "8px 20px",
+          borderRadius: "6px", fontSize: "0.95rem", zIndex: 9999,
+          pointerEvents: "none", letterSpacing: "0.02em",
+        }}>{rainbowToast}</div>
+      )}
       {startAnimation && showHint && (
         <div className={`${styles["scroll-hint"]} ${hintVisible ? styles["scroll-hint--visible"] : ""}`}>
           <div className={styles["down-arrow"]}></div>
