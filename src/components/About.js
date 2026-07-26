@@ -48,6 +48,20 @@ function SpotifyMosaic() {
     return () => ro.disconnect();
   }, []);
 
+  // Unpin card if clicking outside of it
+  useEffect(() => {
+    if (!pinned) return;
+
+    const handleClickOutside = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setPinned(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [pinned]);
+
   const spotifySrc = wide ? IMG_WIDE : IMG_TALL;
   // Match the card's aspect ratio to the chosen theme so the artwork fills it.
   const cardStyle = { aspectRatio: wide ? "320 / 100" : "320 / 445" };
