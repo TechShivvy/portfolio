@@ -75,7 +75,16 @@
          never shown in the fallback font on the first cold load. */
       #preloader {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        /* Pin BOTH dimensions to fixed viewport units so the centered icon
+           doesn't drift while the fixed containing block settles to its final
+           size on the first frames of load (mobile). svh/svw are constants;
+           inset:0 / vh / dvh can change mid-load and cause the icon to slide. */
+        width: 100vw;
+        width: 100svw;
+        height: 100vh;
+        height: 100svh;
         z-index: 999999;
         background: #000;
         display: flex;
@@ -96,15 +105,18 @@
         align-items: center;
         justify-content: center;
       }
-      /* Circular progress ring — sweeps once from the top all the way
-         around the icon, like a loading indicator. No scaling / fading of
-         the icon, just the arc drawing around. */
+      /* Circular loader — a fixed arc segment that spins around the icon.
+         Uses a GPU-composited transform (rotate) instead of animating
+         stroke-dashoffset, so it stays smooth on mobile even while the main
+         thread is busy loading the bundle/font. */
       #preloader .pre-ring {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
-        transform: rotate(-90deg); /* start the sweep at top center */
+        transform-origin: 50% 50%;
+        will-change: transform;
+        animation: pre-spin 0.9s linear infinite;
       }
       #preloader .pre-track {
         fill: none;
@@ -116,18 +128,18 @@
         stroke: #a22b2b;
         stroke-width: 5;
         stroke-linecap: round;
-        stroke-dasharray: 283; /* 2 * PI * r (r = 45) */
-        stroke-dashoffset: 283;
-        animation: pre-draw 2.1s ease-in-out forwards;
+        /* ~25% of the circumference visible (2 * PI * r, r = 45 => ~283). */
+        stroke-dasharray: 71 283;
+        stroke-dashoffset: 0;
       }
       #preloader .pre-ico {
         position: relative;
         width: 40px;
         height: 40px;
       }
-      @keyframes pre-draw {
+      @keyframes pre-spin {
         to {
-          stroke-dashoffset: 0;
+          transform: rotate(360deg);
         }
       }
     </style>
