@@ -20,21 +20,21 @@ function buildVirtualFiles(scrollToSection) {
   const resumeEntry  = ABOUT.find((e) => e.input === "Shivcharan.resume");
 
   return {
-    "whoami.txt": () => [
-      { text: "Shivcharan Thirunavukkarasu", type: "accent" },
-      { text: "CSE grad - developer - gamer - cube-scrambler", type: "output" },
-      { text: "Currently on a quest to locate the elusive missing semicolon ;)", type: "output" },
-    ],
     "skills.txt": () => {
       const entry = ABOUT.find((e) => e.input === "Shivcharan.skills");
       return [{ text: entry ? entry.return : "[]", type: "accent" }];
     },
     "contact.txt": () => {
       if (!contactEntry || !Array.isArray(contactEntry.return)) return [];
-      return contactEntry.return.map((link) => ({
-        text: link.text, type: "link",
-        href: link.href, target: link.target, rel: link.rel || "noopener noreferrer",
-      }));
+      return contactEntry.return.map((link) => {
+        const value = link.href
+          .replace(/^mailto:/, "")
+          .replace(/^https?:\/\/(www\.)?/, "");
+        return {
+          text: `${(link.text + ":").padEnd(10)}${value}`, type: "link",
+          href: link.href, target: link.target, rel: link.rel || "noopener noreferrer",
+        };
+      });
     },
     "resume.txt": () => {
       if (resumeEntry && Array.isArray(resumeEntry.return) && resumeEntry.return[0]) {
@@ -62,12 +62,13 @@ function buildCommands(scrollToSection) {
   return {
     help: () => [
       { text: "Available commands:", type: "info" },
+      { text: "  whoami              - print current user identity", type: "output" },
       { text: "  ls                  - list files (cat <file> to read)", type: "output" },
-      { text: "  cat <file>          - read a file (e.g. cat whoami.txt)", type: "output" },
+      { text: "  cat <file>          - read a file (e.g. cat skills.txt)", type: "output" },
       { text: "  git log             - career timeline as git commits", type: "output" },
       { text: "  timeline            - jump to timeline section", type: "output" },
       { text: "  projects            - jump to projects section", type: "output" },
-      { text: "  portfolio --no-css  - brutalist HTML version (1997 edition)", type: "output" },
+      { text: "  portfolio --no-css  - brutalist HTML version (1997 edition)  [Ctrl+K r]", type: "output" },
       { text: "  matrix [sub]        - matrix rain controls (matrix -h for sub-commands)", type: "output" },
       { text: "  replay [sub]        - replay intro sequences (replay -h for sub-commands)  [Ctrl+K s/m/a]", type: "output" },
       { text: "  clear               - clear terminal", type: "output" },
@@ -85,7 +86,17 @@ function buildCommands(scrollToSection) {
         { text: "drwxr-xr-x  projects/", type: "output" },
         { text: "drwxr-xr-x  beyond-code/", type: "output" },
         ...names.map((n) => ({ text: `-rw-r--r--  ${n}`, type: "output" })),
-        { text: "-rw-r--r--  .secrets  (permission denied)", type: "danger" },
+        { text: "-rw-------  .secrets", type: "danger" },
+      ];
+    },
+
+    whoami: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "whoami - print the current user identity.", type: "info" }];
+      return [
+        { text: "Shivcharan Thirunavukkarasu", type: "accent" },
+        { text: "CSE grad - developer - gamer - cube-scrambler", type: "output" },
+        { text: "Currently on a quest to locate the elusive missing semicolon ;)", type: "output" },
       ];
     },
 
@@ -95,7 +106,10 @@ function buildCommands(scrollToSection) {
           { text: "usage: cat <file>", type: "info" },
           { text: "  available: " + Object.keys(virtualFiles).join(", "), type: "output" },
         ];
-        return [{ text: "cat <file> - read a virtual file. try: cat whoami.txt or just cat whoami", type: "info" }];
+        return [{ text: "cat <file> - read a virtual file. try: cat skills.txt or cat contact.txt", type: "info" }];
+      }
+      if (args[0] === ".secrets" || args[0] === "secrets") {
+        return [{ text: "cat: .secrets: Permission denied", type: "danger" }];
       }
       const name = args[0].endsWith(".txt") ? args[0] : args[0] + ".txt";
       if (virtualFiles[name]) return virtualFiles[name]();
@@ -1031,6 +1045,28 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
     if (e.key === "Enter") {
       runCommand(input);
       setInput("");
+    } else if (e.key === "Tab") {
+      // Autocomplete command names, or file names for the current argument.
+      e.preventDefault();
+      const parts = input.split(/\s+/);
+      const editingCommand = parts.length <= 1;
+      const token = (parts[parts.length - 1] || "").toLowerCase();
+      if (!token) return;
+      const pool = editingCommand
+        ? Object.keys(buildCommands(scrollToSection)).filter((c) => !c.startsWith("-"))
+        : Object.keys(buildVirtualFiles(scrollToSection));
+      const matches = pool.filter((c) => c.startsWith(token));
+      if (matches.length === 0) return;
+      // Longest common prefix across all matches.
+      let prefix = matches[0];
+      for (const m of matches) {
+        while (!m.startsWith(prefix)) prefix = prefix.slice(0, -1);
+      }
+      parts[parts.length - 1] = prefix;
+      setInput(parts.join(" "));
+      if (matches.length > 1) {
+        setLines((prev) => [...prev, { text: matches.join("   "), type: "output" }]);
+      }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       const next = Math.min(histIdx + 1, historyList.length - 1);
@@ -1045,7 +1081,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   };
 
   // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "ls", "cat whoami.txt", "cat skills.txt", "cat contact.txt", "git log", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
+  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
 
   return (
     <div className={styles.interactiveTerminal}>
