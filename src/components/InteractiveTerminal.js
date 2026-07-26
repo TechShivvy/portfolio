@@ -12,53 +12,97 @@ const BOOT_LINES = [
   "Ready. Type 'help' for available commands.",
 ];
 
-// ─── Command definitions ────────────────────────────────────────────────────
-function buildCommands(scrollToSection) {
+// ─── Virtual filesystem ──────────────────────────────────────────────────────
+// Files visible under `ls` and readable via `cat <name>`.
+// Each entry: { name, type: "file"|"dir", fn: () => Line[] }
+function buildVirtualFiles(scrollToSection) {
   const contactEntry = ABOUT.find((e) => e.input === "Shivcharan.contactInfo");
   const resumeEntry  = ABOUT.find((e) => e.input === "Shivcharan.resume");
 
   return {
-    help: () => [
-      { text: "Available commands:", type: "info" },
-      { text: "  whoami       - who is this person?", type: "output" },
-      { text: "  skills       - tech stack", type: "output" },
-      { text: "  projects     - jump to projects section", type: "output" },
-      { text: "  contact      - contact info", type: "output" },
-      { text: "  resume       - open résumé PDF", type: "output" },
-      { text: "  interests    - list all interest areas", type: "output" },
-      { text: "  games        - games I play", type: "output" },
-      { text: "  anime        - shows I watch", type: "output" },
-      { text: "  cycling      - km and routes", type: "output" },
-      { text: "  rubik        - cube PBs", type: "output" },
-      { text: "  tech         - current tech rabbit holes", type: "output" },
-      { text: "  music        - what's playing", type: "output" },
-      { text: "  spotify      - same as music", type: "output" },
-      { text: "  matrix fps N     - set matrix rain to N fps (0 = native)", type: "output" },
-      { text: "  matrix rainbow   - enable rainbow matrix mode", type: "output" },
-      { text: "  matrix reset     - restore default matrix color", type: "output" },
-      { text: "  git log          - career timeline as git commits", type: "output" },
-      { text: "  timeline         - jump to timeline section", type: "output" },
-      { text: "  portfolio --no-css - brutalist HTML version (1997 edition)", type: "output" },
-      { text: "  clear            - clear terminal", type: "output" },
-      { text: "  history          - command history", type: "output" },
-      { text: "  ls               - list... something", type: "output" },
-      { text: "  sudo             - try it ;)", type: "output" },
-      { text: "  exit 8           - the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
-      { text: "  replay splash     - see the loading splash again on next reload", type: "output" },
-      { text: "  replay matrix     - replay the matrix + name scramble on next reload", type: "output" },
-      { text: "  replay all        - full hard reset: splash + matrix scramble on next reload", type: "output" },
-      { text: "  suicide          - closes the tab. for real.", type: "output" },
-    ],
-
-    whoami: () => [
+    "whoami.txt": () => [
       { text: "Shivcharan Thirunavukkarasu", type: "accent" },
-      { text: "CSE grad · developer · gamer · cube-scrambler", type: "output" },
+      { text: "CSE grad - developer - gamer - cube-scrambler", type: "output" },
       { text: "Currently on a quest to locate the elusive missing semicolon ;)", type: "output" },
     ],
-
-    skills: () => {
+    "skills.txt": () => {
       const entry = ABOUT.find((e) => e.input === "Shivcharan.skills");
       return [{ text: entry ? entry.return : "[]", type: "accent" }];
+    },
+    "contact.txt": () => {
+      if (!contactEntry || !Array.isArray(contactEntry.return)) return [];
+      return contactEntry.return.map((link) => ({
+        text: link.text, type: "link",
+        href: link.href, target: link.target, rel: link.rel || "noopener noreferrer",
+      }));
+    },
+    "resume.txt": () => {
+      if (resumeEntry && Array.isArray(resumeEntry.return) && resumeEntry.return[0]) {
+        window.open(resumeEntry.return[0].href, "_blank", "noopener,noreferrer");
+      }
+      return [{ text: ">> opening resume in new tab...", type: "info" }];
+    },
+    "interests.txt": () =>
+      Object.values(INTERESTS).map((i) => ({
+        text: `  ${i.icon}  ${i.label.padEnd(14)} - ${i.blurb}`, type: "output",
+      })),
+    "games.txt":   () => interestLines("games"),
+    "anime.txt":   () => interestLines("anime"),
+    "cycling.txt": () => interestLines("cycling"),
+    "rubik.txt":   () => interestLines("rubik"),
+    "tech.txt":    () => interestLines("tech"),
+    "music.txt":   () => interestLines("music"),
+  };
+}
+
+// ─── Command definitions ────────────────────────────────────────────────────
+function buildCommands(scrollToSection) {
+  const virtualFiles = buildVirtualFiles(scrollToSection);
+
+  return {
+    help: () => [
+      { text: "Available commands:", type: "info" },
+      { text: "  ls                  - list files (cat <file> to read)", type: "output" },
+      { text: "  cat <file>          - read a file (e.g. cat whoami.txt)", type: "output" },
+      { text: "  git log             - career timeline as git commits", type: "output" },
+      { text: "  timeline            - jump to timeline section", type: "output" },
+      { text: "  projects            - jump to projects section", type: "output" },
+      { text: "  portfolio --no-css  - brutalist HTML version (1997 edition)", type: "output" },
+      { text: "  matrix [sub]        - matrix rain controls (matrix -h for sub-commands)", type: "output" },
+      { text: "  replay [sub]        - replay intro sequences (replay -h for sub-commands)", type: "output" },
+      { text: "  clear               - clear terminal", type: "output" },
+      { text: "  history             - command history", type: "output" },
+      { text: "  sudo                - try it ;)", type: "output" },
+      { text: "  exit 8              - the loop. spot 8 anomalies.", type: "output" },
+      { text: "  suicide             - closes the tab. for real.", type: "output" },
+      { text: "", type: "output" },
+      { text: "  ?  or  Ctrl+/   - show keyboard shortcuts", type: "output" },
+      { text: "  Ctrl+K          - prefix key (Ctrl+K then h/c/m/e/s/r/a/q)", type: "output" },
+    ],
+
+    ls: (args) => {
+      const names = Object.keys(virtualFiles);
+      return [
+        { text: "drwxr-xr-x  projects/", type: "output" },
+        { text: "drwxr-xr-x  beyond-code/", type: "output" },
+        ...names.map((n) => ({ text: `-rw-r--r--  ${n}`, type: "output" })),
+        { text: "-rw-r--r--  .secrets  (permission denied)", type: "danger" },
+      ];
+    },
+
+    cat: (args) => {
+      if (!args.length) {
+        return [
+          { text: "usage: cat <file>", type: "info" },
+          { text: "  available: " + Object.keys(virtualFiles).join(", "), type: "output" },
+        ];
+      }
+      const name = args[0].endsWith(".txt") ? args[0] : args[0] + ".txt";
+      if (virtualFiles[name]) return virtualFiles[name]();
+      // strip .txt and try bare name too
+      const bare = args[0].replace(/\.txt$/, "");
+      if (virtualFiles[bare]) return virtualFiles[bare]();
+      return [{ text: `cat: ${args[0]}: no such file`, type: "danger" }];
     },
 
     projects: () => {
@@ -66,48 +110,22 @@ function buildCommands(scrollToSection) {
       return [{ text: ">> scrolling to projects...", type: "info" }];
     },
 
-    contact: () => {
-      if (!contactEntry || !Array.isArray(contactEntry.return)) return [];
-      return contactEntry.return.map((link) => ({
-        text: link.text,
-        type: "link",
-        href: link.href,
-        target: link.target,
-        rel: link.rel || "noopener noreferrer",
-      }));
-    },
-
-    resume: () => {
-      if (resumeEntry && Array.isArray(resumeEntry.return) && resumeEntry.return[0]) {
-        window.open(resumeEntry.return[0].href, "_blank", "noopener,noreferrer");
-      }
-      return [{ text: ">> opening résumé in new tab...", type: "info" }];
-    },
-
-    interests: () =>
-      Object.values(INTERESTS).map((i) => ({
-        text: `  ${i.icon}  ${i.label.padEnd(14)} - ${i.blurb}`,
-        type: "output",
-      })),
-
-    games:   () => interestLines("games"),
-    anime:   () => interestLines("anime"),
-    cycling: () => interestLines("cycling"),
-    rubik:   () => interestLines("rubik"),
-    tech:    () => interestLines("tech"),
-    music:   () => interestLines("music"),
-    spotify: () => interestLines("music"),
-
     matrix: (args) => {
+      if (args.length && (args[0] === "-h" || args[0] === "--help")) {
+        return [
+          { text: "matrix sub-commands:", type: "info" },
+          { text: "  matrix fps N     - set rain speed (0 = native refresh)", type: "output" },
+          { text: "  matrix rainbow   - enable rainbow mode", type: "output" },
+          { text: "  matrix reset     - restore default color", type: "output" },
+        ];
+      }
       if (args.length && args[0] === "fps") {
         const val = parseInt(args[1], 10);
         if (isNaN(val) || val < 0 || val > 240) {
           return [{ text: "usage: matrix fps <0-240>  (0 = native refresh rate)", type: "danger" }];
         }
         window.__matrixFps = val;
-        return [
-          { text: `>> matrix fps set to ${val === 0 ? "native refresh rate" : `${val} fps`}`, type: "info" },
-        ];
+        return [{ text: `>> matrix fps set to ${val === 0 ? "native refresh rate" : `${val} fps`}`, type: "info" }];
       }
       if (args.length && args[0] === "rainbow") {
         window.__matrixRainbow = true;
@@ -136,7 +154,7 @@ function buildCommands(scrollToSection) {
         { text: "", type: "output" },
         { text: "commit f2a0c81", type: "accent" },
         { text: "Date:   Jan 2025", type: "output" },
-        { text: "    feat(career): promoted → MLE2 @ Comcast", type: "output" },
+        { text: "    feat(career): promoted to MLE2 @ Comcast", type: "output" },
         { text: "", type: "output" },
         { text: "commit 9c3d77e", type: "accent" },
         { text: "Date:   Jan 2024", type: "output" },
@@ -166,6 +184,14 @@ function buildCommands(scrollToSection) {
     },
 
     replay: (args) => {
+      if (!args.length || args[0] === "-h" || args[0] === "--help") {
+        return [
+          { text: "replay sub-commands:", type: "info" },
+          { text: "  replay splash    - see the loading splash again", type: "output" },
+          { text: "  replay matrix    - replay the matrix + name scramble", type: "output" },
+          { text: "  replay all       - full reset: splash + matrix scramble", type: "output" },
+        ];
+      }
       const sub = args[0];
       if (sub === "splash") {
         sessionStorage.removeItem("splashShown");
@@ -186,22 +212,9 @@ function buildCommands(scrollToSection) {
         setTimeout(() => window.location.reload(), 500);
         return [{ text: ">> full replay. reloading - full intro from scratch.", type: "info" }];
       }
-      return [
-        { text: "usage:", type: "info" },
-        { text: "  replay splash    - see the loading splash again", type: "output" },
-        { text: "  replay matrix    - replay the matrix + name scramble", type: "output" },
-        { text: "  replay all       - full reset: splash + matrix scramble", type: "output" },
-      ];
+      return [{ text: `replay: unknown sub-command '${sub}'. try replay -h`, type: "danger" }];
     },
 
-    ls: () => [
-      { text: "drwxr-xr-x  about/", type: "output" },
-      { text: "drwxr-xr-x  projects/", type: "output" },
-      { text: "drwxr-xr-x  beyond-code/", type: "output" },
-      { text: "-rw-r--r--  contact.txt", type: "output" },
-      { text: "-rw-r--r--  resume.pdf", type: "output" },
-      { text: "-rw-r--r--  .secrets  (permission denied)", type: "danger" },
-    ],
 
     sudo: (args) => {
       if (args[0] === "suicide" || args[0] === "exit") {
@@ -1007,7 +1020,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   };
 
   // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "whoami", "skills", "projects", "contact", "resume", "interests", "games", "anime", "cycling", "rubik", "tech", "spotify", "matrix", "ls", "sudo", "exit 8", "clear"];
+  const CHIPS = ["help", "ls", "cat whoami.txt", "cat skills.txt", "cat contact.txt", "git log", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
 
   return (
     <div className={styles.interactiveTerminal}>
