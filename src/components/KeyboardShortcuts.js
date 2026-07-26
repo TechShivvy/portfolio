@@ -22,6 +22,14 @@ const ACTIONS = {
   a: { label: "replay all", run: () => replay({ splash: true, matrix: true }) },
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
+  8: { label: "exit 8", run: () => {
+    const input = document.querySelector('[class*="InteractiveTerminal"] input');
+    if (input) {
+      input.focus();
+      input.value = "exit 8";
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter" }));
+    }
+  }},
   6: { label: "67", run: () => {
     if (document.body.classList.contains("sixseven")) {
       document.body.classList.remove("sixseven");
@@ -43,7 +51,8 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "a"], desc: "replay all (splash + matrix)" },
   { keys: ["Ctrl+K", "r"], desc: "raw HTML portfolio (no CSS)" },
   { keys: ["Ctrl+K", "x"], desc: "tenet (reverse intro + close tab)" },
-  { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 6.7s)" },
+  { keys: ["Ctrl+K", "8"], desc: "exit 8 (anomaly detection game)" },
+  { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 4.2s)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },
   { keys: ["Enter"], desc: "run command" },
