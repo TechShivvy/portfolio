@@ -105,19 +105,19 @@
       #preloader.preloader--boom {
         background: transparent;
         pointer-events: none;
-        transition: background 0.5s ease 0.12s;
+        transition: background 0.56s ease 0.12s;
       }
       #preloader.preloader--boom .pre-ring {
-        animation: pre-boom 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: pre-boom 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
       #preloader.preloader--boom .pre-ico {
-        animation: pre-ico-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: pre-ico-out 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
       #preloader.preloader--boom .pre-wrap::before {
-        animation: pre-flash 0.6s ease-out forwards;
+        animation: pre-flash 0.7s ease-out forwards;
       }
       #preloader.preloader--boom .pre-wrap::after {
-        animation: pre-echo 0.72s ease-out 0.12s forwards;
+        animation: pre-echo 0.84s ease-out 0.14s forwards;
       }
       @keyframes pre-boom {
         0% {
@@ -300,10 +300,10 @@
           // boom a beat to breathe, then reveal the hero intro so the site
           // emerges from the ripple instead of cutting in immediately.
           pre.classList.add("preloader--boom");
-          setTimeout(signalSplashDone, 270);
+          setTimeout(signalSplashDone, 360);
           setTimeout(function () {
             if (pre.parentNode) pre.parentNode.removeChild(pre);
-          }, 900);
+          }, 1020);
         }
 
         var fontReady = false;
