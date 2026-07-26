@@ -46,7 +46,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     if (heroEl.parentElement) heroEl.parentElement.style.zIndex = "1";
   }
 
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: "instant" });
   const rootHeight = rootEl.offsetHeight;
   st.rootHeight = rootHeight;
 
@@ -119,14 +119,21 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
 
         let _mRafId;
         const _drawMatrix = () => {
-          _ctx.fillStyle = "rgba(0,0,0,0.05)";
-          _ctx.fillRect(0, 0, _cloneCanvas.width, _cloneCanvas.height);
-          _ctx.fillStyle = "#626e5e";
-          _ctx.font = `${_fs}px monospace`;
-          for (let _i = 0; _i < _drops.length; _i++) {
-            _ctx.fillText(_chars[Math.floor(Math.random() * _chars.length)], _i * _fs, _drops[_i] * _fs);
-            if (_drops[_i] * _fs > _cloneCanvas.height && Math.random() > 0.975) _drops[_i] = 0;
-            _drops[_i]++;
+          // Skip rendering when the clone canvas is off-screen: keeps the loop
+          // alive (so it resumes on scroll-in) but avoids the costly fillText
+          // work for corridors the player can't see. Big FPS win with many clones.
+          const _rect = _cloneCanvas.getBoundingClientRect();
+          const _visible = _rect.bottom > 0 && _rect.top < window.innerHeight;
+          if (_visible) {
+            _ctx.fillStyle = "rgba(0,0,0,0.05)";
+            _ctx.fillRect(0, 0, _cloneCanvas.width, _cloneCanvas.height);
+            _ctx.fillStyle = "#626e5e";
+            _ctx.font = `${_fs}px monospace`;
+            for (let _i = 0; _i < _drops.length; _i++) {
+              _ctx.fillText(_chars[Math.floor(Math.random() * _chars.length)], _i * _fs, _drops[_i] * _fs);
+              if (_drops[_i] * _fs > _cloneCanvas.height && Math.random() > 0.975) _drops[_i] = 0;
+              _drops[_i]++;
+            }
           }
           _mRafId = requestAnimationFrame(_drawMatrix);
         };
@@ -179,13 +186,13 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     const tick = () => {
       const top = corridorEl.getBoundingClientRect().top;
       if (top >= -3) {
-        if (top < 0) window.scrollTo(0, Math.round(window.scrollY + top));
+        if (top < 0) window.scrollTo({ top: Math.round(window.scrollY + top), left: 0, behavior: "instant" });
         st.scrollingBack = false;
         st.cancelBackScroll = null;
         return;
       }
       const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
-      window.scrollTo(0, window.scrollY - stepPx);
+      window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
       backRaf = requestAnimationFrame(tick);
     };
     backRaf = requestAnimationFrame(tick);
@@ -205,6 +212,24 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
       else break;
     }
     return idx;
+  };
+
+  // ── Clone stack pruning ────────────────────────────────────────────
+  // Fully stop the matrix rAF for corridors left well behind (2+ back).
+  // The DOM nodes and array slots are kept intact so scrollHeight, element
+  // ids, and clone indices never shift (shifting them causes a scroll
+  // "boomerang"). Only the animation loop is cancelled to reclaim CPU/GPU;
+  // its canceler slot is swapped for a no-op so teardown stays a clean pass.
+  const noop = () => {};
+  const prunePassedClones = (currentCorridor) => {
+    const stopUpTo = currentCorridor - 3; // clone idx: -1 current, -2 buffer
+    for (let i = 0; i <= stopUpTo; i++) {
+      const cancel = st.cloneMatrixRafs[i];
+      if (typeof cancel === "function") {
+        cancel();
+        st.cloneMatrixRafs[i] = noop;
+      }
+    }
   };
 
   // ── Per-corridor anomaly reset ────────────────────────────────────
@@ -310,7 +335,9 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
       if (st.heroEl.parentElement) st.heroEl.parentElement.style.zIndex = "";
     }
 
-    (st.cloneMatrixRafs || []).forEach((cancel) => cancel());
+    (st.cloneMatrixRafs || []).forEach((cancel) => {
+      if (typeof cancel === "function") cancel();
+    });
     (st.clones || []).forEach((c) => {
       try {
         document.body.removeChild(c);
@@ -495,6 +522,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
         return;
       }
       resetForCorridor(currentCorridor);
+      prunePassedClones(currentCorridor);
     }
 
     if (!st.scrollingBack && !st.anomalyFiredThisCorridor && window.scrollY >= st.anomalyTriggerY) {
@@ -536,7 +564,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
       const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
       st._lastForwardT = now;
       const px = Math.max(1, Math.round((500 * dt) / 1000));
-      window.scrollTo(0, window.scrollY + px);
+      window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
     } else {
       st._lastForwardT = null;
     }
