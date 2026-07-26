@@ -13,6 +13,21 @@ export default defineConfig({
       },
     },
     react(),
+    // Dev-only: redirect /portfolio → /portfolio/ so the trailing slash
+    // isn't required when navigating manually in the browser.
+    {
+      name: 'base-redirect',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/portfolio') {
+            res.writeHead(301, { Location: '/portfolio/' });
+            res.end();
+            return;
+          }
+          next();
+        });
+      },
+    },
   ],
 
   // Must match gh-pages deploy repo path

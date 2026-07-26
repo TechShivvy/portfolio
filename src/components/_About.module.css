@@ -92,6 +92,7 @@
 .para {
   font-size: 1.2rem;
   text-align: justify;
+  line-height: 1.5; /* extra space so inline pill bgs don't bleed into adjacent wrapped lines */
   /* width: 75%; */
   /* margin-left: 50px;; */
 }
@@ -178,7 +179,6 @@ a > img {
   box-shadow: 0 0 12px 1px rgba(29, 185, 84, 0.4),
               inset 0 0 30px rgba(29, 185, 84, 0.04);
   border-radius: 2px;
-  cursor: pointer;
 }
 
 /* When pinned (clicked), tighten the glow so the user knows it's locked */

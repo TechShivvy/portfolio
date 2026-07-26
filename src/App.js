@@ -1,8 +1,6 @@
 import "./App.css";
 import React, { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import aboutData from "./content/about";
-import projectData from "./content/projects";
 
 const About = lazy(() => import("./components/About"));
 const BeyondCode = lazy(() => import("./components/BeyondCode"));
@@ -14,6 +12,7 @@ const Navbar = lazy(() => import("./components/Navbar"));
 const Progressbar = lazy(() => import("./components/Progressbar"));
 const Project = lazy(() => import("./components/Project"));
 const ScrollUp = lazy(() => import("./components/ScrollUp"));
+const Timeline = lazy(() => import("./components/Timeline"));
 
 function App() {
   useEffect(() => {
@@ -57,8 +56,9 @@ function App() {
                   <Home />
                   <Navbar />
                   <Progressbar />
-                  <About data={aboutData} />
-                  <Project data={projectData} />
+                  <About />
+                  <Timeline />
+                  <Project />
                   <BeyondCode />
                   {/* <Construction /> */}
                   <ContactForm />

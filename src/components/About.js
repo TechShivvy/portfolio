@@ -3,6 +3,7 @@ import styles from "./_About.module.css";
 import AboutLines from "../utils/about";
 import InteractiveTerminal from "./InteractiveTerminal";
 import useFadeIn from "../utils/useFadeIn";
+import aboutData from "../content/about";
 
 // ─── Spotify mosaic-reveal card ──────────────────────────────────────────────
 const COLS = 24;
@@ -96,7 +97,7 @@ function SpotifyMosaic() {
   );
 }
 
-function About(props) {
+function About() {
   const fadeRef = useFadeIn();
   // Toggle between dummy (static) and interactive (real) terminal
   const [interactive, setInteractive] = useState(false);
@@ -150,7 +151,7 @@ function About(props) {
                   className={interactive ? styles.terminalHidden : undefined}
                   aria-hidden={interactive || undefined}
                 >
-                  <AboutLines data={props.data} />
+                  <AboutLines data={aboutData} />
                 </div>
                 <div
                   className={interactive ? undefined : styles.terminalHidden}

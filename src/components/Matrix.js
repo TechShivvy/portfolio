@@ -32,10 +32,14 @@ const MatrixAnimation = ({ startAnimation }) => {
       context.fillStyle = "rgba(0, 0, 0, 0.05)";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.fillStyle = COLOR_MATRIX;
       context.font = fontSize + "px monospace";
 
       for (let i = 0; i < matrix.length; i++) {
+        if (window.__matrixRainbow) {
+          context.fillStyle = `hsl(${(i * 7 + Date.now() / 30) % 360}, 80%, 60%)`;
+        } else {
+          context.fillStyle = COLOR_MATRIX;
+        }
         const text =
           charactersArray[Math.floor(Math.random() * charactersArray.length)];
         context.fillText(text, i * fontSize, matrix[i] * fontSize);

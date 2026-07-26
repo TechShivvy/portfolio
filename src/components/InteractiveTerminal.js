@@ -33,14 +33,19 @@ function buildCommands(scrollToSection) {
       { text: "  tech         — current tech rabbit holes", type: "output" },
       { text: "  music        — what's playing", type: "output" },
       { text: "  spotify      — same as music", type: "output" },
-      { text: "  matrix       — replay the matrix", type: "output" },
-      { text: "  matrix fps N — set matrix rain to N fps (0 = native)", type: "output" },
-      { text: "  clear        — clear terminal", type: "output" },
-      { text: "  history      — command history", type: "output" },
-      { text: "  ls           — list... something", type: "output" },
-      { text: "  sudo         — try it ;)", type: "output" },
-      { text: "  exit 8       — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
-      { text: "  suicide      — closes the tab. for real.", type: "output" },
+      { text: "  matrix           — replay the matrix", type: "output" },
+      { text: "  matrix fps N     — set matrix rain to N fps (0 = native)", type: "output" },
+      { text: "  matrix rainbow   — enable rainbow matrix mode", type: "output" },
+      { text: "  matrix reset     — restore default matrix color", type: "output" },
+      { text: "  git log          — career timeline as git commits", type: "output" },
+      { text: "  timeline         — jump to timeline section", type: "output" },
+      { text: "  portfolio --no-css — brutalist HTML version (1997 edition)", type: "output" },
+      { text: "  clear            — clear terminal", type: "output" },
+      { text: "  history          — command history", type: "output" },
+      { text: "  ls               — list... something", type: "output" },
+      { text: "  sudo             — try it ;)", type: "output" },
+      { text: "  exit 8           — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
+      { text: "  suicide          — closes the tab. for real.", type: "output" },
     ],
 
     whoami: () => [
@@ -102,9 +107,57 @@ function buildCommands(scrollToSection) {
           { text: `>> matrix fps set to ${val === 0 ? "native refresh rate" : `${val} fps`}`, type: "info" },
         ];
       }
+      if (args.length && args[0] === "rainbow") {
+        window.__matrixRainbow = true;
+        return [{ text: ">> matrix: rainbow mode enabled. you're a person of culture.", type: "info" }];
+      }
+      if (args.length && args[0] === "reset") {
+        window.__matrixRainbow = false;
+        return [{ text: ">> matrix: color reset to default.", type: "info" }];
+      }
       sessionStorage.removeItem("hasRun");
       window.location.reload();
       return [{ text: ">> reloading matrix...", type: "info" }];
+    },
+
+    git: (args) => {
+      if (args[0] !== "log") {
+        return [{ text: `git: '${args[0] || ""}' is not a git command. Try 'git log'.`, type: "danger" }];
+      }
+      return [
+        { text: "commit 0f1a2b3  (HEAD -> main)", type: "accent" },
+        { text: "Date:   Jun 2025", type: "output" },
+        { text: "    chore: still shipping. semicolon still missing.", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit f2a0c81", type: "accent" },
+        { text: "Date:   Jan 2025", type: "output" },
+        { text: "    feat(career): promoted → MLE2 @ Comcast", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit 9c3d77e", type: "accent" },
+        { text: "Date:   Jan 2024", type: "output" },
+        { text: "    feat(career): joined Comcast as MLE1", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit 4f8e21b  (tag: v4.0.0)", type: "accent" },
+        { text: "Date:   May 2023", type: "output" },
+        { text: "    feat: graduated. shipped to production.", type: "output" },
+        { text: "", type: "output" },
+        { text: "commit a1b2c3d", type: "accent" },
+        { text: "Date:   Sep 2019", type: "output" },
+        { text: "    Initial commit: enrolled in B.E. CSE, SSNCE", type: "output" },
+      ];
+    },
+
+    portfolio: (args) => {
+      if (args[0] === "--no-css") {
+        setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
+        return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
+      }
+      return [{ text: "usage: portfolio --no-css", type: "danger" }];
+    },
+
+    timeline: () => {
+      scrollToSection("timeline");
+      return [{ text: ">> scrolling to timeline...", type: "info" }];
     },
 
     ls: () => [
@@ -156,6 +209,11 @@ function buildCommands(scrollToSection) {
 
     clear: () => [],
     history: () => [],
+
+    "--no-css": () => {
+      setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
+      return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
+    },
   };
 }
 
