@@ -81,6 +81,8 @@ function buildCommands(scrollToSection) {
     ],
 
     ls: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "ls - list files in the virtual filesystem. use cat <file> to read.", type: "info" }];
       const names = Object.keys(virtualFiles);
       return [
         { text: "drwxr-xr-x  projects/", type: "output" },
@@ -91,11 +93,12 @@ function buildCommands(scrollToSection) {
     },
 
     cat: (args) => {
-      if (!args.length) {
-        return [
+      if (!args.length || args[0] === "-h" || args[0] === "--help") {
+        if (!args.length) return [
           { text: "usage: cat <file>", type: "info" },
           { text: "  available: " + Object.keys(virtualFiles).join(", "), type: "output" },
         ];
+        return [{ text: "cat <file> - read a virtual file. try: cat whoami.txt or just cat whoami", type: "info" }];
       }
       const name = args[0].endsWith(".txt") ? args[0] : args[0] + ".txt";
       if (virtualFiles[name]) return virtualFiles[name]();
@@ -144,6 +147,8 @@ function buildCommands(scrollToSection) {
     },
 
     git: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "git log - shows career timeline as git commits. only log is supported.", type: "info" }];
       if (args[0] !== "log") {
         return [{ text: `git: '${args[0] || ""}' is not a git command. Try 'git log'.`, type: "danger" }];
       }
@@ -171,6 +176,8 @@ function buildCommands(scrollToSection) {
     },
 
     portfolio: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "portfolio --no-css - loads the brutalist plain-HTML version of this site.", type: "info" }];
       if (args[0] === "--no-css") {
         setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
         return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
@@ -178,9 +185,18 @@ function buildCommands(scrollToSection) {
       return [{ text: "usage: portfolio --no-css", type: "danger" }];
     },
 
-    timeline: () => {
+    timeline: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "timeline - scrolls the page to the Timeline section.", type: "info" }];
       scrollToSection("timeline");
       return [{ text: ">> scrolling to timeline...", type: "info" }];
+    },
+
+    projects: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "projects - scrolls the page to the Projects section.", type: "info" }];
+      scrollToSection("projects");
+      return [{ text: ">> scrolling to projects...", type: "info" }];
     },
 
     replay: (args) => {
@@ -217,6 +233,8 @@ function buildCommands(scrollToSection) {
 
 
     sudo: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "sudo - try it. i dare you.", type: "info" }];
       if (args[0] === "suicide" || args[0] === "exit") {
         setTimeout(() => window.location.replace("about:blank"), 600);
         return [{ text: ">> bye o/", type: "info" }];
@@ -249,13 +267,23 @@ function buildCommands(scrollToSection) {
       return picks[Math.floor(Math.random() * picks.length)];
     },
 
-    suicide: () => {
+    suicide: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "suicide - closes the current tab. no questions asked.", type: "info" }];
       setTimeout(() => window.location.replace("about:blank"), 600);
       return [{ text: ">> bye o/", type: "info" }];
     },
 
-    clear: () => [],
-    history: () => [],
+    clear: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "clear - clears the terminal output.", type: "info" }];
+      return [];
+    },
+    history: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "history - shows the last 50 commands entered this session.", type: "info" }];
+      return [];
+    },
 
     "--no-css": () => {
       setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
