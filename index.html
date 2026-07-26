@@ -55,7 +55,7 @@
     -->
     <script>
       try {
-        if (localStorage.getItem("splashShown") === "1") {
+        if (sessionStorage.getItem("splashShown") === "1") {
           document.documentElement.classList.add("splash-skip");
         }
       } catch (e) {}
@@ -108,12 +108,12 @@
       }
       #preloader .pre-track {
         fill: none;
-        stroke: rgba(43, 162, 162, 0.15);
+        stroke: rgba(162, 43, 43, 0.2);
         stroke-width: 5;
       }
       #preloader .pre-arc {
         fill: none;
-        stroke: #2ba2a2;
+        stroke: #a22b2b;
         stroke-width: 5;
         stroke-linecap: round;
         stroke-dasharray: 283; /* 2 * PI * r (r = 45) */
@@ -163,11 +163,10 @@
           } catch (e) {}
         }
 
-        // Repeat visit: the splash was skipped (element hidden by CSS), so
-        // there's nothing to do — the cached font renders the hero instantly.
+        // Repeat refresh within this tab session: skip splash.
         var alreadyShown = false;
         try {
-          alreadyShown = localStorage.getItem("splashShown") === "1";
+          alreadyShown = sessionStorage.getItem("splashShown") === "1";
         } catch (e) {}
         if (!pre || alreadyShown) {
           signalSplashDone();
@@ -185,7 +184,7 @@
           if (hidden) return;
           hidden = true;
           try {
-            localStorage.setItem("splashShown", "1");
+            sessionStorage.setItem("splashShown", "1");
           } catch (e) {}
           pre.classList.add("preloader--hide");
           setTimeout(function () {
