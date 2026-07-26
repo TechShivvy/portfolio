@@ -407,7 +407,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             scrollingBack: false, cancelBackScroll: null,
             anomalyActive: false, removeEffect: null, expireTimer: null,
             anomalyFiredThisCorridor: false, isCurrentCorridorClean: true,
-            anomalyTriggerY: Infinity, scorePredictedThisCorridor: false,
+            anomalyTriggerY: Infinity, scorePredictedThisCorridor: false, verdictLocked: false,
             _lastForwardT: null, // used by step() to normalise speed to real wall-clock time
           });
 
@@ -579,6 +579,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             st.isCurrentCorridorClean = isClean;
             st.anomalyFiredThisCorridor = false;
             st.scorePredictedThisCorridor = false;
+            st.verdictLocked = false;
             // Anchor the trigger to the corridor's REAL top so it never fires the
             // instant we scroll back (the old grid coord drifted from real layout).
             st.anomalyTriggerY = isClean
@@ -586,10 +587,37 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               : corridorRealTop(corridorIdx) + (0.1 + Math.random() * 0.3) * st.rootHeight;
           };
 
+          // ── Lock the verdict for the corridor we're leaving ───────────────
+          // Called when the next homescreen's number is about to become readable
+          // (its hero text touches the viewport bottom edge) OR at corridor exit —
+          // whichever comes first. After this the anomaly is no longer callable, so a
+          // player can't read the pre-set number and then decide. Idempotent.
+          // Returns true if this pushed the score to a win.
+          const lockCorridorVerdict = () => {
+            if (st.verdictLocked) return false;
+            st.verdictLocked = true;
+            if (st.isCurrentCorridorClean) {
+              // No anomaly, player didn't call → CLEAN PASS → score++
+              st.score = Math.min(st.score + 1, 9);
+              updateScoreUI();
+            } else if (st.anomalyFiredThisCorridor) {
+              // Anomaly appeared but was never called in time → MISSED
+              st.score = 0;
+              updateScoreUI();
+              setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
+            }
+            if (st.anomalyActive) {
+              if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
+              st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
+            }
+            return st.score >= 9;
+          };
+
           // ── Anomaly check: score + scrollback ─────────────────────────────
-          // A real anomaly is callable for the WHOLE corridor (until the next
-          // homescreen). The 5s effect is only a visual flash — you can still call it
-          // after it fades, as long as you haven't left the corridor.
+          // A real anomaly is callable until its verdict locks — i.e. until the next
+          // corridor's homescreen number is about to enter view (hero touches the
+          // bottom edge). The 5s effect is only a visual flash; you can still call it
+          // after it fades, as long as the verdict hasn't locked.
           const triggerAnomalyCheck = () => {
             const currentCorridor = currentCorridorIdx();
             const corridorEl = corridorElFor(currentCorridor);
@@ -601,8 +629,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               st.anomalyActive = false; st.removeEffect = null;
             }
 
-            if (st.anomalyFiredThisCorridor) {
-              // Correct — a real anomaly fired in this corridor
+            if (st.anomalyFiredThisCorridor && !st.verdictLocked) {
+              // Correct — a real anomaly fired in this corridor and is still callable
               st.score = Math.min(st.score + 1, 9);
               updateScoreUI();
               if (st.score >= 9) { st.winGame?.(); return; }
@@ -611,7 +639,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
                 type: "accent",
               }]);
             } else {
-              // False call — reset immediately
+              // False call (or too late — verdict already locked) — reset immediately
               const hadProgress = st.score > 0;
               if (hadProgress) { st.score = 0; updateScoreUI(); }
               setLines((prev) => [...prev, {
@@ -667,7 +695,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               scrollingBack: false, cancelBackScroll: null, rootHeight: 0, lastCorridor: 0,
               corridorFoundAnomaly: false, progressBarEl: null,
               anomalyFiredThisCorridor: false, isCurrentCorridorClean: true, anomalyTriggerY: Infinity,
-              scorePredictedThisCorridor: false, _lastForwardT: null,
+              scorePredictedThisCorridor: false, verdictLocked: false, _lastForwardT: null,
             });
           };
           st.teardown = teardown;
@@ -798,28 +826,23 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const step = (now) => {
             const currentCorridor = currentCorridorIdx();
 
-            // Natural corridor exit — score the corridor we just LEFT, set up the new one
+            // Lock the verdict the instant the NEXT corridor's homescreen number is about
+            // to become readable — the moment its hero text touches the viewport bottom
+            // edge. After this the anomaly is no longer callable, so the player can't read
+            // the pre-set number and then turn back to game it.
+            if (!st.verdictLocked && !st.scrollingBack) {
+              const _nextClone = st.clones[currentCorridor]; // corridor currentCorridor+1's clone
+              const _nextHero = _nextClone && _nextClone.querySelector("#hackerText");
+              if (_nextHero && _nextHero.getBoundingClientRect().top <= window.innerHeight) {
+                if (lockCorridorVerdict()) { st.winGame?.(); return; }
+              }
+            }
+
+            // Natural corridor exit — set up the new corridor. The verdict for the corridor
+            // we left is normally already locked (above); this is just a safety fallback.
             if (currentCorridor > st.lastCorridor) {
               st.lastCorridor = currentCorridor;
-
-              if (st.isCurrentCorridorClean) {
-                // No anomaly, player didn't call → CLEAN PASS → score++
-                st.score = Math.min(st.score + 1, 9);
-                updateScoreUI();
-                if (st.score >= 9) { st.winGame?.(); return; }
-              } else if (st.anomalyFiredThisCorridor) {
-                // Anomaly appeared but player left the corridor without calling → MISSED
-                st.score = 0;
-                updateScoreUI();
-                setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
-              }
-
-              // Clean up any still-active visual effect before the new corridor
-              if (st.anomalyActive) {
-                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-                st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
-              }
-
+              if (lockCorridorVerdict()) { st.winGame?.(); return; }
               resetForCorridor(currentCorridor);
             }
 
