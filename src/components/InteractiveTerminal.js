@@ -67,6 +67,7 @@ function buildCommands(scrollToSection) {
       { text: "  ls                  - list files (cat <file> to read)", type: "output" },
       { text: "  cat <file>          - read a file (e.g. cat skills.txt)", type: "output" },
       { text: "  git log             - career timeline as git commits", type: "output" },
+      { text: "  spotify --now-playing - what i'm grooving to right now", type: "output" },
       { text: "  timeline            - jump to timeline section", type: "output" },
       { text: "  projects            - jump to projects section", type: "output" },
       { text: "  portfolio --no-css  - brutalist HTML version (1997 edition)  [Ctrl+K r]", type: "output" },
@@ -272,6 +273,15 @@ function buildCommands(scrollToSection) {
         return [{ text: "suicide - closes the current tab. no questions asked.", type: "info" }];
       setTimeout(() => window.location.replace("about:blank"), 600);
       return [{ text: ">> bye o/", type: "info" }];
+    },
+
+    spotify: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "spotify --now-playing - what i'm grooving to right now", type: "info" }];
+      return [
+        { text: ">> loading now playing...", type: "info" },
+        { text: "look at the card to your side or scroll below → hover / click to reveal what i'm grooving to", type: "output" },
+      ];
     },
 
     clear: (args) => {
@@ -1070,7 +1080,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   };
 
   // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
+  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "spotify --now-playing", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
 
   return (
     <div className={styles.interactiveTerminal}>
