@@ -23,11 +23,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   const outputRef = useRef(null);
   const cmdScrollPos = useRef(null); // captures content bottom before each command
   const isCommandScroll = useRef(false); // true when scroll was triggered by a user command (not boot)
-  const exitScrollRef = useRef(null); // rAF handle for `exit 8` page scroll loop
-  const exitBarRef    = useRef(null); // floating bar DOM element during exit 8
-  const exitCloneRef  = useRef(null); // cloned #root appended below for seamless loop
   const exit8GameRef  = useRef(null); // game instance returned from startExit8()
-  const exitStateRef  = useRef({ anomalyTimer: null, expireTimer: null, anomalyActive: false, removeEffect: null, score: 0, scheduleAnomaly: null, teardown: null });
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ── Focus input when active ──────────────────────────────────────────────
