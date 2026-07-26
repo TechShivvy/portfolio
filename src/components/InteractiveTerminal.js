@@ -408,6 +408,11 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             anomalyActive: false, removeEffect: null, expireTimer: null,
             anomalyFiredThisCorridor: false, isCurrentCorridorClean: true,
             anomalyTriggerY: Infinity, scorePredictedThisCorridor: false,
+            // Pending real anomaly still awaiting a call. The 5s visual effect and the
+            // answer window are decoupled: the effect fades after 5s but the player can
+            // still call it (Enter / [!]) until scrollY passes pendingDeadlineY (50% into
+            // the next corridor).
+            pendingCorridor: -1, pendingDeadlineY: Infinity,
             _lastForwardT: null, // used by step() to normalise speed to real wall-clock time
           });
 
@@ -586,22 +591,26 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               : corridorRealTop(corridorIdx) + (0.1 + Math.random() * 0.3) * st.rootHeight;
           };
 
-          // ── Anomaly check: immediate score + scrollback ───────────────────
+          // ── Anomaly check: score + scrollback ─────────────────────────────
+          // A real anomaly stays "answerable" until the player scrolls past
+          // pendingDeadlineY (50% into the next corridor) — even after the 5s
+          // visual effect has faded.
           const triggerAnomalyCheck = () => {
             const currentCorridor = currentCorridorIdx();
             const corridorEl = corridorElFor(currentCorridor);
 
-            // Always clear the expire timer
+            // Always clear the visual-expire timer + wipe any lingering effect
             if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-
-            const wasActive = st.anomalyActive;
             if (st.anomalyActive) {
               st.removeEffect?.();
               st.anomalyActive = false; st.removeEffect = null;
             }
 
-            if (wasActive) {
-              // Correct — score immediately
+            const answerable = st.pendingCorridor >= 0 && window.scrollY <= st.pendingDeadlineY;
+
+            if (answerable) {
+              // Correct — even if the visual effect already faded
+              st.pendingCorridor = -1; st.pendingDeadlineY = Infinity;
               st.score = Math.min(st.score + 1, 9);
               updateScoreUI();
               if (st.score >= 9) { st.winGame?.(); return; }
@@ -611,6 +620,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }]);
             } else {
               // False call — reset immediately
+              st.pendingCorridor = -1; st.pendingDeadlineY = Infinity;
               const hadProgress = st.score > 0;
               if (hadProgress) { st.score = 0; updateScoreUI(); }
               setLines((prev) => [...prev, {
@@ -621,7 +631,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }]);
             }
 
-            // Fresh anomaly for same corridor, then scroll back to its top
+            // Fresh anomaly for the corridor we're now in, then scroll back to its top
             resetForCorridor(currentCorridor);
             scrollBack(corridorEl);
           };
@@ -666,7 +676,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               scrollingBack: false, cancelBackScroll: null, rootHeight: 0, lastCorridor: 0,
               corridorFoundAnomaly: false, progressBarEl: null,
               anomalyFiredThisCorridor: false, isCurrentCorridorClean: true, anomalyTriggerY: Infinity,
-              scorePredictedThisCorridor: false, _lastForwardT: null,
+              scorePredictedThisCorridor: false, pendingCorridor: -1, pendingDeadlineY: Infinity,
+              _lastForwardT: null,
             });
           };
           st.teardown = teardown;
@@ -801,38 +812,55 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             if (currentCorridor > st.lastCorridor) {
               st.lastCorridor = currentCorridor;
 
-              if (!st.corridorFoundAnomaly) {
-                if (st.isCurrentCorridorClean) {
-                  // No anomaly, player didn’t press → CLEAN PASS → score++
-                  st.score = Math.min(st.score + 1, 9);
-                  updateScoreUI();
-                  if (st.score >= 9) { st.winGame?.(); return; }
-                } else if (st.anomalyFiredThisCorridor) {
-                  // Anomaly appeared but player scrolled past without calling → MISSED
-                  st.score = 0;
-                  updateScoreUI();
-                  setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
-                }
+              // Clean pass: no anomaly, no pending call awaiting an answer → score++.
+              // Anomaly corridors are NOT scored here — their verdict stays pending
+              // until the player either calls it or crosses pendingDeadlineY (handled
+              // below), so the answer window can extend into this next corridor.
+              if (st.isCurrentCorridorClean && st.pendingCorridor < 0) {
+                st.score = Math.min(st.score + 1, 9);
+                updateScoreUI();
+                if (st.score >= 9) { st.winGame?.(); return; }
               }
 
-              // Clean up any still-active effect before the new corridor
+              // Clean up any still-active visual effect before the new corridor
+              // (does NOT close the answer window for a pending anomaly).
               if (st.anomalyActive) {
                 if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
                 st.removeEffect?.(); st.anomalyActive = false; st.removeEffect = null;
               }
 
-              st.corridorFoundAnomaly = false;   // reset for new corridor
               resetForCorridor(currentCorridor);
+            }
+
+            // Pending anomaly went unanswered past its deadline (50% into the next
+            // corridor) → MISSED → reset.
+            if (st.pendingCorridor >= 0 && !st.scrollingBack && window.scrollY > st.pendingDeadlineY) {
+              st.pendingCorridor = -1; st.pendingDeadlineY = Infinity;
+              st.score = 0;
+              updateScoreUI();
+              setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
             }
 
             // Fire anomaly at the trigger scroll-point (never while scrolling back)
             if (!st.scrollingBack && !st.anomalyFiredThisCorridor && window.scrollY >= st.anomalyTriggerY) {
+              // If a previous corridor's anomaly is still unanswered when a new one
+              // appears, the old one is now missed.
+              if (st.pendingCorridor >= 0) {
+                st.pendingCorridor = -1; st.pendingDeadlineY = Infinity;
+                st.score = 0;
+                updateScoreUI();
+                setLines((l) => [...l, { text: ">> anomaly missed \u2014 reset.", type: "danger" }]);
+              }
               st.anomalyFiredThisCorridor = true;
+              st.pendingCorridor = currentCorridor;
+              // Answerable until 50% into the NEXT corridor (1.5 corridor-heights past
+              // this corridor's real top).
+              st.pendingDeadlineY = corridorRealTop(currentCorridor) + 1.5 * st.rootHeight;
               const targetEl = corridorElFor(currentCorridor);
               st.removeEffect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)](targetEl);
               st.anomalyActive = true;
-              // 5-second display window — effect disappears but no scroll-back here;
-              // scoring consequence comes when player exits the corridor without pressing.
+              // 5-second VISUAL window — only the effect fades here; the answer window
+              // stays open until pendingDeadlineY.
               st.expireTimer = setTimeout(() => {
                 if (st.anomalyActive) {
                   st.removeEffect?.();
@@ -841,23 +869,17 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }, 5000);
             }
 
-            // At 70% of corridor: expire anomaly effect + pre-update next clone’s score display
+            // At 70% of corridor: pre-update the next clone’s score display so the value
+            // is already correct when its homescreen scrolls in. A clean corridor shows
+            // the +1; an anomaly corridor keeps the current score (its verdict is still
+            // pending). Only mark predicted once the clone actually exists so it retries
+            // for tall corridors whose next clone is appended after the 70% mark.
             if (!st.scrollingBack && window.scrollY >= corridorRealTop(currentCorridor) + 0.7 * st.rootHeight) {
-              if (st.anomalyActive) {
-                if (st.expireTimer) { clearTimeout(st.expireTimer); st.expireTimer = null; }
-                st.removeEffect?.();
-                st.anomalyActive = false;
-                st.removeEffect = null;
-              }
               if (!st.scorePredictedThisCorridor) {
-                st.scorePredictedThisCorridor = true;
                 const _nextClone = st.clones[currentCorridor]; // corridor currentCorridor+1's clone
                 if (_nextClone) {
-                  let _pred = st.score;
-                  if (!st.corridorFoundAnomaly) {
-                    if (st.isCurrentCorridorClean) _pred = Math.min(st.score + 1, 9);
-                    else if (st.anomalyFiredThisCorridor) _pred = 0;
-                  }
+                  st.scorePredictedThisCorridor = true;
+                  const _pred = st.isCurrentCorridorClean ? Math.min(st.score + 1, 9) : st.score;
                   const _ch = _nextClone.querySelector("#hackerText");
                   if (_ch) { _ch.textContent = `${_pred} \u2193`; _ch.style.color = "#2ba2a2"; }
                 }
