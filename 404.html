@@ -36,25 +36,326 @@
 
     <!-- SEO & social -->
     <title>Shivcharan | Portfolio</title>
-    <meta name="description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
+    <meta name="description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
     <meta name="author" content="Shivcharan Thirunavukkarasu" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://techshivvy.github.io/portfolio" />
     <meta property="og:title" content="Shivcharan | Portfolio" />
-    <meta property="og:description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
+    <meta property="og:description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Shivcharan | Portfolio" />
-    <meta name="twitter:description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
-
-    <!-- Preload Watch Dogs / Hacked font -->
-    <link rel="preload" href="https://hackedfont.com/HACKED.ttf" as="font" crossorigin="anonymous" />
+    <meta name="twitter:description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
 
     <link rel="manifest" href="/portfolio/manifest.json" />
-    <script type="module" crossorigin src="/portfolio/assets/index-jmPIjK2z.js"></script>
-    <link rel="stylesheet" crossorigin href="/portfolio/assets/index-B6OSfkfL.css">
+
+    <!--
+      The splash only plays on the very first visit. This tiny script runs
+      before first paint and, on repeat visits, marks the document so the
+      splash below is never rendered (the self-hosted font is already cached).
+    -->
+    <script>
+      try {
+        if (sessionStorage.getItem("splashShown") === "1") {
+          document.documentElement.classList.add("splash-skip");
+        }
+      } catch (e) {}
+    </script>
+
+    <!--
+      Splash preloader styles - inlined so the splash paints on the very
+      first frame (before the JS/CSS bundles load) on the first visit.
+    -->
+    <style>
+      html.splash-skip #preloader {
+        display: none !important;
+      }
+
+      /* Animatable sweep angle for the conic progress ring below. */
+      @property --p {
+        syntax: "<angle>";
+        inherits: false;
+        initial-value: 0deg;
+      }
+
+      /* Splash preloader - paints on the very first frame (before the JS
+         bundle and the custom font finish downloading) so the hero name is
+         never shown in the fallback font on the first cold load. */
+      #preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        /* Pin BOTH dimensions to fixed viewport units so the centered icon
+           doesn't drift while the fixed containing block settles to its final
+           size on the first frames of load (mobile). svh/svw are constants;
+           inset:0 / vh / dvh can change mid-load and cause the icon to slide. */
+        width: 100vw;
+        width: 100svw;
+        height: 100vh;
+        height: 100svh;
+        z-index: 999999;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      /* Exit "boom" - a layered shockwave: a soft light-burst flash, the
+         main progress ring ripples outward, and a second echo ring follows,
+         while the black backdrop clears to reveal the site underneath. */
+      #preloader.preloader--boom {
+        background: transparent;
+        pointer-events: none;
+        transition: background 0.56s ease 0.12s;
+      }
+      #preloader.preloader--boom .pre-ring {
+        animation: pre-boom 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      #preloader.preloader--boom .pre-ico {
+        animation: pre-ico-out 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      #preloader.preloader--boom .pre-wrap::before {
+        animation: pre-flash 0.7s ease-out forwards;
+      }
+      #preloader.preloader--boom .pre-wrap::after {
+        animation: pre-echo 0.84s ease-out 0.14s forwards;
+      }
+      @keyframes pre-boom {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        16% {
+          transform: scale(0.82);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(26);
+          opacity: 0;
+        }
+      }
+      @keyframes pre-ico-out {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        28% {
+          opacity: 1;
+          transform: scale(1.14);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.4);
+        }
+      }
+      @keyframes pre-flash {
+        0% {
+          opacity: 0;
+          transform: scale(0.7);
+        }
+        25% {
+          opacity: 0.8;
+          transform: scale(1.5);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(9.5);
+        }
+      }
+      @keyframes pre-echo {
+        0% {
+          opacity: 0.85;
+          transform: scale(0.7);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(18);
+        }
+      }
+      #preloader .pre-wrap {
+        position: relative;
+        width: 76px;
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Burst layers for the boom - invisible during load, animated on exit.
+         ::before is a soft radial light flash; ::after is an echo ring. */
+      #preloader .pre-wrap::before,
+      #preloader .pre-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+      }
+      #preloader .pre-wrap::before {
+        background: radial-gradient(
+          circle,
+          rgba(162, 43, 43, 0.55),
+          rgba(162, 43, 43, 0) 70%
+        );
+      }
+      #preloader .pre-wrap::after {
+        border: 2px solid #a22b2b;
+      }
+      /* Circular progress ring - fills once from the top around the icon,
+         like a loading indicator. Rendered with a conic-gradient whose sweep
+         angle is animated via the @property custom property above. This is
+         far lighter to animate than SVG stroke geometry, so it stays smooth
+         on mobile during load while keeping the progress-fill look. */
+      #preloader .pre-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(
+          #a22b2b var(--p, 0deg),
+          rgba(162, 43, 43, 0.2) 0
+        );
+        /* Carve out the middle so only a ~5px ring remains. */
+        -webkit-mask: radial-gradient(
+          farthest-side,
+          #0000 calc(100% - 5px),
+          #000 calc(100% - 5px)
+        );
+        mask: radial-gradient(
+          farthest-side,
+          #0000 calc(100% - 5px),
+          #000 calc(100% - 5px)
+        );
+        animation: pre-fill 2.1s ease-in-out forwards;
+      }
+      #preloader .pre-ico {
+        position: relative;
+        z-index: 1;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        /* Prevent the ICO canvas edge from flashing as a square during the
+           boom scale/fade animation on some mobile compositors. */
+        -webkit-mask-image: radial-gradient(circle, #000 72%, #0000 76%);
+        mask-image: radial-gradient(circle, #000 72%, #0000 76%);
+        overflow: hidden;
+      }
+      @keyframes pre-fill {
+        to {
+          --p: 360deg;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="/portfolio/assets/index-BXVDpUcd.js"></script>
+    <link rel="stylesheet" crossorigin href="/portfolio/assets/index-CeeGO89j.css">
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Font/app loading splash - removed once the "Hacked" font is ready
+         and React has mounted (or after a fail-safe timeout). -->
+    <div id="preloader" aria-hidden="true">
+      <div class="pre-wrap">
+        <div class="pre-ring"></div>
+        <img class="pre-ico" src="/portfolio/coderwings.ico" alt="" width="40" height="40" />
+      </div>
+    </div>
+
     <div id="root"></div>
+    <script>
+      (function () {
+        var pre = document.getElementById("preloader");
+
+        // Let the app know the splash is out of the way so the hero intro
+        // (scramble → set name → matrix) starts only once the splash lifts,
+        // instead of running hidden behind it.
+        function signalSplashDone() {
+          if (window.__splashDone) return;
+          window.__splashDone = true;
+          try {
+            window.dispatchEvent(new Event("splash:done"));
+          } catch (e) {}
+        }
+
+        // Repeat refresh within this tab session: skip splash.
+        var alreadyShown = false;
+        try {
+          alreadyShown = sessionStorage.getItem("splashShown") === "1";
+        } catch (e) {}
+        if (!pre || alreadyShown) {
+          signalSplashDone();
+          return;
+        }
+
+        // Minimum time the splash stays up on the first visit so it always
+        // plays a full, graceful cycle and fades out - never cut abruptly,
+        // even when the (now self-hosted) font is ready almost instantly.
+        var MIN_VISIBLE = 2400;
+        var startedAt = Date.now();
+
+        var hidden = false;
+        function hide() {
+          if (hidden) return;
+          hidden = true;
+          try {
+            sessionStorage.setItem("splashShown", "1");
+          } catch (e) {}
+          // Ring ripples/booms outward while the backdrop clears; give the
+          // boom a beat to breathe, then reveal the hero intro so the site
+          // emerges from the ripple instead of cutting in immediately.
+          pre.classList.add("preloader--boom");
+          setTimeout(signalSplashDone, 360);
+          setTimeout(function () {
+            if (pre.parentNode) pre.parentNode.removeChild(pre);
+          }, 1020);
+        }
+
+        var fontReady = false;
+        var appReady = false;
+        var scheduled = false;
+        function maybeHide() {
+          if (!(fontReady && appReady) || scheduled) return;
+          scheduled = true;
+          // Hold the splash until BOTH the content is ready AND the minimum
+          // display time has elapsed, so the animation completes gracefully.
+          var wait = Math.max(0, MIN_VISIBLE - (Date.now() - startedAt));
+          setTimeout(hide, wait);
+        }
+
+        // Wait for the custom "Hacked" font to actually download.
+        if (document.fonts && document.fonts.load) {
+          document.fonts
+            .load('1em "Hacked"')
+            .then(function () {
+              return document.fonts.ready;
+            })
+            .then(function () {
+              fontReady = true;
+              maybeHide();
+            })
+            .catch(function () {
+              fontReady = true;
+              maybeHide();
+            });
+        } else {
+          fontReady = true;
+        }
+
+        // Wait for React to render into #root so the splash never uncovers
+        // an empty page if the font finishes before the JS bundle.
+        var poll = setInterval(function () {
+          var root = document.getElementById("root");
+          if (root && root.childElementCount > 0) {
+            appReady = true;
+            clearInterval(poll);
+            maybeHide();
+          }
+        }, 50);
+
+        // Fail-safe: never trap the user if something stalls.
+        setTimeout(function () {
+          clearInterval(poll);
+          hide();
+        }, 8000);
+      })();
+    </script>
   </body>
 </html>
