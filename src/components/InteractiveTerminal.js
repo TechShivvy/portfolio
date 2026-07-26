@@ -5,15 +5,9 @@ import startExit8 from "../utils/exit8";
 import buildCommands from "../utils/terminalCommands";
 import buildVirtualFiles from "../utils/virtualFiles";
 import renderText from "../utils/renderText";
-
-// ─── Boot sequence lines ────────────────────────────────────────────────────
-const BOOT_LINES = [
-  "Initializing shivi-shell v1.0.0...",
-  "Loading user profile...",
-  "Mounting filesystem...",
-  "$ source ~/.shivi_profile",
-  "Ready. Type 'help' for available commands.",
-];
+import { BOOT_LINES } from "../content/bootLines";
+import { CHIPS } from "../content/terminalChips";
+import sleep from "../utils/sleep";
 
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -253,9 +247,6 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
     }
   };
 
-  // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "spotify --now-playing", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "tenet", "clear"];
-
   return (
     <div className={styles.interactiveTerminal}>
       {/* Output area */}
@@ -318,8 +309,4 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       )}
     </div>
   );
-}
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
 }
