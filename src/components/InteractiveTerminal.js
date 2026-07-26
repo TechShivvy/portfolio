@@ -69,15 +69,12 @@ function buildCommands(scrollToSection) {
       { text: "  projects            - jump to projects section", type: "output" },
       { text: "  portfolio --no-css  - brutalist HTML version (1997 edition)", type: "output" },
       { text: "  matrix [sub]        - matrix rain controls (matrix -h for sub-commands)", type: "output" },
-      { text: "  replay [sub]        - replay intro sequences (replay -h for sub-commands)", type: "output" },
+      { text: "  replay [sub]        - replay intro sequences (replay -h for sub-commands)  [Ctrl+K s/m/a]", type: "output" },
       { text: "  clear               - clear terminal", type: "output" },
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
       { text: "  exit 8              - the loop. spot 8 anomalies.", type: "output" },
-      { text: "  suicide             - closes the tab. for real.", type: "output" },
-      { text: "", type: "output" },
-      { text: "  ?  or  Ctrl+/   - show keyboard shortcuts", type: "output" },
-      { text: "  Ctrl+K          - prefix key (Ctrl+K then h/c/m/e/s/r/a/q)", type: "output" },
+      { text: "  suicide             - closes the tab. for real.  [Ctrl+K q]", type: "output" },
     ],
 
     ls: (args) => {
