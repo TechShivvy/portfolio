@@ -408,6 +408,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             anomalyActive: false, removeEffect: null, expireTimer: null,
             anomalyFiredThisCorridor: false, isCurrentCorridorClean: true,
             anomalyTriggerY: Infinity, scorePredictedThisCorridor: false,
+            _lastForwardT: null, // used by step() to normalise speed to real wall-clock time
           });
 
           window.scrollTo({ top: 0, behavior: "instant" });
@@ -427,7 +428,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const EFFECTS_SAFE = [
             (t) => { t.style.filter = "invert(1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "sepia(1) saturate(4) hue-rotate(300deg)"; return () => { t.style.filter = ""; }; },
-            (t) => { t.style.filter = "brightness(0.04)"; return () => { t.style.filter = ""; }; },
+            // brightness(0.04) is invisible on this dark (#000) theme — use a stark desaturated
+            // contrast instead that clearly reads as "wrong" even on a black background.
+            (t) => { t.style.filter = "saturate(0) contrast(6) brightness(1.8)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "blur(6px) saturate(0)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "invert(0.6) hue-rotate(100deg) saturate(3)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "contrast(20) brightness(0.3)"; return () => { t.style.filter = ""; }; },
@@ -435,6 +438,10 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             (t) => { t.style.filter = "brightness(8)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.transform = "scaleX(-1)"; return () => { t.style.transform = ""; }; },
             (t) => { t.style.transform = "scaleY(-1)"; return () => { t.style.transform = ""; }; },
+            // fontFamily on #root doesn't change canvas text (drawn with 'monospace' in JS)
+            // and most elements inherit the CSS variable explicitly — barely noticeable.
+            // Replace with a strong drop-shadow glitch that's always visible.
+            (t) => { t.style.filter = "hue-rotate(260deg) saturate(15) brightness(1.1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.fontFamily = '"Comic Sans MS",cursive'; return () => { t.style.fontFamily = ""; }; },
           ];
           const EFFECTS_HEAVY = [
@@ -532,16 +539,19 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const scrollBack = (corridorEl) => {
             st.cancelBackScroll?.();
             st.scrollingBack = true;
+            st._lastForwardT = null; // reset forward-speed clock so there's no big jump on resume
             let backRaf;
             const tick = () => {
               const top = corridorEl.getBoundingClientRect().top; // corridor top offset from viewport top
-              if (top >= -1) {
-                // At (or just past) the corridor top — snap it exactly to viewport top
-                window.scrollTo({ top: window.scrollY + top, left: 0, behavior: "instant" });
+              // Terminate within 3px — sub-pixel BoundingClientRect values can make the
+              // old ">= -1" threshold loop forever (stepPx rounds to 0, no progress).
+              if (top >= -3) {
+                if (top < 0) window.scrollTo({ top: Math.round(window.scrollY + top), left: 0, behavior: "instant" });
                 st.scrollingBack = false; st.cancelBackScroll = null; return;
               }
-              // Corridor top is above the viewport — scroll up toward it (no overshoot)
-              const stepPx = Math.min(28, -top);
+              // Eased deceleration: 35% of remaining distance per frame, min 4 px, max 60 px.
+              // Feels much smoother than a fixed step and never micro-loops at fractional px.
+              const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
               window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
               backRaf = requestAnimationFrame(tick);
             };
@@ -656,7 +666,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               scrollingBack: false, cancelBackScroll: null, rootHeight: 0, lastCorridor: 0,
               corridorFoundAnomaly: false, progressBarEl: null,
               anomalyFiredThisCorridor: false, isCurrentCorridorClean: true, anomalyTriggerY: Infinity,
-              scorePredictedThisCorridor: false,
+              scorePredictedThisCorridor: false, _lastForwardT: null,
             });
           };
           st.teardown = teardown;
@@ -784,7 +794,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
           // ── Main scroll loop ────────────────────────────────────────────────────────────
           resetForCorridor(0); // prime corridor 0 anomaly
-          const step = () => {
+          const step = (now) => {
             const currentCorridor = currentCorridorIdx();
 
             // Natural corridor exit — score the corridor we just LEFT, set up the new one
@@ -859,7 +869,16 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               createAndAppendClone();
             }
 
-            if (!st.scrollingBack) window.scrollTo({ top: window.scrollY + 8, left: 0, behavior: "instant" });
+            if (!st.scrollingBack) {
+              // Normalise scroll speed to wall-clock time so it's the same at 60 Hz,
+              // 90 Hz, and 120 Hz (without this, speed doubles on high-refresh displays).
+              const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
+              st._lastForwardT = now;
+              const px = Math.max(1, Math.round(500 * dt / 1000)); // target 500 px/s
+              window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
+            } else {
+              st._lastForwardT = null; // reset while paused so first forward frame isn't a big jump
+            }
             exitScrollRef.current = requestAnimationFrame(step);
           };
           exitScrollRef.current = requestAnimationFrame(step);
