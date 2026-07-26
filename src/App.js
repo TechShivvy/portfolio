@@ -36,6 +36,7 @@ function App() {
     const saved = sessionStorage.getItem("scrollpos");
     const target = saved ? parseInt(saved, 10) : NaN;
     sessionStorage.removeItem("scrollpos");
+    sessionStorage.removeItem("replayReload");
 
     if (!Number.isNaN(target) && target > 0) {
       let tries = 0;
@@ -59,6 +60,9 @@ function App() {
     }
 
     const handleBeforeUnload = () => {
+      // Don't save scroll position when a replay command triggered the reload
+      // — we want to land at the top, not restore the previous position.
+      if (sessionStorage.getItem("replayReload") === "1") return;
       sessionStorage.setItem("scrollpos", window.scrollY.toString());
     };
 

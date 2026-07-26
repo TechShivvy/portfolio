@@ -33,7 +33,6 @@ function buildCommands(scrollToSection) {
       { text: "  tech         — current tech rabbit holes", type: "output" },
       { text: "  music        — what's playing", type: "output" },
       { text: "  spotify      — same as music", type: "output" },
-      { text: "  matrix           — replay the matrix", type: "output" },
       { text: "  matrix fps N     — set matrix rain to N fps (0 = native)", type: "output" },
       { text: "  matrix rainbow   — enable rainbow matrix mode", type: "output" },
       { text: "  matrix reset     — restore default matrix color", type: "output" },
@@ -45,6 +44,9 @@ function buildCommands(scrollToSection) {
       { text: "  ls               — list... something", type: "output" },
       { text: "  sudo             — try it ;)", type: "output" },
       { text: "  exit 8           — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
+      { text: "  replay splash     — see the loading splash again on next reload", type: "output" },
+      { text: "  replay matrix     — replay the matrix + name scramble on next reload", type: "output" },
+      { text: "  replay all        — full hard reset: splash + matrix scramble on next reload", type: "output" },
       { text: "  suicide          — closes the tab. for real.", type: "output" },
     ],
 
@@ -115,9 +117,12 @@ function buildCommands(scrollToSection) {
         window.__matrixRainbow = false;
         return [{ text: ">> matrix: color reset to default.", type: "info" }];
       }
-      sessionStorage.removeItem("hasRun");
-      window.location.reload();
-      return [{ text: ">> reloading matrix...", type: "info" }];
+      return [
+        { text: "matrix sub-commands:", type: "info" },
+        { text: "  matrix fps N     — set rain speed (0 = native refresh)", type: "output" },
+        { text: "  matrix rainbow   — enable rainbow mode", type: "output" },
+        { text: "  matrix reset     — restore default color", type: "output" },
+      ];
     },
 
     git: (args) => {
@@ -158,6 +163,35 @@ function buildCommands(scrollToSection) {
     timeline: () => {
       scrollToSection("timeline");
       return [{ text: ">> scrolling to timeline...", type: "info" }];
+    },
+
+    replay: (args) => {
+      const sub = args[0];
+      if (sub === "splash") {
+        sessionStorage.removeItem("splashShown");
+        sessionStorage.setItem("replayReload", "1");
+        setTimeout(() => window.location.reload(), 500);
+        return [{ text: ">> replaying splash. reloading — watch for the boom.", type: "info" }];
+      }
+      if (sub === "matrix") {
+        sessionStorage.removeItem("hasRun");
+        sessionStorage.setItem("replayReload", "1");
+        setTimeout(() => window.location.reload(), 500);
+        return [{ text: ">> replaying matrix. reloading — shivcharan incoming.", type: "info" }];
+      }
+      if (sub === "all") {
+        sessionStorage.removeItem("splashShown");
+        sessionStorage.removeItem("hasRun");
+        sessionStorage.setItem("replayReload", "1");
+        setTimeout(() => window.location.reload(), 500);
+        return [{ text: ">> full replay. reloading — full intro from scratch.", type: "info" }];
+      }
+      return [
+        { text: "usage:", type: "info" },
+        { text: "  replay splash    — see the loading splash again", type: "output" },
+        { text: "  replay matrix    — replay the matrix + name scramble", type: "output" },
+        { text: "  replay all       — full reset: splash + matrix scramble", type: "output" },
+      ];
     },
 
     ls: () => [
