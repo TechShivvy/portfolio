@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./_KeyboardShortcuts.module.css";
+import tenet from "../utils/tenet";
 
 // ─── Site-wide keyboard shortcuts ────────────────────────────────────────────
 // `?` or `Ctrl+/`  -> toggle this shortcuts panel (works anywhere on the site)
@@ -20,6 +21,7 @@ const ACTIONS = {
   m: { label: "replay matrix", run: () => replay({ matrix: true }) },
   a: { label: "replay all", run: () => replay({ splash: true, matrix: true }) },
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
+  x: { label: "tenet", run: () => tenet() },
   q: { label: "suicide", run: () => window.location.replace("about:blank") },
 };
 
@@ -32,6 +34,7 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "m"], desc: "replay matrix" },
   { keys: ["Ctrl+K", "a"], desc: "replay all (splash + matrix)" },
   { keys: ["Ctrl+K", "r"], desc: "raw HTML portfolio (no CSS)" },
+  { keys: ["Ctrl+K", "x"], desc: "tenet (reverse intro + close tab)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },
   { keys: ["Enter"], desc: "run command" },

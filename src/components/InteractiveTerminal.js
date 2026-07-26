@@ -3,6 +3,7 @@ import styles from "./_About.module.css";
 import INTERESTS from "../content/interests";
 import ABOUT from "../content/about";
 import TIMELINE from "../content/timeline";
+import tenet from "../utils/tenet";
 
 // ─── Boot sequence lines ────────────────────────────────────────────────────
 const BOOT_LINES = [
@@ -77,6 +78,7 @@ function buildCommands(scrollToSection) {
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
       { text: "  exit 8              - the loop. spot 8 anomalies.", type: "output" },
+      { text: "  tenet               - play the whole intro in reverse, then power off.  [Ctrl+K x]", type: "output" },
       { text: "  suicide             - closes the tab. for real.  [Ctrl+K q]", type: "output" },
     ],
 
@@ -273,6 +275,16 @@ function buildCommands(scrollToSection) {
         return [{ text: "suicide - closes the current tab. no questions asked.", type: "info" }];
       setTimeout(() => window.location.replace("about:blank"), 600);
       return [{ text: ">> bye o/", type: "info" }];
+    },
+
+    tenet: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "tenet - plays the whole intro in reverse, then closes the tab. what's happened, happened. no coming back.", type: "info" }];
+      setTimeout(() => tenet(), 500);
+      return [
+        { text: ">> inverting the turnstile...", type: "danger" },
+        { text: "what's happened, happened. hold on to something.", type: "output" },
+      ];
     },
 
     spotify: (args) => {
@@ -1080,7 +1092,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   };
 
   // ── Chip commands for mobile ──────────────────────────────────────────────
-  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "spotify --now-playing", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "clear"];
+  const CHIPS = ["help", "ls", "whoami", "cat skills.txt", "cat contact.txt", "git log", "spotify --now-playing", "timeline", "projects", "matrix", "replay", "sudo", "exit 8", "tenet", "clear"];
 
   return (
     <div className={styles.interactiveTerminal}>

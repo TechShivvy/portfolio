@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
 import Swal from "sweetalert2";
@@ -13,6 +13,7 @@ const Home = () => {
   const [hintVisible, setHintVisible] = useState(false);
   const [rainbowToast, setRainbowToast] = useState(null);
   const [introStarted, setIntroStarted] = useState(false);
+  const arrowHiddenRef = useRef(false);
 
   const handleKonami = useCallback(() => {
     const next = !window.__matrixRainbow;
@@ -56,17 +57,22 @@ const Home = () => {
 
   // Step 1: mount the arrow element 3.5 s after intro
   useEffect(() => {
-    if (!startAnimation) return;
-    const timer = setTimeout(() => setShowHint(true), 3500);
+    if (!startAnimation || arrowHiddenRef.current) return;
+    const timer = setTimeout(() => {
+      if (arrowHiddenRef.current) return;
+      setShowHint(true);
+    }, 3500);
     return () => clearTimeout(timer);
   }, [startAnimation]);
 
   // Step 2: once mounted, double-RAF so browser paints opacity:0 first,
   // then the CSS transition fires to opacity:1 cleanly
   useEffect(() => {
-    if (!showHint) return;
+    if (!showHint || arrowHiddenRef.current) return;
     const raf1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setHintVisible(true));
+      requestAnimationFrame(() => {
+        if (!arrowHiddenRef.current) setHintVisible(true);
+      });
     });
     return () => cancelAnimationFrame(raf1);
   }, [showHint]);
@@ -74,9 +80,21 @@ const Home = () => {
   // Step 3: sync fade in/out with scroll - only depends on showArrow so it
   // doesn't fire on mount (which would race with the double-RAF above)
   useEffect(() => {
+    if (arrowHiddenRef.current) return;
     if (showHint) setHintVisible(showArrow);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArrow]);
+
+  // Tenet sequence: the down-arrow hint is the last thing in, so it's the
+  // first thing out. Fade it away and keep it hidden for the rest of the run.
+  useEffect(() => {
+    const hideArrow = () => {
+      arrowHiddenRef.current = true;
+      setHintVisible(false);
+    };
+    window.addEventListener("hero:hide-arrow", hideArrow);
+    return () => window.removeEventListener("hero:hide-arrow", hideArrow);
+  }, []);
 
   const YES_OPTS = ["yuh!", "yus", "ye!", "yup!", "mhm!"];
   const NO_OPTS  = ["nah", "nawr", "nO", "nahhh", "nope"];
