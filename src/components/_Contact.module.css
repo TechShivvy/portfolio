@@ -52,7 +52,7 @@
 
 .contact-form textarea {
   width: 100%;
-  min-width: 200px;
+  min-width: 0;
   min-height: 15em;
   resize: vertical;
 
@@ -104,6 +104,7 @@
   flex-direction: column;
   height: 100%;
   text-align: center;
+  min-width: 0;
 }
 
 .text-wrapper {
@@ -125,6 +126,7 @@
 
 .text-below-image {
   text-align: justify;
+  overflow-wrap: anywhere;
   /* font-size: 1rem; */
 }
 
@@ -155,10 +157,21 @@ input:invalid {
     grid-template-columns: 1fr;
   }
 
-  .gridItem {
+  .text-wrapper h3 {
+    font-size: 1.6rem;
+  }
+
+  .text-below-image {
+    /* Justify creates huge word gaps on narrow screens — left-align instead. */
+    text-align: left;
+    font-size: 0.9rem;
   }
 
   .text-above-image {
     display: none;
+  }
+
+  .form-container {
+    padding: 12px;
   }
 }

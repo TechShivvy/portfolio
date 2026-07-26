@@ -272,17 +272,9 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   // ── Scroll ONLY within the output div (not the whole page) ───────────────
   useEffect(() => {
     if (!outputRef.current) return;
-    if (isCommandScroll.current) {
-      // After a command: scroll so the "> cmd" line sits at the top of the pane.
-      // Use the captured content-bottom position (not scrollHeight, which can
-      // equal clientHeight when content doesn't overflow before the command).
-      outputRef.current.scrollTop = cmdScrollPos.current;
-      isCommandScroll.current = false;
-      cmdScrollPos.current = null;
-    } else {
-      // Boot sequence: always follow the latest line (scroll to bottom)
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
-    }
+    // Always follow the latest line — the newest output sits at the bottom of
+    // the fixed-height pane, just like a real terminal.
+    outputRef.current.scrollTop = outputRef.current.scrollHeight;
   }, [lines]);
 
   // ── Boot sequence ─────────────────────────────────────────────────────────

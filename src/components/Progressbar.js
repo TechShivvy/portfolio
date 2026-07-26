@@ -5,11 +5,16 @@ function Progressbar() {
   const barRef = useRef(null);
   const tickingRef = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [top, setTop] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 768 ? "50px" : "0px"
-  );
+  const [top, setTop] = useState("50px");
 
   useEffect(() => {
+    // Anchor the bar to the bottom of the navbar so it never overlaps it,
+    // regardless of navbar height (which differs between mobile and desktop).
+    const measureTop = () => {
+      const nav = document.getElementById("navbar");
+      setTop(nav ? `${Math.round(nav.getBoundingClientRect().height)}px` : "50px");
+    };
+
     const update = () => {
       tickingRef.current = false;
       const scrollTop =
@@ -33,10 +38,11 @@ function Progressbar() {
     };
 
     const onResize = () => {
-      setTop(window.innerWidth >= 768 ? "50px" : "0px");
+      measureTop();
       requestTick();
     };
 
+    measureTop();
     update();
     window.addEventListener("scroll", requestTick, { passive: true });
     window.addEventListener("resize", onResize);

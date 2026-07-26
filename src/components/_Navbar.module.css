@@ -64,4 +64,10 @@
 }
 
 @media (max-width: 768px) {
+  .navbar a {
+    /* Fluid size keeps all six links on one row without crowding, down to the
+       narrowest phones. */
+    font-size: clamp(0.5rem, 2.7vw, 0.8rem);
+    letter-spacing: 0;
+  }
 }

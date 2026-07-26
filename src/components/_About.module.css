@@ -73,6 +73,9 @@
 .lines {
   margin: 0;
   line-height: 1.5;
+  /* Break long unbroken strings (URLs, emails) so they never overflow the
+     terminal box on narrow screens. */
+  overflow-wrap: anywhere;
 }
 
 .h2 {
@@ -150,6 +153,7 @@ a > img {
 
 .gridItem {
   position: relative;
+  min-width: 0; /* allow grid items to shrink below content width instead of overflowing the track */
 }
 
 .gridItem:first-child {
@@ -173,12 +177,14 @@ a > img {
 .mosaicCard {
   position: relative;
   width: 100%;
-  height: 400px;
+  /* aspect-ratio is set inline in About.js to match the active theme
+     (tall cover vs wide bar), chosen from the card's measured width. */
   overflow: hidden;
   border: 1px solid #1DB954; /* Spotify green */
   box-shadow: 0 0 12px 1px rgba(29, 185, 84, 0.4),
               inset 0 0 30px rgba(29, 185, 84, 0.04);
   border-radius: 2px;
+  isolation: isolate; /* prevent will-change:transform tiles bleeding through on mobile */
 }
 
 /* When pinned (clicked), tighten the glow so the user knows it's locked */
@@ -201,12 +207,11 @@ a > img {
    request doesn't bleed through sub-pixel tile gaps at high zoom levels. */
 .mosaicBack a {
   display: block;
-  max-width: 100%;  /* don't overflow card horizontally */
+  width: 100%;      /* fill the card so the artwork covers it edge to edge */
+  height: 100%;
   font-size: 0;     /* hides inline alt text */
   color: transparent;
   overflow: hidden;
-  /* width/height intentionally omitted — shrinks to image size so genuine
-     gaps around the image fall outside <a> and can toggle the pin state */
 }
 
 /* <picture> sits between <a> and <img> */
@@ -217,11 +222,10 @@ a > img {
 .mosaicBack a > img,
 .mosaicBack a > picture > img {
   display: block;
-  max-height: 400px; /* cap at card height */
-  max-width: 100%;   /* cap at card width */
-  width: auto;
-  height: auto;
-  /* Natural sizing: gaps around the image are real DOM space outside <a> */
+  width: 100%;
+  height: 100%;
+  /* Card aspect ratio matches the theme, so cover fills with no crop. */
+  object-fit: cover;
 }
 
 /* Fallback shown when the Spotify image fails to load (bad response / offline) */
@@ -284,7 +288,7 @@ a > img {
   }
 
   .lines {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 
   .fakeScreen {
@@ -297,11 +301,9 @@ a > img {
     height: 200px; /* kept for if flip-card is ever used again */
   }
   .mosaicCard {
-    /* On mobile hover isn't available; tap-to-reveal (onClick) toggles the
-       tiles. Use aspect-ratio so it scales with the viewport on zoom. */
-    height: auto;
-    aspect-ratio: 16 / 9;
-    min-height: 160px;
+    /* aspect-ratio is set inline in About.js from the card's measured width. */
+    max-height: none;
+    min-height: 90px;
   }
 }
 
@@ -379,14 +381,21 @@ a > img {
   color: #000;
 }
 
-/* ─── Terminal grid — stacks fake + interactive in the same cell so the
-       container height is always the natural max of the two modes. ─── */
+/* ─── Terminal grid — the view-mode content defines the box height; the
+       interactive terminal is absolutely overlaid so its (potentially huge)
+       output never grows the box — it scrolls internally instead. ─── */
 .terminalGrid {
+  position: relative;
   display: grid;
+  min-height: 320px;
 }
 .terminalGrid > * {
   grid-column: 1;
   grid-row: 1;
+}
+.terminalSlot {
+  position: absolute;
+  inset: 0;
 }
 .terminalHidden {
   visibility: hidden;
@@ -396,7 +405,7 @@ a > img {
 /* ─── Interactive terminal output area ─── */
 .interactiveTerminal {
   width: 100%;
-  height: 100%;  /* fill the grid cell set by the fake terminal's natural height */
+  height: 100%;  /* fill the overlay slot (which matches the view-mode height) */
   display: flex;
   flex-direction: column;
   gap: 0;
