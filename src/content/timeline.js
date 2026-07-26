@@ -1,7 +1,7 @@
 /**
  * Career timeline displayed as git log commits.
  * Each entry: { hash, date, message, tag?, body? }
- * body: optional — shown on click as an expandable detail block.
+ * body: optional - shown on click as an expandable detail block.
  */
 const timelineData = [
   {
@@ -31,7 +31,7 @@ const timelineData = [
     message: "feat(career): graduated from SSN",
     tag: "tag: v4.0.0",
     body: [
-      "B.E. Computer Science — SSNCE, Kalavakkam",
+      "B.E. Computer Science - SSNCE, Kalavakkam",
       "four years, one degree, many 3am debug sessions",
     ],
   },
@@ -49,7 +49,7 @@ const timelineData = [
     date: "Nov 2020",
     message: "chore: initial empty commit",
     body: [
-      "enrolled in B.E. CSE — SSNCE, Kalavakkam",
+      "enrolled in B.E. CSE - SSNCE, Kalavakkam",
       "this is where it all begins...",
     ],
   },

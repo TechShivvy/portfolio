@@ -16,7 +16,7 @@ const Timeline = lazy(() => import("./components/Timeline"));
 
 function App() {
   // If we have a saved scroll position, start "restoring" so a black overlay
-  // covers the page from the very first paint — this hides the brief flash of
+  // covers the page from the very first paint - this hides the brief flash of
   // the hero at the top before we jump to the saved position.
   const [restoring, setRestoring] = useState(() => {
     const s = sessionStorage.getItem("scrollpos");
@@ -30,12 +30,13 @@ function App() {
     }
 
     // Restore the saved position. Sections are lazy-loaded, so the document
-    // isn't tall enough right away — retry until we reach the target (or the
+    // isn't tall enough right away - retry until we reach the target (or the
     // page simply can't get that tall anymore) instead of relying on
     // DOMContentLoaded, which has already fired by the time this effect runs.
     const saved = sessionStorage.getItem("scrollpos");
     const target = saved ? parseInt(saved, 10) : NaN;
     sessionStorage.removeItem("scrollpos");
+    sessionStorage.removeItem("replayReload");
 
     if (!Number.isNaN(target) && target > 0) {
       let tries = 0;
@@ -59,6 +60,9 @@ function App() {
     }
 
     const handleBeforeUnload = () => {
+      // Don't save scroll position when a replay command triggered the reload
+      // - we want to land at the top, not restore the previous position.
+      if (sessionStorage.getItem("replayReload") === "1") return;
       sessionStorage.setItem("scrollpos", window.scrollY.toString());
     };
 

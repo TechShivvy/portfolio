@@ -33,10 +33,10 @@ const MatrixAnimation = ({ startAnimation }) => {
       canvas.height = cssH;
       const columns = Math.floor(cssW / fontSize) + 1;
       if (columns > matrix.length) {
-        // grew wider — seed the new columns at the top
+        // grew wider - seed the new columns at the top
         for (let i = matrix.length; i < columns; i++) matrix[i] = 1;
       } else {
-        // shrank — drop the extra columns
+        // shrank - drop the extra columns
         matrix.length = columns;
       }
     }

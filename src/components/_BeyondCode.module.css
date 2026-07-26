@@ -126,7 +126,7 @@
   color: var(--color-matrix);
 }
 
-/* Lines that are entirely a // comment — no bullet, dim + italic */
+/* Lines that are entirely a // comment - no bullet, dim + italic */
 .listItemComment {
   font-style: italic;
   opacity: 0.5;
@@ -170,7 +170,7 @@
   }
 }
 
-/* Very narrow screens — stack tabs into a 3-column grid so they don't spill */
+/* Very narrow screens - stack tabs into a 3-column grid so they don't spill */
 @media (max-width: 400px) {
   .tabs {
     display: grid;

@@ -162,7 +162,7 @@ input:invalid {
   }
 
   .text-below-image {
-    /* Justify creates huge word gaps on narrow screens — left-align instead. */
+    /* Justify creates huge word gaps on narrow screens - left-align instead. */
     text-align: left;
     font-size: 0.9rem;
   }

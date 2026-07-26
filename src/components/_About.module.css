@@ -307,7 +307,7 @@ a > img {
   }
 }
 
-/* ─── Spotify card — terminal-themed front face ─── */
+/* ─── Spotify card - terminal-themed front face ─── */
 /* .flip-card-front is replaced by the mosaic tile system above */
 
 .spotifyFront {
@@ -381,9 +381,9 @@ a > img {
   color: #000;
 }
 
-/* ─── Terminal grid — the view-mode content defines the box height; the
+/* ─── Terminal grid - the view-mode content defines the box height; the
        interactive terminal is absolutely overlaid so its (potentially huge)
-       output never grows the box — it scrolls internally instead. ─── */
+       output never grows the box - it scrolls internally instead. ─── */
 .terminalGrid {
   position: relative;
   display: grid;
@@ -419,7 +419,7 @@ a > img {
   text-align: left;
 }
 
-/* output line types — cmd stands out; output/info/danger are smaller & indented */
+/* output line types - cmd stands out; output/info/danger are smaller & indented */
 /* ─ cmd: accent, bold, group-separator top margin ─ */
 .line-cmd {
   color: var(--color-accent);
@@ -479,7 +479,7 @@ a > img {
   font-family: var(--font-mono);
   font-size: 1rem;
   width: 100%;
-  /* Native caret hidden — the fake block cursor below stands in for it */
+  /* Native caret hidden - the fake block cursor below stands in for it */
   caret-color: transparent;
 }
 

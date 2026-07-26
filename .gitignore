@@ -14,7 +14,7 @@
 # misc
 .DS_Store
 .env.local
-# .env.development.local  # tracked intentionally — sets GENERATE_SOURCEMAP=false for faster dev starts
+# .env.development.local  # tracked intentionally - sets GENERATE_SOURCEMAP=false for faster dev starts
 .env.test.local
 .env.production.local
 

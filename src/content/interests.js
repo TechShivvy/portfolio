@@ -45,7 +45,7 @@ export const INTERESTS = {
     icon: "(°ロ°)",
     blurb: "3x3 PB: 26.05s  // still chasing sub-20",
     favorites: [
-      "3x3  — 26.05s PB",
+      "3x3  - 26.05s PB",
       "2x2",
       "4x4  // parity errors are personal attacks",
       "Pyraminx  // triangles, somehow more cursed",

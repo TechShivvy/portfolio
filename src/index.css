@@ -68,7 +68,8 @@ html {
 
 @font-face {
   font-family: Hacked;
-  src: url(https://hackedfont.com/HACKED.ttf);
+  src: url(./fonts/HACKED.ttf) format("truetype");
+  font-display: block;
 }
 
 ::-moz-selection {
