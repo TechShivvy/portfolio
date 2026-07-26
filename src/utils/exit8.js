@@ -46,7 +46,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     if (heroEl.parentElement) heroEl.parentElement.style.zIndex = "1";
   }
 
-  window.scrollTo({ top: 0, behavior: "instant" });
+  window.scrollTo(0, 0);
   const rootHeight = rootEl.offsetHeight;
   st.rootHeight = rootHeight;
 
@@ -179,13 +179,13 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     const tick = () => {
       const top = corridorEl.getBoundingClientRect().top;
       if (top >= -3) {
-        if (top < 0) window.scrollTo({ top: Math.round(window.scrollY + top), left: 0, behavior: "instant" });
+        if (top < 0) window.scrollTo(0, Math.round(window.scrollY + top));
         st.scrollingBack = false;
         st.cancelBackScroll = null;
         return;
       }
       const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
-      window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
+      window.scrollTo(0, window.scrollY - stepPx);
       backRaf = requestAnimationFrame(tick);
     };
     backRaf = requestAnimationFrame(tick);
@@ -536,7 +536,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
       const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
       st._lastForwardT = now;
       const px = Math.max(1, Math.round((500 * dt) / 1000));
-      window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
+      window.scrollTo(0, window.scrollY + px);
     } else {
       st._lastForwardT = null;
     }
@@ -545,14 +545,6 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
   };
 
   st.scrollRafId = requestAnimationFrame(step);
-
-  // Initial game output
-  setLines((prev) => [
-    ...prev,
-    { text: ">> corridor initiated. something is wrong in here.", type: "danger" },
-    { text: ">> spot anomalies. press ENTER or tap [!] to call them.", type: "output" },
-    { text: ">> reach exit 8. ESC or EXIT to quit.  // false calls reset you.", type: "output" },
-  ]);
 
   // Return API
   return {

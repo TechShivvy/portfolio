@@ -68,11 +68,6 @@ export default function buildCommands(scrollToSection) {
       return [{ text: `cat: ${args[0]}: no such file`, type: "danger" }];
     },
 
-    projects: () => {
-      scrollToSection("projects");
-      return [{ text: ">> scrolling to projects...", type: "info" }];
-    },
-
     matrix: (args) => {
       if (args.length && (args[0] === "-h" || args[0] === "--help")) {
         return [

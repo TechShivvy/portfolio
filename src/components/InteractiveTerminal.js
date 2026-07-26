@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./_About.module.css";
-import tenet from "../utils/tenet";
 import startExit8 from "../utils/exit8";
 import buildCommands from "../utils/terminalCommands";
 import buildVirtualFiles from "../utils/virtualFiles";
@@ -141,7 +140,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             setLines,
             inputRef,
             rootEl: document.getElementById("root"),
-            onQuit: () => {},
+            onQuit: () => runCommand("exit 0"),
           });
           exit8GameRef.current = gameInstance;
           setLines((prev) => [
