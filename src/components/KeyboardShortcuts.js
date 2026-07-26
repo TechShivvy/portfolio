@@ -22,14 +22,7 @@ const ACTIONS = {
   a: { label: "replay all", run: () => replay({ splash: true, matrix: true }) },
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
-  8: { label: "exit 8", run: () => {
-    const input = document.querySelector('[class*="InteractiveTerminal"] input');
-    if (input) {
-      input.focus();
-      input.value = "exit 8";
-      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter" }));
-    }
-  }},
+  8: { label: "exit 8", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8" })) },
   6: { label: "67", run: () => {
     if (document.body.classList.contains("sixseven")) {
       document.body.classList.remove("sixseven");

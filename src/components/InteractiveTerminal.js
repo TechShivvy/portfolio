@@ -1064,6 +1064,15 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
     [historyList, scrollToSection, captureScrollPos]
   );
 
+  // ── External trigger: let global keybindings run a real terminal command ──
+  // Dispatch `new CustomEvent("terminal:run", { detail: "exit 8" })` from
+  // anywhere to invoke the actual command path (same as typing + Enter).
+  useEffect(() => {
+    const onRun = (e) => runCommand(e.detail);
+    window.addEventListener("terminal:run", onRun);
+    return () => window.removeEventListener("terminal:run", onRun);
+  }, [runCommand]);
+
   // ── Keyboard handling ─────────────────────────────────────────────────────
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
