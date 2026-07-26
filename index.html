@@ -46,14 +46,205 @@
     <meta name="twitter:title" content="Shivcharan | Portfolio" />
     <meta name="twitter:description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
 
-    <!-- Preload Watch Dogs / Hacked font -->
-    <link rel="preload" href="https://hackedfont.com/HACKED.ttf" as="font" crossorigin="anonymous" />
-
     <link rel="manifest" href="/manifest.json" />
+
+    <!--
+      The splash only plays on the very first visit. This tiny script runs
+      before first paint and, on repeat visits, marks the document so the
+      splash below is never rendered (the self-hosted font is already cached).
+    -->
+    <script>
+      try {
+        if (localStorage.getItem("splashShown") === "1") {
+          document.documentElement.classList.add("splash-skip");
+        }
+      } catch (e) {}
+    </script>
+
+    <!--
+      Splash preloader styles — inlined so the splash paints on the very
+      first frame (before the JS/CSS bundles load) on the first visit.
+    -->
+    <style>
+      html.splash-skip #preloader {
+        display: none !important;
+      }
+
+      /* Splash preloader — paints on the very first frame (before the JS
+         bundle and the custom font finish downloading) so the hero name is
+         never shown in the fallback font on the first cold load. */
+      #preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      #preloader.preloader--hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #preloader .pre-wrap {
+        position: relative;
+        width: 76px;
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Circular progress ring — sweeps once from the top all the way
+         around the icon, like a loading indicator. No scaling / fading of
+         the icon, just the arc drawing around. */
+      #preloader .pre-ring {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg); /* start the sweep at top center */
+      }
+      #preloader .pre-track {
+        fill: none;
+        stroke: rgba(43, 162, 162, 0.15);
+        stroke-width: 5;
+      }
+      #preloader .pre-arc {
+        fill: none;
+        stroke: #2ba2a2;
+        stroke-width: 5;
+        stroke-linecap: round;
+        stroke-dasharray: 283; /* 2 * PI * r (r = 45) */
+        stroke-dashoffset: 283;
+        animation: pre-draw 2.1s ease-in-out forwards;
+      }
+      #preloader .pre-ico {
+        position: relative;
+        width: 40px;
+        height: 40px;
+      }
+      @keyframes pre-draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Font/app loading splash — removed once the "Hacked" font is ready
+         and React has mounted (or after a fail-safe timeout). -->
+    <div id="preloader" aria-hidden="true">
+      <div class="pre-wrap">
+        <svg class="pre-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="pre-track" cx="50" cy="50" r="45" />
+          <circle class="pre-arc" cx="50" cy="50" r="45" />
+        </svg>
+        <img class="pre-ico" src="/coderwings.ico" alt="" width="40" height="40" />
+      </div>
+    </div>
+
     <div id="root"></div>
+    <script>
+      (function () {
+        var pre = document.getElementById("preloader");
+
+        // Let the app know the splash is out of the way so the hero intro
+        // (scramble → set name → matrix) starts only once the splash lifts,
+        // instead of running hidden behind it.
+        function signalSplashDone() {
+          if (window.__splashDone) return;
+          window.__splashDone = true;
+          try {
+            window.dispatchEvent(new Event("splash:done"));
+          } catch (e) {}
+        }
+
+        // Repeat visit: the splash was skipped (element hidden by CSS), so
+        // there's nothing to do — the cached font renders the hero instantly.
+        var alreadyShown = false;
+        try {
+          alreadyShown = localStorage.getItem("splashShown") === "1";
+        } catch (e) {}
+        if (!pre || alreadyShown) {
+          signalSplashDone();
+          return;
+        }
+
+        // Minimum time the splash stays up on the first visit so it always
+        // plays a full, graceful cycle and fades out — never cut abruptly,
+        // even when the (now self-hosted) font is ready almost instantly.
+        var MIN_VISIBLE = 2400;
+        var startedAt = Date.now();
+
+        var hidden = false;
+        function hide() {
+          if (hidden) return;
+          hidden = true;
+          try {
+            localStorage.setItem("splashShown", "1");
+          } catch (e) {}
+          pre.classList.add("preloader--hide");
+          setTimeout(function () {
+            if (pre.parentNode) pre.parentNode.removeChild(pre);
+            // Signal only after the splash has fully faded out, so the hero
+            // intro starts on a clean screen instead of overlapping the fade.
+            signalSplashDone();
+          }, 600);
+        }
+
+        var fontReady = false;
+        var appReady = false;
+        var scheduled = false;
+        function maybeHide() {
+          if (!(fontReady && appReady) || scheduled) return;
+          scheduled = true;
+          // Hold the splash until BOTH the content is ready AND the minimum
+          // display time has elapsed, so the animation completes gracefully.
+          var wait = Math.max(0, MIN_VISIBLE - (Date.now() - startedAt));
+          setTimeout(hide, wait);
+        }
+
+        // Wait for the custom "Hacked" font to actually download.
+        if (document.fonts && document.fonts.load) {
+          document.fonts
+            .load('1em "Hacked"')
+            .then(function () {
+              return document.fonts.ready;
+            })
+            .then(function () {
+              fontReady = true;
+              maybeHide();
+            })
+            .catch(function () {
+              fontReady = true;
+              maybeHide();
+            });
+        } else {
+          fontReady = true;
+        }
+
+        // Wait for React to render into #root so the splash never uncovers
+        // an empty page if the font finishes before the JS bundle.
+        var poll = setInterval(function () {
+          var root = document.getElementById("root");
+          if (root && root.childElementCount > 0) {
+            appReady = true;
+            clearInterval(poll);
+            maybeHide();
+          }
+        }, 50);
+
+        // Fail-safe: never trap the user if something stalls.
+        setTimeout(function () {
+          clearInterval(poll);
+          hide();
+        }, 8000);
+      })();
+    </script>
     <script type="module" src="/src/index.js"></script>
   </body>
 </html>

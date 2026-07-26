@@ -12,6 +12,7 @@ const Home = () => {
   const [showHint, setShowHint] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
   const [rainbowToast, setRainbowToast] = useState(null);
+  const [introStarted, setIntroStarted] = useState(false);
 
   const handleKonami = useCallback(() => {
     const next = !window.__matrixRainbow;
@@ -23,12 +24,22 @@ const Home = () => {
   useKonami(handleKonami);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadTask1() {
+      if (cancelled) return;
+      setIntroStarted(true);
       await task1();
-      setStartAnimation(true);
+      if (!cancelled) setStartAnimation(true);
     }
 
-    loadTask1();
+    // Start the hero intro (scramble → set name → matrix) only once the
+    // loading splash has lifted, so it isn't played hidden behind it.
+    if (window.__splashDone) {
+      loadTask1();
+    } else {
+      window.addEventListener("splash:done", loadTask1, { once: true });
+    }
 
     const handleScroll = () => {
       setShowArrow(window.scrollY <= 100);
@@ -37,6 +48,8 @@ const Home = () => {
     window.addEventListener("scroll", handleScroll);
 
     return () => {
+      cancelled = true;
+      window.removeEventListener("splash:done", loadTask1);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
@@ -100,7 +113,13 @@ const Home = () => {
   return (
     <div className={styles["home-section"]} id="home">
       <MatrixAnimation startAnimation={startAnimation} />
-      <div className={styles["centered-content"]}>
+      <div
+        className={styles["centered-content"]}
+        style={{
+          opacity: introStarted ? 1 : 0,
+          transition: "opacity 0.5s ease",
+        }}
+      >
         <h1 id="hackerText" onClick={handleH1Click}>
           S h i v c h a r a n
         </h1>
