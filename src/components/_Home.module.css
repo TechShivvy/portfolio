@@ -40,8 +40,15 @@
 }
 
 .matrix {
+  position: absolute;
+  /* Extend one font-row above the section so the very first rain character
+     starts above the viewport edge - no empty horizontal gap at the top. */
+  top: -14px;
+  left: 0;
   width: 100%;
-  height: 100%;
+  /* Extra 14 px at top means we need to compensate the height so the bottom
+     of the canvas still reaches the section bottom. */
+  height: calc(100% + 14px);
 }
 
 .glitch {

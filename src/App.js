@@ -1,6 +1,7 @@
 import "./App.css";
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import KeyboardShortcuts from "./components/KeyboardShortcuts";
 
 const About = lazy(() => import("./components/About"));
 const BeyondCode = lazy(() => import("./components/BeyondCode"));
@@ -74,7 +75,8 @@ function App() {
   }, []);
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <KeyboardShortcuts />
       {restoring && (
         <div
           aria-hidden="true"

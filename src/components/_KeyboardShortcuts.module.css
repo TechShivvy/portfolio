@@ -1,0 +1,155 @@
+/* ─── Chord indicator (bottom-left) ─── */
+.chordIndicator {
+  position: fixed;
+  bottom: 18px;
+  left: 18px;
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(13, 13, 13, 0.92);
+  border: 1px solid rgba(43, 162, 162, 0.28);
+  border-left: 2px solid var(--color-accent);
+  border-radius: 3px;
+  color: #b9c7c7;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  padding: 6px 11px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  animation: chord-in 0.16s ease-out;
+}
+
+.chordDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+  animation: chord-pulse 1s ease-in-out infinite;
+}
+
+.chordKey {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 2px;
+  padding: 0 5px;
+  color: var(--color-accent);
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+}
+
+@keyframes chord-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chord-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1); }
+}
+
+/* ─── Shortcuts panel ─── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 14px 18px 12px;
+  min-width: 300px;
+  max-width: 95%;
+  max-height: 80%;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #ccc;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+.close {
+  background: transparent;
+  border: 1px solid #333;
+  color: #888;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 2px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.close:hover {
+  color: var(--color-accent-danger);
+  border-color: var(--color-accent-danger);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table td {
+  padding: 4px 6px 4px 0;
+  vertical-align: top;
+}
+.table td:first-child {
+  white-space: nowrap;
+  padding-right: 16px;
+  color: #aaa;
+}
+
+.section {
+  color: var(--color-accent);
+  opacity: 0.65;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 12px !important;
+  padding-bottom: 3px !important;
+}
+
+.table kbd {
+  display: inline-block;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 2px;
+  padding: 0 5px;
+  margin-right: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: #ddd;
+}
+
+.hint {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  opacity: 0.45;
+  font-size: 0.65rem;
+  text-align: center;
+}
+.hint kbd {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+}

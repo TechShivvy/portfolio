@@ -24,6 +24,59 @@ const MatrixAnimation = ({ startAnimation }) => {
     let cssH = 0;
     let matrix = [];
 
+    // ── Reverse (tenet) state ─────────────────────────────────────────────
+    // When the `matrix:reverse` event fires, every column retracts from its
+    // current height back up to the top over REVERSE_MS, all arriving together
+    // (same time, same point). Then the canvas freezes and reports back. Kept
+    // slow so it reads at the same graceful pace as the forward intro.
+    const REVERSE_MS = 2600;
+    let reversing = false;
+    let reverseStart = 0;
+    let reverseFrom = [];
+    const easeInOutCubic = (t) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    function startReverse() {
+      if (reversing) return;
+      reversing = true;
+      reverseStart = 0; // stamped on the first reverse frame
+      reverseFrom = matrix.slice();
+    }
+
+    function drawReverse(timestamp) {
+      if (!reverseStart) reverseStart = timestamp;
+      const t = Math.min(1, (timestamp - reverseStart) / REVERSE_MS);
+      const e = easeInOutCubic(t);
+
+      // Stronger fade than the forward rain so the trails retract cleanly.
+      context.fillStyle = "rgba(0, 0, 0, 0.18)";
+      context.fillRect(0, 0, cssW, cssH);
+      context.font = fontSize + "px monospace";
+
+      for (let i = 0; i < matrix.length; i++) {
+        if (window.__matrixRainbow) {
+          context.fillStyle = `hsl(${(i * 7 + Date.now() / 30) % 360}, 80%, 60%)`;
+        } else {
+          context.fillStyle = COLOR_MATRIX;
+        }
+        // Pull the head from its captured height back up to the top (y = 0).
+        matrix[i] = (reverseFrom[i] || 0) * (1 - e);
+        const text =
+          charactersArray[Math.floor(Math.random() * charactersArray.length)];
+        context.fillText(text, i * fontSize, matrix[i] * fontSize);
+      }
+
+      if (t >= 1) {
+        // All columns have frozen at the top - clear to solid black and stop.
+        context.fillStyle = "#000";
+        context.fillRect(0, 0, cssW, cssH);
+        reversing = false;
+        cancelAnimationFrame(rafId);
+        rafId = null;
+        window.dispatchEvent(new Event("matrix:reverse-done"));
+      }
+    }
+
     function resizeCanvas() {
       cssW = canvas.clientWidth || window.innerWidth;
       cssH = canvas.clientHeight || window.innerHeight;
@@ -33,8 +86,9 @@ const MatrixAnimation = ({ startAnimation }) => {
       canvas.height = cssH;
       const columns = Math.floor(cssW / fontSize) + 1;
       if (columns > matrix.length) {
-        // grew wider - seed the new columns at the top
-        for (let i = matrix.length; i < columns; i++) matrix[i] = 1;
+        // grew wider - seed new columns at 0 so first char draws at y=0
+        // (no gap at the top of the viewport on first frame)
+        for (let i = matrix.length; i < columns; i++) matrix[i] = 0;
       } else {
         // shrank - drop the extra columns
         matrix.length = columns;
@@ -67,6 +121,11 @@ const MatrixAnimation = ({ startAnimation }) => {
 
     function animateMatrix(timestamp) {
       rafId = requestAnimationFrame(animateMatrix);
+      // Tenet in progress: retract the rain and ignore FPS throttling.
+      if (reversing) {
+        drawReverse(timestamp);
+        return;
+      }
       // If a target FPS is set (via the terminal `matrix fps <n>` command),
       // throttle to that rate; otherwise run at the display's native refresh.
       const targetFps = window.__matrixFps || 0;
@@ -86,14 +145,16 @@ const MatrixAnimation = ({ startAnimation }) => {
     const resizeObserver = new ResizeObserver(resizeCanvas);
     resizeObserver.observe(canvas);
     window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("matrix:reverse", startReverse);
 
     let lastTime = 0;
     let rafId = requestAnimationFrame(animateMatrix);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafId) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("matrix:reverse", startReverse);
     };
   }, [startAnimation]);
 
