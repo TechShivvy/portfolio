@@ -99,10 +99,38 @@
         justify-content: center;
         transition: opacity 0.5s ease, visibility 0.5s ease;
       }
-      #preloader.preloader--hide {
-        opacity: 0;
-        visibility: hidden;
+      /* Exit "boom" — the ring ripples outward and fades, the icon fades,
+         and the black backdrop clears to reveal the site underneath. */
+      #preloader.preloader--boom {
+        background: transparent;
         pointer-events: none;
+        transition: background 0.45s ease 0.1s;
+      }
+      #preloader.preloader--boom .pre-ring {
+        animation: pre-boom 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      #preloader.preloader--boom .pre-ico {
+        animation: pre-ico-out 0.4s ease-out forwards;
+      }
+      @keyframes pre-boom {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        18% {
+          transform: scale(0.86);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(16);
+          opacity: 0;
+        }
+      }
+      @keyframes pre-ico-out {
+        to {
+          opacity: 0;
+          transform: scale(1.15);
+        }
       }
       #preloader .pre-wrap {
         position: relative;
@@ -202,13 +230,13 @@
           try {
             sessionStorage.setItem("splashShown", "1");
           } catch (e) {}
-          pre.classList.add("preloader--hide");
+          // Ring ripples/booms outward while the backdrop clears; reveal the
+          // hero intro at the same moment so the site emerges from the ripple.
+          pre.classList.add("preloader--boom");
+          signalSplashDone();
           setTimeout(function () {
             if (pre.parentNode) pre.parentNode.removeChild(pre);
-            // Signal only after the splash has fully faded out, so the hero
-            // intro starts on a clean screen instead of overlapping the fade.
-            signalSplashDone();
-          }, 600);
+          }, 750);
         }
 
         var fontReady = false;
