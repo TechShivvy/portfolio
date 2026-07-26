@@ -26,7 +26,7 @@ const IMG_WIDE = "https://spotify-github-profile.kittinanx.com/api/view?uid=2gsh
 
 // Above this rendered card width a tall cover would become unreasonably large,
 // so switch to the wide "now playing" bar instead. Driven by the card's actual
-// measured width (stable — width is set by the column, not the aspect ratio),
+// measured width (stable - width is set by the column, not the aspect ratio),
 // so it always matches the card's real shape at any zoom or viewport.
 const WIDE_THRESHOLD = 420;
 
@@ -70,7 +70,7 @@ function SpotifyMosaic() {
       onMouseLeave={() => setHovered(false)}
       onClick={handleClick}
     >
-      {/* Layer 0 — Spotify image or fallback, always beneath */}
+      {/* Layer 0 - Spotify image or fallback, always beneath */}
       <div className={styles.mosaicBack}>
         {imgFailed ? (
           <div className={styles.spotifyFallback} aria-label="Spotify unavailable">
@@ -88,7 +88,7 @@ function SpotifyMosaic() {
         )}
       </div>
 
-      {/* Layer 1 — terminal-style prompt (fades on reveal). Always rendered
+      {/* Layer 1 - terminal-style prompt (fades on reveal). Always rendered
           so the dramatic reveal works even when the image failed. */}
       <div className={styles.spotifyFront} style={{ opacity: revealed ? 0 : 1 }}>
         <span className={styles.spotifyPrompt}>&gt; spotify --now-playing</span>
@@ -97,7 +97,7 @@ function SpotifyMosaic() {
         </span>
       </div>
 
-      {/* Layer 2 — mosaic tiles that dissolve away on reveal */}
+      {/* Layer 2 - mosaic tiles that dissolve away on reveal */}
       {TILES.map(({ idx, col, row, chess, wave }) => (
         <div
           key={idx}
@@ -121,7 +121,7 @@ function About() {
   const fadeRef = useFadeIn();
   // Toggle between dummy (static) and interactive (real) terminal
   const [interactive, setInteractive] = useState(false);
-  // hasBooted: true after first activation — skip boot animation on re-opens
+  // hasBooted: true after first activation - skip boot animation on re-opens
   const [hasBooted, setHasBooted] = useState(false);
 
   const handleToggle = () => {
@@ -148,7 +148,7 @@ function About() {
               <div className={`d-flex ${styles["fakeButtons"]} ${styles["fakeMinimize"]}`} />
               <div className={`d-flex ${styles["fakeButtons"]} ${styles["fakeZoom"]}`} />
 
-              {/* Toggle button — sits in the menu bar */}
+              {/* Toggle button - sits in the menu bar */}
               <button
                 className={`${styles.termToggle} ${interactive ? styles.termToggleActive : ""}`}
                 onClick={handleToggle}
@@ -164,7 +164,7 @@ function About() {
               id="fakeScreen"
             >
               {/* Both terminals are always mounted so the container height is
-                  the natural max of the two — no fixed pixel anchoring needed.
+                  the natural max of the two - no fixed pixel anchoring needed.
                   The inactive one is hidden from view and interaction. */}
               <div className={styles.terminalGrid}>
                 <div

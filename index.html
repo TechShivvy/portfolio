@@ -36,15 +36,15 @@
 
     <!-- SEO & social -->
     <title>Shivcharan | Portfolio</title>
-    <meta name="description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
+    <meta name="description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
     <meta name="author" content="Shivcharan Thirunavukkarasu" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://techshivvy.github.io/portfolio" />
     <meta property="og:title" content="Shivcharan | Portfolio" />
-    <meta property="og:description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
+    <meta property="og:description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Shivcharan | Portfolio" />
-    <meta name="twitter:description" content="Portfolio of Shivcharan Thirunavukkarasu — CSE grad, developer, gamer, and everything in between." />
+    <meta name="twitter:description" content="Portfolio of Shivcharan Thirunavukkarasu - CSE grad, developer, gamer, and everything in between." />
 
     <link rel="manifest" href="/manifest.json" />
 
@@ -62,7 +62,7 @@
     </script>
 
     <!--
-      Splash preloader styles — inlined so the splash paints on the very
+      Splash preloader styles - inlined so the splash paints on the very
       first frame (before the JS/CSS bundles load) on the first visit.
     -->
     <style>
@@ -77,7 +77,7 @@
         initial-value: 0deg;
       }
 
-      /* Splash preloader — paints on the very first frame (before the JS
+      /* Splash preloader - paints on the very first frame (before the JS
          bundle and the custom font finish downloading) so the hero name is
          never shown in the fallback font on the first cold load. */
       #preloader {
@@ -99,7 +99,7 @@
         justify-content: center;
         transition: opacity 0.5s ease, visibility 0.5s ease;
       }
-      /* Exit "boom" — a layered shockwave: a soft light-burst flash, the
+      /* Exit "boom" - a layered shockwave: a soft light-burst flash, the
          main progress ring ripples outward, and a second echo ring follows,
          while the black backdrop clears to reveal the site underneath. */
       #preloader.preloader--boom {
@@ -179,7 +179,7 @@
         align-items: center;
         justify-content: center;
       }
-      /* Burst layers for the boom — invisible during load, animated on exit.
+      /* Burst layers for the boom - invisible during load, animated on exit.
          ::before is a soft radial light flash; ::after is an echo ring. */
       #preloader .pre-wrap::before,
       #preloader .pre-wrap::after {
@@ -200,7 +200,7 @@
       #preloader .pre-wrap::after {
         border: 2px solid #a22b2b;
       }
-      /* Circular progress ring — fills once from the top around the icon,
+      /* Circular progress ring - fills once from the top around the icon,
          like a loading indicator. Rendered with a conic-gradient whose sweep
          angle is animated via the @property custom property above. This is
          far lighter to animate than SVG stroke geometry, so it stays smooth
@@ -248,7 +248,7 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <!-- Font/app loading splash — removed once the "Hacked" font is ready
+    <!-- Font/app loading splash - removed once the "Hacked" font is ready
          and React has mounted (or after a fail-safe timeout). -->
     <div id="preloader" aria-hidden="true">
       <div class="pre-wrap">
@@ -284,7 +284,7 @@
         }
 
         // Minimum time the splash stays up on the first visit so it always
-        // plays a full, graceful cycle and fades out — never cut abruptly,
+        // plays a full, graceful cycle and fades out - never cut abruptly,
         // even when the (now self-hosted) font is ready almost instantly.
         var MIN_VISIBLE = 2400;
         var startedAt = Date.now();

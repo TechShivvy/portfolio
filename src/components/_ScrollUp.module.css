@@ -32,7 +32,7 @@
   box-shadow: 0 0 10px 1px var(--color-accent);
 }
 
-/* Two up-chevrons — small and tight to fit inside the 42 px circle */
+/* Two up-chevrons - small and tight to fit inside the 42 px circle */
 .chevronUp {
   display: block;
   width: 8px;

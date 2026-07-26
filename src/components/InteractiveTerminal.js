@@ -20,34 +20,34 @@ function buildCommands(scrollToSection) {
   return {
     help: () => [
       { text: "Available commands:", type: "info" },
-      { text: "  whoami       — who is this person?", type: "output" },
-      { text: "  skills       — tech stack", type: "output" },
-      { text: "  projects     — jump to projects section", type: "output" },
-      { text: "  contact      — contact info", type: "output" },
-      { text: "  resume       — open résumé PDF", type: "output" },
-      { text: "  interests    — list all interest areas", type: "output" },
-      { text: "  games        — games I play", type: "output" },
-      { text: "  anime        — shows I watch", type: "output" },
-      { text: "  cycling      — km and routes", type: "output" },
-      { text: "  rubik        — cube PBs", type: "output" },
-      { text: "  tech         — current tech rabbit holes", type: "output" },
-      { text: "  music        — what's playing", type: "output" },
-      { text: "  spotify      — same as music", type: "output" },
-      { text: "  matrix fps N     — set matrix rain to N fps (0 = native)", type: "output" },
-      { text: "  matrix rainbow   — enable rainbow matrix mode", type: "output" },
-      { text: "  matrix reset     — restore default matrix color", type: "output" },
-      { text: "  git log          — career timeline as git commits", type: "output" },
-      { text: "  timeline         — jump to timeline section", type: "output" },
-      { text: "  portfolio --no-css — brutalist HTML version (1997 edition)", type: "output" },
-      { text: "  clear            — clear terminal", type: "output" },
-      { text: "  history          — command history", type: "output" },
-      { text: "  ls               — list... something", type: "output" },
-      { text: "  sudo             — try it ;)", type: "output" },
-      { text: "  exit 8           — the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
-      { text: "  replay splash     — see the loading splash again on next reload", type: "output" },
-      { text: "  replay matrix     — replay the matrix + name scramble on next reload", type: "output" },
-      { text: "  replay all        — full hard reset: splash + matrix scramble on next reload", type: "output" },
-      { text: "  suicide          — closes the tab. for real.", type: "output" },
+      { text: "  whoami       - who is this person?", type: "output" },
+      { text: "  skills       - tech stack", type: "output" },
+      { text: "  projects     - jump to projects section", type: "output" },
+      { text: "  contact      - contact info", type: "output" },
+      { text: "  resume       - open résumé PDF", type: "output" },
+      { text: "  interests    - list all interest areas", type: "output" },
+      { text: "  games        - games I play", type: "output" },
+      { text: "  anime        - shows I watch", type: "output" },
+      { text: "  cycling      - km and routes", type: "output" },
+      { text: "  rubik        - cube PBs", type: "output" },
+      { text: "  tech         - current tech rabbit holes", type: "output" },
+      { text: "  music        - what's playing", type: "output" },
+      { text: "  spotify      - same as music", type: "output" },
+      { text: "  matrix fps N     - set matrix rain to N fps (0 = native)", type: "output" },
+      { text: "  matrix rainbow   - enable rainbow matrix mode", type: "output" },
+      { text: "  matrix reset     - restore default matrix color", type: "output" },
+      { text: "  git log          - career timeline as git commits", type: "output" },
+      { text: "  timeline         - jump to timeline section", type: "output" },
+      { text: "  portfolio --no-css - brutalist HTML version (1997 edition)", type: "output" },
+      { text: "  clear            - clear terminal", type: "output" },
+      { text: "  history          - command history", type: "output" },
+      { text: "  ls               - list... something", type: "output" },
+      { text: "  sudo             - try it ;)", type: "output" },
+      { text: "  exit 8           - the loop. spot 8 anomalies. press ENTER or [!] to call one.", type: "output" },
+      { text: "  replay splash     - see the loading splash again on next reload", type: "output" },
+      { text: "  replay matrix     - replay the matrix + name scramble on next reload", type: "output" },
+      { text: "  replay all        - full hard reset: splash + matrix scramble on next reload", type: "output" },
+      { text: "  suicide          - closes the tab. for real.", type: "output" },
     ],
 
     whoami: () => [
@@ -86,7 +86,7 @@ function buildCommands(scrollToSection) {
 
     interests: () =>
       Object.values(INTERESTS).map((i) => ({
-        text: `  ${i.icon}  ${i.label.padEnd(14)} — ${i.blurb}`,
+        text: `  ${i.icon}  ${i.label.padEnd(14)} - ${i.blurb}`,
         type: "output",
       })),
 
@@ -119,9 +119,9 @@ function buildCommands(scrollToSection) {
       }
       return [
         { text: "matrix sub-commands:", type: "info" },
-        { text: "  matrix fps N     — set rain speed (0 = native refresh)", type: "output" },
-        { text: "  matrix rainbow   — enable rainbow mode", type: "output" },
-        { text: "  matrix reset     — restore default color", type: "output" },
+        { text: "  matrix fps N     - set rain speed (0 = native refresh)", type: "output" },
+        { text: "  matrix rainbow   - enable rainbow mode", type: "output" },
+        { text: "  matrix reset     - restore default color", type: "output" },
       ];
     },
 
@@ -171,26 +171,26 @@ function buildCommands(scrollToSection) {
         sessionStorage.removeItem("splashShown");
         sessionStorage.setItem("replayReload", "1");
         setTimeout(() => window.location.reload(), 500);
-        return [{ text: ">> replaying splash. reloading — watch for the boom.", type: "info" }];
+        return [{ text: ">> replaying splash. reloading - watch for the boom.", type: "info" }];
       }
       if (sub === "matrix") {
         sessionStorage.removeItem("hasRun");
         sessionStorage.setItem("replayReload", "1");
         setTimeout(() => window.location.reload(), 500);
-        return [{ text: ">> replaying matrix. reloading — shivcharan incoming.", type: "info" }];
+        return [{ text: ">> replaying matrix. reloading - shivcharan incoming.", type: "info" }];
       }
       if (sub === "all") {
         sessionStorage.removeItem("splashShown");
         sessionStorage.removeItem("hasRun");
         sessionStorage.setItem("replayReload", "1");
         setTimeout(() => window.location.reload(), 500);
-        return [{ text: ">> full replay. reloading — full intro from scratch.", type: "info" }];
+        return [{ text: ">> full replay. reloading - full intro from scratch.", type: "info" }];
       }
       return [
         { text: "usage:", type: "info" },
-        { text: "  replay splash    — see the loading splash again", type: "output" },
-        { text: "  replay matrix    — replay the matrix + name scramble", type: "output" },
-        { text: "  replay all       — full reset: splash + matrix scramble", type: "output" },
+        { text: "  replay splash    - see the loading splash again", type: "output" },
+        { text: "  replay matrix    - replay the matrix + name scramble", type: "output" },
+        { text: "  replay all       - full reset: splash + matrix scramble", type: "output" },
       ];
     },
 
@@ -306,7 +306,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
   // ── Scroll ONLY within the output div (not the whole page) ───────────────
   useEffect(() => {
     if (!outputRef.current) return;
-    // Always follow the latest line — the newest output sits at the bottom of
+    // Always follow the latest line - the newest output sits at the bottom of
     // the fixed-height pane, just like a real terminal.
     outputRef.current.scrollTop = outputRef.current.scrollHeight;
   }, [lines]);
@@ -404,8 +404,8 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
         }
         if (args[0] === "8") {
           // ── Exit 8: seamless corridor loop + anomaly detection game ─────
-          // Effects are applied to #root (and its clone) ONLY — never to
-          // document.body — so the fixed floating bar (a body child) stays
+          // Effects are applied to #root (and its clone) ONLY - never to
+          // document.body - so the fixed floating bar (a body child) stays
           // immune to transforms/filters and never drifts.
           const rootEl = document.getElementById("root");
           const st = exitStateRef.current;
@@ -462,7 +462,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           const EFFECTS_SAFE = [
             (t) => { t.style.filter = "invert(1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "sepia(1) saturate(4) hue-rotate(300deg)"; return () => { t.style.filter = ""; }; },
-            // brightness(0.04) is invisible on this dark (#000) theme — use a stark desaturated
+            // brightness(0.04) is invisible on this dark (#000) theme - use a stark desaturated
             // contrast instead that clearly reads as "wrong" even on a black background.
             (t) => { t.style.filter = "saturate(0) contrast(6) brightness(1.8)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.filter = "blur(6px) saturate(0)"; return () => { t.style.filter = ""; }; },
@@ -473,7 +473,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             (t) => { t.style.transform = "scaleX(-1)"; return () => { t.style.transform = ""; }; },
             (t) => { t.style.transform = "scaleY(-1)"; return () => { t.style.transform = ""; }; },
             // fontFamily on #root doesn't change canvas text (drawn with 'monospace' in JS)
-            // and most elements inherit the CSS variable explicitly — barely noticeable.
+            // and most elements inherit the CSS variable explicitly - barely noticeable.
             // Replace with a strong drop-shadow glitch that's always visible.
             (t) => { t.style.filter = "hue-rotate(260deg) saturate(15) brightness(1.1)"; return () => { t.style.filter = ""; }; },
             (t) => { t.style.fontFamily = '"Comic Sans MS",cursive'; return () => { t.style.fontFamily = ""; }; },
@@ -501,14 +501,14 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             c.setAttribute("aria-hidden", "true");
             c.style.cssText = "margin:0;pointer-events:none;";
             // Reveal fade-in-on-scroll sections that hadn't entered the viewport
-            // when cloned — their inline opacity:0 would render the clone blank on mobile.
+            // when cloned - their inline opacity:0 would render the clone blank on mobile.
             c.querySelectorAll("*").forEach((el) => {
               if (el.style && el.style.opacity === "0") {
                 el.style.opacity = "1";
                 el.style.transform = "translateY(0)";
               }
             });
-            // Canvas pixels don’t survive cloneNode — run a live matrix animation on the clone
+            // Canvas pixels don’t survive cloneNode - run a live matrix animation on the clone
             const _origCanvas = rootEl.querySelector("canvas");
             const _cloneCanvas = c.querySelector("canvas");
             if (_origCanvas && _cloneCanvas) {
@@ -577,7 +577,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             let backRaf;
             const tick = () => {
               const top = corridorEl.getBoundingClientRect().top; // corridor top offset from viewport top
-              // Terminate within 3px — sub-pixel BoundingClientRect values can make the
+              // Terminate within 3px - sub-pixel BoundingClientRect values can make the
               // old ">= -1" threshold loop forever (stepPx rounds to 0, no progress).
               if (top >= -3) {
                 if (top < 0) window.scrollTo({ top: Math.round(window.scrollY + top), left: 0, behavior: "instant" });
@@ -623,7 +623,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
 
           // ── Lock the verdict for the corridor we're leaving ───────────────
           // Called when the next homescreen's number is about to become readable
-          // (its hero text touches the viewport bottom edge) OR at corridor exit —
+          // (its hero text touches the viewport bottom edge) OR at corridor exit -
           // whichever comes first. After this the anomaly is no longer callable, so a
           // player can't read the pre-set number and then decide. Idempotent.
           // Returns true if this pushed the score to a win.
@@ -648,7 +648,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           };
 
           // ── Anomaly check: score + scrollback ─────────────────────────────
-          // A real anomaly is callable until its verdict locks — i.e. until the next
+          // A real anomaly is callable until its verdict locks - i.e. until the next
           // corridor's homescreen number is about to enter view (hero touches the
           // bottom edge). The 5s effect is only a visual flash; you can still call it
           // after it fades, as long as the verdict hasn't locked.
@@ -664,7 +664,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             }
 
             if (st.anomalyFiredThisCorridor && !st.verdictLocked) {
-              // Correct — a real anomaly fired in this corridor and is still callable
+              // Correct - a real anomaly fired in this corridor and is still callable
               st.score = Math.min(st.score + 1, 9);
               updateScoreUI();
               if (st.score >= 9) { st.winGame?.(); return; }
@@ -673,7 +673,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
                 type: "accent",
               }]);
             } else {
-              // False call (or too late — verdict already locked) — reset immediately
+              // False call (or too late - verdict already locked) - reset immediately
               const hadProgress = st.score > 0;
               if (hadProgress) { st.score = 0; updateScoreUI(); }
               setLines((prev) => [...prev, {
@@ -756,14 +756,14 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               winStyle.textContent = "@keyframes _e8winSlide{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}";
               document.head.appendChild(winStyle);
 
-              // Show one random WITTY message — no cycling
+              // Show one random WITTY message - no cycling
               escapedHeroEl.style.animation = "none";
               void escapedHeroEl.offsetHeight; // force reflow
               escapedHeroEl.textContent = WITTY[idx];
               escapedHeroEl.style.color = "#2ba2a2";
               escapedHeroEl.style.animation = "_e8winSlide 0.5s ease forwards";
 
-              // User interacted — restore hero, stay on page (no terminal focus)
+              // User interacted - restore hero, stay on page (no terminal focus)
               const restoreHero = () => {
                 if (!active) return;
                 active = false;
@@ -774,7 +774,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
                 winStyle.remove();
               };
 
-              // No interaction for 4s — restore hero + focus terminal
+              // No interaction for 4s - restore hero + focus terminal
               let focusTimer = setTimeout(() => {
                 if (!active) return;
                 active = false;
@@ -788,7 +788,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
                 }
               }, 4000);
 
-              // 500ms grace — prevents winning gesture from immediately clearing win text
+              // 500ms grace - prevents winning gesture from immediately clearing win text
               setTimeout(() => {
                 document.addEventListener("mousemove",   restoreHero, { once: true });
                 document.addEventListener("pointerdown", restoreHero, { once: true });
@@ -846,7 +846,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           document.addEventListener("keydown", keyHandler);
           st.keyHandler = keyHandler;
 
-          // Block mouse-wheel and touch-drag scroll — only the auto-scroll in step() moves the page
+          // Block mouse-wheel and touch-drag scroll - only the auto-scroll in step() moves the page
           const preventScroll = (e) => { e.preventDefault(); };
           document.addEventListener("wheel",     preventScroll, { passive: false });
           document.addEventListener("touchmove", preventScroll, { passive: false });
@@ -861,7 +861,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             const currentCorridor = currentCorridorIdx();
 
             // Lock the verdict the instant the NEXT corridor's homescreen number is about
-            // to become readable — the moment its hero text touches the viewport bottom
+            // to become readable - the moment its hero text touches the viewport bottom
             // edge. After this the anomaly is no longer callable, so the player can't read
             // the pre-set number and then turn back to game it.
             if (!st.verdictLocked && !st.scrollingBack) {
@@ -872,7 +872,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               }
             }
 
-            // Natural corridor exit — set up the new corridor. The verdict for the corridor
+            // Natural corridor exit - set up the new corridor. The verdict for the corridor
             // we left is normally already locked (above); this is just a safety fallback.
             if (currentCorridor > st.lastCorridor) {
               st.lastCorridor = currentCorridor;
@@ -886,7 +886,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               const targetEl = corridorElFor(currentCorridor);
               st.removeEffect = EFFECTS[Math.floor(Math.random() * EFFECTS.length)](targetEl);
               st.anomalyActive = true;
-              // 5-second VISUAL flash only — the anomaly stays *callable* for the rest of
+              // 5-second VISUAL flash only - the anomaly stays *callable* for the rest of
               // the corridor (via anomalyFiredThisCorridor) even after the effect fades.
               st.expireTimer = setTimeout(() => {
                 if (st.anomalyActive) {
@@ -897,7 +897,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
             }
 
             // At 70% of corridor: pre-set the next clone's homescreen number to its FINAL
-            // settled value before it scrolls into view — a clean pass shows +1, an
+            // settled value before it scrolls into view - a clean pass shows +1, an
             // uncalled anomaly shows 0 (a miss). The next homescreen isn't visible yet at
             // 70%, so this leaks nothing; if the player calls the anomaly after 70% they
             // turn back (away from that clone) and a re-walk re-predicts. Only mark
@@ -1044,7 +1044,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
               autoCapitalize="off"
               spellCheck="false"
             />
-            {/* Fake terminal cursor — mirrors the typed text so the block sits
+            {/* Fake terminal cursor - mirrors the typed text so the block sits
                 right after it, and blinks via CSS. */}
             <span className={styles.termInputMirror} aria-hidden="true">
               {input}

@@ -71,7 +71,7 @@ const Home = () => {
     return () => cancelAnimationFrame(raf1);
   }, [showHint]);
 
-  // Step 3: sync fade in/out with scroll — only depends on showArrow so it
+  // Step 3: sync fade in/out with scroll - only depends on showArrow so it
   // doesn't fire on mount (which would race with the double-RAF above)
   useEffect(() => {
     if (showHint) setHintVisible(showArrow);
