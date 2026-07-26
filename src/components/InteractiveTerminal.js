@@ -293,7 +293,7 @@ function buildCommands(scrollToSection) {
         return [{ text: ">> 67 off.", type: "info" }];
       }
       document.body.classList.add("sixseven");
-      setTimeout(() => document.body.classList.remove("sixseven"), 6700);
+      setTimeout(() => document.body.classList.remove("sixseven"), 4200);
       return [
         { text: ">> 67.", type: "danger" },
         { text: "ride or die.", type: "output" },

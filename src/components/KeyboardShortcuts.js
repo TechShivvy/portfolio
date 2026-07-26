@@ -27,7 +27,7 @@ const ACTIONS = {
       document.body.classList.remove("sixseven");
     } else {
       document.body.classList.add("sixseven");
-      setTimeout(() => document.body.classList.remove("sixseven"), 6700);
+      setTimeout(() => document.body.classList.remove("sixseven"), 4200);
     }
   }},
   q: { label: "suicide", run: () => window.location.replace("about:blank") },

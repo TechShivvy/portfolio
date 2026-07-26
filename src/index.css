@@ -108,12 +108,12 @@ body::-webkit-scrollbar {
    elongated like a parallelogram — not a hanging swing, not a head-bob. */
 @keyframes sixseven {
   0%   { transform: skewY(0deg);   }
-  25%  { transform: skewY(7deg);   }
+  25%  { transform: skewY(12deg);  }
   50%  { transform: skewY(0deg);   }
-  75%  { transform: skewY(-7deg);  }
+  75%  { transform: skewY(-12deg); }
   100% { transform: skewY(0deg);   }
 }
 body.sixseven {
-  animation: sixseven 0.32s ease-in-out infinite;
+  animation: sixseven 0.38s ease-in-out infinite;
   transform-origin: center center;
 }
