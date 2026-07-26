@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./_About.module.css";
 import INTERESTS from "../content/interests";
 import ABOUT from "../content/about";
+import TIMELINE from "../content/timeline";
 
 // ─── Boot sequence lines ────────────────────────────────────────────────────
 const BOOT_LINES = [
@@ -163,27 +164,15 @@ function buildCommands(scrollToSection) {
       if (args[0] !== "log") {
         return [{ text: `git: '${args[0] || ""}' is not a git command. Try 'git log'.`, type: "danger" }];
       }
-      return [
-        { text: "commit 0f1a2b3  (HEAD -> main)", type: "accent" },
-        { text: "Date:   Jun 2025", type: "output" },
-        { text: "    chore: still shipping. semicolon still missing.", type: "output" },
-        { text: "", type: "output" },
-        { text: "commit f2a0c81", type: "accent" },
-        { text: "Date:   Jan 2025", type: "output" },
-        { text: "    feat(career): promoted to MLE2 @ Comcast", type: "output" },
-        { text: "", type: "output" },
-        { text: "commit 9c3d77e", type: "accent" },
-        { text: "Date:   Jan 2024", type: "output" },
-        { text: "    feat(career): joined Comcast as MLE1", type: "output" },
-        { text: "", type: "output" },
-        { text: "commit 4f8e21b  (tag: v4.0.0)", type: "accent" },
-        { text: "Date:   May 2023", type: "output" },
-        { text: "    feat: graduated. shipped to production.", type: "output" },
-        { text: "", type: "output" },
-        { text: "commit a1b2c3d", type: "accent" },
-        { text: "Date:   Sep 2019", type: "output" },
-        { text: "    Initial commit: enrolled in B.E. CSE, SSNCE", type: "output" },
-      ];
+      const lines = [];
+      TIMELINE.forEach((entry, idx) => {
+        const tagStr = entry.tag ? `  (${entry.tag})` : "";
+        lines.push({ text: `commit ${entry.hash}${tagStr}`, type: "accent" });
+        lines.push({ text: `Date:   ${entry.date}`, type: "output" });
+        lines.push({ text: `    ${entry.message}`, type: "output" });
+        if (idx < TIMELINE.length - 1) lines.push({ text: "", type: "output" });
+      });
+      return lines;
     },
 
     portfolio: (args) => {
