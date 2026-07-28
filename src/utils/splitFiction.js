@@ -62,13 +62,14 @@ function buildLeftLens() {
 }
 
 // ─── Right fairy overlay ──────────────────────────────────────────────────
-// Dual role:
-//   1. backdrop-filter: shifts techy teal/green → violet/lavender on real content.
-//      Starting calibration: teal #2ba2a2 (hue ≈180°) + hue-rotate(90°) → 270° ≈ violet.
-//   2. background rgba fill: covers the body's pure-black section-margin gaps
-//      with the fairy dark colour so no black bars bleed through on the right.
+// Structural fixed element that receives its opacity transition in sync with
+// the seam and left lens. Visual theming of the right half is handled by:
+//   • body._sfActive{background:#0d0015} (body gap fill)
+//   • Section gradient hard-stops in the fairy supplement stylesheet
+// No backdrop-filter here: hue-rotate was shifting the fairy dark background
+// (#0d0015 ≈ violet hue 280°) by +90° into the red range (370°=10°), which
+// produced a brownish-red card background instead of the intended dark purple.
 function buildRightOverlay() {
-  const f = "hue-rotate(90deg) saturate(1.5) brightness(0.8)";
   const el = document.createElement("div");
   el.id = "_sfRightOverlay";
   el.style.cssText = [
@@ -79,12 +80,6 @@ function buildRightOverlay() {
     "bottom:0",
     "pointer-events:none",
     "z-index:99990",
-    // No background fill here — body._sfActive{background:#0d0015} in the
-    // fairy stylesheet handles gap fill. Keeping this transparent avoids
-    // compositing a coloured layer over real content and lets the backdrop-
-    // filter do its tinting work cleanly.
-    "backdrop-filter:" + f,
-    "-webkit-backdrop-filter:" + f,
     "opacity:0",
     "transition:opacity " + SPLIT_MS + "ms ease",
   ].join(";");
@@ -154,6 +149,17 @@ body._sfActive [class*='card_']:hover {
    snapping it off causes a brief bright-green flash on the left side because
    the real card's color:#165757 momentarily bleeds through the left lens's
    invert+hue-rotate(150deg) filter during the transition, mapping to green. */
+
+/* 2a. Card title + skills text — explicit colours so neither side shows white.
+   Left side: these values pass through invert(1)+hue-rotate(150deg)+saturate(2.2)
+   → title #e8d5f5 (lavender) → dark indigo; skills #c482ff (purple) → dark blue.
+   Right side: title lavender and skills purple read clearly on the dark #0d0015 bg. */
+body._sfActive [class*='card-title'] {
+  color: #e8d5f5 !important;
+}
+body._sfActive [class*='card-skills'] {
+  color: #c482ff !important;
+}
 
 /* 3. About terminal: framed window + fairy mac dots */
 body._sfActive [class*='fakeScreen'] {
