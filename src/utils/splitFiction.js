@@ -311,6 +311,26 @@ body._sfActive #hackerText {
 body._sfActive [class*='down-arrow'] {
   filter: hue-rotate(90deg) saturate(1.5) !important;
 }
+
+/* 12. Scroll progress bar — split at the seam.
+    Left  (sci-fi) : electric cyan  #00e5ff  — sharp tech readout look.
+    Right (fairy)  : fairy purple   #c482ff  — soft glow.
+    The gradient is painted at 100vw wide so the hard stop at var(--split-abs)
+    always lands at the seam pixel, regardless of how wide the fill div is. */
+body._sfActive #progress-container {
+  background: transparent !important;
+  height: 3px !important;
+}
+body._sfActive #progress-bar {
+  background: linear-gradient(
+    to right,
+    #00e5ff var(--split-abs),
+    #c482ff var(--split-abs)
+  ) !important;
+  background-size: 100vw 3px !important;
+  background-repeat: no-repeat !important;
+  box-shadow: 0 0 5px 1px rgba(0, 229, 255, 0.45) !important;
+}
 `.trim();
 
   document.head.appendChild(el);
