@@ -14,6 +14,9 @@ const MatrixAnimation = ({ startAnimation }) => {
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const charactersArray = characters.split("");
 
+    // Elder Futhark runes — shown on the right half during splitFiction.
+    const fairyChars = "\u16A0\u16A2\u16A6\u16A8\u16B1\u16B2\u16B7\u16B9\u16BA\u16BE\u16C1\u16C3\u16C7\u16C8\u16C9\u16CA\u16CF\u16D2\u16D6\u16D7\u16DA\u16DC\u16DE\u16DF".split("");
+
     const fontSize = 14;
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -107,8 +110,14 @@ const MatrixAnimation = ({ startAnimation }) => {
         } else {
           context.fillStyle = COLOR_MATRIX;
         }
-        const text =
-          charactersArray[Math.floor(Math.random() * charactersArray.length)];
+        // Right-half columns swap to runic chars during splitFiction.
+        // Threshold tracks the draggable split position in real time.
+        const splitX = (window.__sfSplitPct || 50) / 100 * cssW;
+        const pool =
+          window.__sfFairyActive && i * fontSize >= splitX
+            ? fairyChars
+            : charactersArray;
+        const text = pool[Math.floor(Math.random() * pool.length)];
         context.fillText(text, i * fontSize, matrix[i] * fontSize);
 
         if (matrix[i] * fontSize > cssH && Math.random() > 0.975) {
