@@ -205,14 +205,29 @@ body._sfActive [class*='mosaicCard']:hover [class*='mosaicTile'] {
 }
 body._sfActive [class*='mosaicCard'] {
   border-color: rgba(240, 168, 48, 0.4) !important;
+  /* override the Spotify green glow → amber/gold to match the border */
+  box-shadow: 0 0 12px 1px rgba(240, 168, 48, 0.4),
+              inset 0 0 30px rgba(240, 168, 48, 0.04) !important;
+}
+body._sfActive [class*='mosaicCardPinned'] {
+  box-shadow: 0 0 20px 3px rgba(240, 168, 48, 0.6),
+              inset 0 0 30px rgba(240, 168, 48, 0.06) !important;
 }
 body._sfActive [class*='spotifyFront'] {
   transition: opacity 0.3s ease !important;
   transition-delay: 0.8s !important;
+  /* remove the green scanline bg so it doesn't bleed through as a tint */
+  background-image: none !important;
 }
 body._sfActive [class*='mosaicCard']:hover [class*='spotifyFront'] {
   opacity: 0 !important;
   transition-delay: 0s !important;
+}
+body._sfActive [class*='spotifyPrompt'] {
+  color: #f0a830 !important;
+}
+body._sfActive [class*='spotifyHint'] {
+  color: rgba(240, 168, 48, 0.7) !important;
 }
 
 /* 5. Contact inputs / textareas */
@@ -500,9 +515,19 @@ export default async function splitFiction() {
     try { document.head.removeChild(sparkStyle); } catch (_) {}
     try { document.head.removeChild(fairyStyle); } catch (_) {}
 
-    // Remove --tile-idx from mosaic tiles
-    document.querySelectorAll("[class*='mosaicTile']").forEach((tile) => {
+    // Snap mosaic tiles to their resting state instantly before removing
+    // body._sfActive, so the browser doesn't play out a residual dissolve
+    // animation (tiles fading back in one-by-one) after SF is torn down.
+    // Clearing the inline transition lets the next rAF restore normal behaviour.
+    const allTiles = document.querySelectorAll("[class*='mosaicTile']");
+    allTiles.forEach((tile) => {
+      tile.style.setProperty("transition", "none");
+      tile.style.removeProperty("transform");
+      tile.style.removeProperty("opacity");
       tile.style.removeProperty("--tile-idx");
+    });
+    requestAnimationFrame(() => {
+      allTiles.forEach((tile) => tile.style.removeProperty("transition"));
     });
 
     // CSS variables
