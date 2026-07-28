@@ -312,24 +312,24 @@ body._sfActive [class*='down-arrow'] {
   filter: hue-rotate(90deg) saturate(1.5) !important;
 }
 
-/* 12. Scroll progress bar — split at the seam.
-    Left  (sci-fi) : electric cyan  #00e5ff  — sharp tech readout look.
-    Right (fairy)  : fairy purple   #c482ff  — soft glow.
-    The gradient is painted at 100vw wide so the hard stop at var(--split-abs)
-    always lands at the seam pixel, regardless of how wide the fill div is. */
+/* 12. Scroll progress bar — during SF the original #progress-bar fill is hidden
+    in JS and the battery+vine SVG is injected directly into #progress-container.
+    Make the container tall enough for the SVG and let its overflow be visible so
+    flowers and leaves can poke above/below the 8px strip. The container stays at
+    its natural z-index (9999) so it sits behind the seam and lenses, receiving
+    the same backdrop-filter treatment as the rest of the page content.
+    Background gradient fills the strip opaquely so page content doesn't bleed
+    through the transparent gaps in the SVG (battery cell spacing, vine curves).
+    Left = #000 (body bg — inverts to white through left lens, matching the page).
+    Right = #0d0015 (fairy body bg — seamless with sections). */
 body._sfActive #progress-container {
-  background: transparent !important;
-  height: 3px !important;
-}
-body._sfActive #progress-bar {
+  height: 8px !important;
+  overflow: visible !important;
   background: linear-gradient(
     to right,
-    #00e5ff var(--split-abs),
-    #c482ff var(--split-abs)
+    #000 var(--split-abs),
+    #0d0015 var(--split-abs)
   ) !important;
-  background-size: 100vw 3px !important;
-  background-repeat: no-repeat !important;
-  box-shadow: 0 0 5px 1px rgba(0, 229, 255, 0.45) !important;
 }
 `.trim();
 
@@ -399,6 +399,188 @@ function buildSparkles() {
   return { wrap, styleEl };
 }
 
+// ─── Progress indicator: unified battery (left) + vine+flowers (right) ──────
+// Single full-width SVG, 8px tall, pinned to the bottom edge of the navbar.
+// One clipPath rect grows 0→1000 (viewBox) as the page scrolls, revealing
+// both halves as one continuous bar: battery cells (0→seam) then wavy vine
+// (seam→1000). Seam drag calls updateVine() which rebuilds path + flowers.
+
+function buildProgressBar(initPct) {
+  // Inject the battery+vine SVG directly into the existing #progress-container
+  // rather than creating a parallel fixed div. The React Progressbar component
+  // already computed and set the correct top/z-index for that element, so this
+  // gives us perfect positioning for free — responsive and always flush with the
+  // navbar bottom regardless of navbar height changes.
+  const wrap = document.getElementById("progress-container");
+  const origBar = document.getElementById("progress-bar");
+  // Hide the original React fill bar; we own the visuals during SF.
+  if (origBar) origBar.style.display = "none";
+
+  const seamVb = initPct * 10; // seam in 0–1000 viewBox units
+
+  const NS  = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("width",  "100%");
+  svg.setAttribute("height", "100%");
+  // viewBox 8 units tall; battery and vine both centered at y=4.
+  svg.setAttribute("viewBox", "0 0 1000 8");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.style.cssText = "display:block;overflow:visible;width:100%;height:100%";
+
+  const defs = document.createElementNS(NS, "defs");
+
+  // Battery cell pattern: 13-unit tile (11px cell + 2px gap), centered at y=4.
+  const pat = document.createElementNS(NS, "pattern");
+  pat.id = "_sfBatPat";
+  pat.setAttribute("patternUnits", "userSpaceOnUse");
+  pat.setAttribute("width", "13"); pat.setAttribute("height", "8");
+  const pr = document.createElementNS(NS, "rect");
+  pr.setAttribute("x", "1");  pr.setAttribute("y", "2");
+  pr.setAttribute("width", "11"); pr.setAttribute("height", "4");
+  pr.setAttribute("rx", "1.2"); pr.setAttribute("fill", "#00e5ff");
+  pat.appendChild(pr);
+  defs.appendChild(pat);
+
+  // Single scroll-progress clip rect — drives both halves together.
+  const cp = document.createElementNS(NS, "clipPath");
+  cp.id = "_sfProgCP";
+  const clipR = document.createElementNS(NS, "rect");
+  clipR.setAttribute("x", "0"); clipR.setAttribute("y", "-3");
+  clipR.setAttribute("width", "0"); clipR.setAttribute("height", "14");
+  cp.appendChild(clipR);
+  defs.appendChild(cp);
+
+  svg.appendChild(defs);
+
+  // Battery rect (0 → seam), centered at y=4 (y=2, h=4).
+  const batRect = document.createElementNS(NS, "rect");
+  batRect.id = "_sfBatRect";
+  batRect.setAttribute("x", "0"); batRect.setAttribute("y", "2");
+  batRect.setAttribute("width", String(seamVb));
+  batRect.setAttribute("height", "4");
+  batRect.setAttribute("fill", "url(#_sfBatPat)");
+  batRect.setAttribute("clip-path", "url(#_sfProgCP)");
+  svg.appendChild(batRect);
+
+  // Vine path (seam → 1000+): tipsy cubic-bezier wave around y=4.
+  const vineP = document.createElementNS(NS, "path");
+  vineP.id = "_sfVinePath";
+  vineP.setAttribute("fill", "none");
+  vineP.setAttribute("stroke", "#a855f7");
+  vineP.setAttribute("stroke-width", "1.5");
+  vineP.setAttribute("stroke-linecap", "round");
+  vineP.setAttribute("clip-path", "url(#_sfProgCP)");
+  svg.appendChild(vineP);
+
+  // Flower group, also clipped by scroll progress.
+  const flowerG = document.createElementNS(NS, "g");
+  flowerG.id = "_sfFlowerG";
+  flowerG.setAttribute("clip-path", "url(#_sfProgCP)");
+  svg.appendChild(flowerG);
+
+  // Mark so cleanup knows this SVG was injected by SF.
+  svg.id = "_sfProgressSvg";
+  wrap.appendChild(svg);
+
+  // Generate wavy path from sx to beyond 1000 so it always reaches the edge.
+  // Period=90 VB units, amplitude=±2.5 around y=4. Adjacent bezier arcs share
+  // end-points at y=4 so the wave is smooth and continuous.
+  function makePath(sx) {
+    const period = 90, amp = 2.5, cy = 4;
+    let d = "M " + sx.toFixed(1) + "," + cy;
+    let phase = 0;
+    for (let x = sx; x < 1010; x += period, phase++) {
+      const nx   = Math.min(x + period, 1010);
+      const yOff = (phase % 2 === 0 ? -amp : amp).toFixed(2);
+      const cp1x = (x + (nx - x) * 0.35).toFixed(1);
+      const cp2x = (x + (nx - x) * 0.65).toFixed(1);
+      d += " C " + cp1x + "," + (parseFloat(yOff) + cy).toFixed(1) +
+           " "  + cp2x + "," + (parseFloat(yOff) + cy).toFixed(1) +
+           " "  + nx.toFixed(1) + "," + cy;
+    }
+    return d;
+  }
+
+  // Approximate the vine's y at any SVG-space x (for flower placement).
+  function vineYAt(x, sx) {
+    const period = 90, amp = 2.5, cy = 4;
+    const phase  = Math.floor((x - sx) / period);
+    const t      = ((x - sx) % period) / period;
+    return cy + (phase % 2 === 0 ? -amp : amp) * Math.sin(t * Math.PI);
+  }
+
+  // Leaves + 5-petal circle flowers along the vine.
+  // Leaves alternate above/below the vine every 28 VB units (green ovals, tilted).
+  // Flowers have 5 round petals in a ring + yellow center, every 72 VB units.
+  const FLOWER_COLS = ["#f9a8d4", "#d8b4fe", "#fbcfe8", "#c4b5fd"];
+  function buildFlowers(sx) {
+    while (flowerG.firstChild) flowerG.removeChild(flowerG.firstChild);
+    // Leaves
+    for (let x = sx + 18; x < 990; x += 28) {
+      const vy   = vineYAt(x, sx);
+      const side = (Math.floor((x - sx) / 28) % 2 === 0) ? -1 : 1;
+      const lx   = x, ly = vy + side * 2.5;
+      const leaf = document.createElementNS(NS, "ellipse");
+      leaf.setAttribute("cx", lx.toFixed(2));
+      leaf.setAttribute("cy", ly.toFixed(2));
+      leaf.setAttribute("rx", "2.6");
+      leaf.setAttribute("ry", "1.0");
+      leaf.setAttribute("fill", "#86efac");
+      leaf.setAttribute("opacity", "0.9");
+      leaf.setAttribute("transform",
+        "rotate(" + (side * 38).toFixed(0) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
+      flowerG.appendChild(leaf);
+    }
+    // Flowers
+    let fi = 0;
+    for (let x = sx + 50; x < 990; x += 72, fi++) {
+      const vy    = vineYAt(x, sx);
+      const color = FLOWER_COLS[fi % FLOWER_COLS.length];
+      for (let p = 0; p < 5; p++) {
+        const a     = (p / 5) * Math.PI * 2 - Math.PI / 2;
+        const petal = document.createElementNS(NS, "circle");
+        petal.setAttribute("cx", (x + Math.cos(a) * 2.6).toFixed(2));
+        petal.setAttribute("cy", (vy + Math.sin(a) * 2.6).toFixed(2));
+        petal.setAttribute("r", "1.6");
+        petal.setAttribute("fill", color);
+        flowerG.appendChild(petal);
+      }
+      const dot = document.createElementNS(NS, "circle");
+      dot.setAttribute("cx", x.toFixed(2));
+      dot.setAttribute("cy", vy.toFixed(2));
+      dot.setAttribute("r", "1.1");
+      dot.setAttribute("fill", "#fde68a");
+      flowerG.appendChild(dot);
+    }
+  }
+
+  // Single update function: syncs battery width, vine path, and flowers.
+  function updateVine(svb) {
+    batRect.setAttribute("width", String(svb));
+    vineP.setAttribute("d", makePath(svb));
+    buildFlowers(svb);
+  }
+  updateVine(seamVb); // initial render
+
+  return { wrap, origBar, clipR, updateVine };
+}
+
+// Drives the unified clip rect — returns a cancel fn for cleanup.
+function startProgressTick(clipR) {
+  let raf = null;
+  function tick() {
+    raf = requestAnimationFrame(tick);
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const range =
+      document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const pct = range > 0 ? Math.max(0, Math.min((scrollTop / range) * 100, 100)) : 0;
+    // viewBox is 0-1000, so scroll 0-100% maps to clipRect width 0-1000.
+    clipR.setAttribute("width", (pct * 10).toFixed(1));
+  }
+  raf = requestAnimationFrame(tick);
+  return () => cancelAnimationFrame(raf);
+}
+
 // ─── Draggable seam ────────────────────────────────────────────────────────
 function buildSeam() {
   const el = document.createElement("div");
@@ -449,11 +631,14 @@ export default async function splitFiction() {
   const fairyStyle = buildFairyStylesheet();
   const seam       = buildSeam();
   const { wrap: sparkWrap, styleEl: sparkStyle } = buildSparkles();
+  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateVine: updateProgVine } = buildProgressBar(splitPct);
+  const stopProgressTick = startProgressTick(progClipR);
 
   document.body.appendChild(leftLens);
   document.body.appendChild(rightOvl);
   document.body.appendChild(seam);
   document.body.appendChild(sparkWrap);
+  // progWrap is #progress-container (already in DOM) — no appendChild needed.
 
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
@@ -463,6 +648,8 @@ export default async function splitFiction() {
     window.__sfSplitPct = splitPct;
     setSplitVars(splitPct);
     seam.style.left = splitPct + "%";
+    // Keep battery/vine split in sync with the draggable seam.
+    updateProgVine(splitPct * 10);
   }
   applySplit(splitPct); // sync seam.left with the CSS var on first paint
 
@@ -544,6 +731,11 @@ export default async function splitFiction() {
     });
     try { document.head.removeChild(sparkStyle); } catch (_) {}
     try { document.head.removeChild(fairyStyle); } catch (_) {}
+    // Restore #progress-container: remove SVG, restore original bar.
+    const sfSvg = document.getElementById("_sfProgressSvg");
+    if (sfSvg && sfSvg.parentNode) sfSvg.parentNode.removeChild(sfSvg);
+    if (progOrigBar) progOrigBar.style.display = "";
+    stopProgressTick();
 
     // Snap mosaic tiles to their resting state instantly before removing
     // body._sfActive, so the browser doesn't play out a residual dissolve
