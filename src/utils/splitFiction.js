@@ -224,7 +224,10 @@ body._sfActive select {
 }
 body._sfActive input::placeholder,
 body._sfActive textarea::placeholder {
-  color: rgba(232, 213, 245, 0.45) !important;
+  /* 0.45 at full-lavender was invisible on white inputs (right) and inverted to
+     dark olive on black inputs (left). Higher opacity + warmer purple is readable
+     on both: right = muted purple on white; left = inverted to blue-violet on black. */
+  color: rgba(180, 140, 230, 0.72) !important;
 }
 
 /* 6. Buttons */
@@ -235,6 +238,13 @@ body._sfActive [class*='btn'],
 body._sfActive [class*='Btn'] {
   border: 1px solid rgba(196, 130, 255, 0.45) !important;
   border-radius: 5px !important;
+}
+/* card-buttons is the flex wrapper for GitHub+Preview — [class*='button'] above
+   matches it too, so it gets an outer frame that creates a visible divider between
+   the two adjacent card-button children. Clear it here (more specific / later rule). */
+body._sfActive [class*='card-buttons'] {
+  border: none !important;
+  box-shadow: none !important;
 }
 body._sfActive button:hover,
 body._sfActive [class*='button']:hover,
@@ -260,6 +270,22 @@ body._sfActive h4, body._sfActive h5, body._sfActive h6 {
 /* 9. Links */
 body._sfActive a:hover {
   text-shadow: 0 0 6px rgba(196, 130, 255, 0.4) !important;
+}
+
+/* 10. Hero name — real DOM uses var(--color-accent-danger) which is teal,
+    showing as teal on the right (fairy) side. Override to fairy pink so both
+    halves have a distinct palette colour instead of the sci-fi teal bleed-through.
+    Left: #f9a8d4 → invert → dark green → hue-rotate(150°) → dark indigo/violet. */
+body._sfActive #hackerText {
+  color: #f9a8d4 !important;
+}
+
+/* 11. Scroll-down arrow chevrons — ::before/::after use border in var(--color-accent)
+    (teal). On the right the teal is unchanged; on the left the inversion maps it
+    to something hard to see. Set to fairy pink to match the hero name. */
+body._sfActive [class*='down-arrow']::before,
+body._sfActive [class*='down-arrow']::after {
+  border-color: #f9a8d4 !important;
 }
 `.trim();
 
