@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./_KeyboardShortcuts.module.css";
 import tenet from "../utils/tenet";
+import splitFiction from "../utils/splitFiction";
 
 // ─── Site-wide keyboard shortcuts ────────────────────────────────────────────
 // `?` or `Ctrl+/`  -> toggle this shortcuts panel (works anywhere on the site)
@@ -23,6 +24,7 @@ const ACTIONS = {
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
   8: { label: "exit 8", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8" })) },
+  f: { label: "split fiction", run: () => splitFiction() },
   6: { label: "67", run: () => {
     if (document.body.classList.contains("sixseven")) {
       document.body.classList.remove("sixseven");
@@ -45,6 +47,7 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "r"], desc: "raw HTML portfolio (no CSS)" },
   { keys: ["Ctrl+K", "x"], desc: "tenet (reverse intro + close tab)" },
   { keys: ["Ctrl+K", "8"], desc: "exit 8 (anomaly detection game)" },
+  { keys: ["Ctrl+K", "f"], desc: "split fiction (sci-fi | fairy world split)" },
   { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 4.2s)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },
