@@ -237,6 +237,16 @@ body._sfActive select {
   border: 1px solid rgba(196, 130, 255, 0.5) !important;
   border-radius: 6px !important;
 }
+/* Restore validation borders — pseudo-class adds specificity so these beat the
+   base rule above even though both carry !important. */
+body._sfActive input:invalid,
+body._sfActive textarea:invalid {
+  border: 2px solid rgba(239, 68, 68, 0.85) !important;
+}
+body._sfActive input:valid,
+body._sfActive textarea:valid {
+  border: 2px solid rgba(74, 222, 128, 0.85) !important;
+}
 body._sfActive input::placeholder,
 body._sfActive textarea::placeholder {
   /* 0.45 at full-lavender was invisible on white inputs (right) and inverted to
