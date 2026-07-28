@@ -79,7 +79,10 @@ function buildRightOverlay() {
     "bottom:0",
     "pointer-events:none",
     "z-index:99990",
-    "background:rgba(13,0,21,0.35)",
+    // No background fill here — body._sfActive{background:#0d0015} in the
+    // fairy stylesheet handles gap fill. Keeping this transparent avoids
+    // compositing a coloured layer over real content and lets the backdrop-
+    // filter do its tinting work cleanly.
     "backdrop-filter:" + f,
     "-webkit-backdrop-filter:" + f,
     "opacity:0",
@@ -107,10 +110,11 @@ function buildFairyStylesheet() {
     "[class*='project-section']",
     "[class*='timelineSection']",
     "[class*='contact-section']",
-    "[class*='beyondCode']",
-    "[class*='BeyondCode']",
-    "[class*='FOOTER']",
-    "[class*='footer']",
+    // BeyondCode uses styles.section (CSS-module hash is _section_<hash>);
+    // target by the stable id attribute instead.
+    "#beyond-code",
+    // Footer is a native <footer> element with no CSS-module class on the root.
+    "footer",
   ].map((s) => "body._sfActive " + s).join(",\n");
 
   el.textContent = `
@@ -118,6 +122,13 @@ function buildFairyStylesheet() {
    Gradient hard-stops at var(--split-abs): left = transparent (real DOM),
    right = fairy fill. Right overlay's backdrop-filter tints over the top.
 */
+
+/* 0. Body background — fills the black margin gaps between sections on the
+      right side. Left-side gaps show the inverted version (#f2ffea, pale mint)
+      which is barely distinguishable from pure white at 10px scale. */
+body._sfActive {
+  background: #0d0015 !important;
+}
 
 /* 1. Section backgrounds */
 ${SECTIONS} {
@@ -139,7 +150,10 @@ body._sfActive [class*='card_']:hover {
   border-color: rgba(196, 130, 255, 0.85) !important;
   box-shadow: 0 0 22px rgba(196, 130, 255, 0.28) !important;
 }
-body._sfActive [class*='card_']:hover * { color: #f6ecff !important; }
+/* NOTE: no hover * {color} rule here — overriding descendant color and then
+   snapping it off causes a brief bright-green flash on the left side because
+   the real card's color:#165757 momentarily bleeds through the left lens's
+   invert+hue-rotate(150deg) filter during the transition, mapping to green. */
 
 /* 3. About terminal: framed window + fairy mac dots */
 body._sfActive [class*='fakeScreen'] {
