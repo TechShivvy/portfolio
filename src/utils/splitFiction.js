@@ -272,20 +272,19 @@ body._sfActive a:hover {
   text-shadow: 0 0 6px rgba(196, 130, 255, 0.4) !important;
 }
 
-/* 10. Hero name — real DOM uses var(--color-accent-danger) which is teal,
-    showing as teal on the right (fairy) side. Override to fairy pink so both
-    halves have a distinct palette colour instead of the sci-fi teal bleed-through.
-    Left: #f9a8d4 → invert → dark green → hue-rotate(150°) → dark indigo/violet. */
+/* 10. Hero name — filter shifts native teal (var(--color-accent-danger), hue ≈180°)
+    by +90° → hue ≈270° (purple/violet) on the right (fairy) side. This restores
+    the purple look the right overlay's backdrop-filter used to produce.
+    Left compound: teal → filter(+90°) = purple → left lens invert(hue 90°=yellow-green)
+    → hue-rotate(150°) = 240° → saturate = vivid blue-indigo. */
 body._sfActive #hackerText {
-  color: #f9a8d4 !important;
+  filter: hue-rotate(90deg) saturate(1.5) !important;
 }
 
-/* 11. Scroll-down arrow chevrons — ::before/::after use border in var(--color-accent)
-    (teal). On the right the teal is unchanged; on the left the inversion maps it
-    to something hard to see. Set to fairy pink to match the hero name. */
-body._sfActive [class*='down-arrow']::before,
-body._sfActive [class*='down-arrow']::after {
-  border-color: #f9a8d4 !important;
+/* 11. Scroll-down arrow — filter on the container applies to ::before/::after too.
+    Same shift as hero name: teal → +90° → purple on the right side. */
+body._sfActive [class*='down-arrow'] {
+  filter: hue-rotate(90deg) saturate(1.5) !important;
 }
 `.trim();
 
