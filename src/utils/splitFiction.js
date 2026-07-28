@@ -643,6 +643,41 @@ export default async function splitFiction() {
   document.body.appendChild(sparkWrap);
   // progWrap is #progress-container (already in DOM) — no appendChild needed.
 
+  // ── Exit button (bottom-left, slides in like exit8's EXIT btn) ─────────
+  const exitBtn = document.createElement("button");
+  exitBtn.id = "_sfExitBtn";
+  exitBtn.title = "Exit Split Fiction (Esc)";
+  exitBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/></svg>`;
+  exitBtn.style.cssText = [
+    "position:fixed",
+    "bottom:24px",
+    "left:-80px",
+    "width:42px",
+    "height:42px",
+    "z-index:99998",
+    "background:rgba(13,0,21,0.85)",
+    "border:1px solid #a855f7",
+    "border-radius:8px",
+    "display:flex",
+    "align-items:center",
+    "justify-content:center",
+    "cursor:var(--cursor-pointer,pointer)",
+    "transition:left 0.45s cubic-bezier(0.22,0.61,0.36,1),box-shadow 0.25s ease",
+    "box-shadow:none",
+  ].join(";");
+  exitBtn.addEventListener("mouseenter", () => {
+    exitBtn.style.boxShadow = "0 0 10px 2px rgba(168,85,247,0.6)";
+  });
+  exitBtn.addEventListener("mouseleave", () => {
+    exitBtn.style.boxShadow = "none";
+  });
+  exitBtn.addEventListener("click", () => cleanup());
+  document.body.appendChild(exitBtn);
+  // Slide in after paint (same pattern as exit8).
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    exitBtn.style.left = "24px";
+  }));
+
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
   // per frame); only the seam's `left` needs a direct inline update.
@@ -729,7 +764,7 @@ export default async function splitFiction() {
     document.removeEventListener("keydown",   onKeyDown);
 
     // Injected DOM nodes
-    [leftLens, rightOvl, seam, sparkWrap].forEach((el) => {
+    [leftLens, rightOvl, seam, sparkWrap, exitBtn].forEach((el) => {
       try { document.body.removeChild(el); } catch (_) {}
     });
     try { document.head.removeChild(sparkStyle); } catch (_) {}
