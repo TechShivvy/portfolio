@@ -460,6 +460,7 @@ function buildProgressBar(initPct) {
   batRect.setAttribute("height", "4");
   batRect.setAttribute("fill", "url(#_sfBatPat)");
   batRect.setAttribute("clip-path", "url(#_sfProgCP)");
+  batRect.style.filter = "drop-shadow(0 0 1.5px rgba(0,229,255,0.5))";
   svg.appendChild(batRect);
 
   // Vine path (seam → 1000+): tipsy cubic-bezier wave around y=4.
@@ -470,12 +471,14 @@ function buildProgressBar(initPct) {
   vineP.setAttribute("stroke-width", "1.5");
   vineP.setAttribute("stroke-linecap", "round");
   vineP.setAttribute("clip-path", "url(#_sfProgCP)");
+  vineP.style.filter = "drop-shadow(0 0 2.5px rgba(168,85,247,0.85))";
   svg.appendChild(vineP);
 
   // Flower group, also clipped by scroll progress.
   const flowerG = document.createElementNS(NS, "g");
   flowerG.id = "_sfFlowerG";
   flowerG.setAttribute("clip-path", "url(#_sfProgCP)");
+  flowerG.style.filter = "drop-shadow(0 0 2px rgba(249,168,212,0.7))";
   svg.appendChild(flowerG);
 
   // Mark so cleanup knows this SVG was injected by SF.
