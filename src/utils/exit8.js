@@ -12,11 +12,6 @@ const getWinAudio = () => {
   return winAudioInstance;
 };
 
-// Pre-trigger browser load
-try {
-  getWinAudio().load();
-} catch (_) {}
-
 const playWinAudio = () => {
   try {
     const audio = getWinAudio();
@@ -66,6 +61,9 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
   // Guard: prevent concurrent game instances
   if (startExit8._active) return { teardown: () => {} };
   startExit8._active = true;
+
+  // Preload audio async (completely decoupled from game startup, loads in background)
+  setTimeout(() => { try { getWinAudio().load(); } catch (_) {} }, 0);
 
   const st = {
     score: 0, clones: [], cloneMatrixRafs: [],
