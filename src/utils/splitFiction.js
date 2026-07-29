@@ -742,8 +742,7 @@ function buildSeam(isSpinMode) {
       "height:10px",
       "transform:translate(-50%,-50%) rotate(90deg)",
       "z-index:99993",
-      "pointer-events:auto",
-      "cursor:grab",
+      "pointer-events:none",
       "background:linear-gradient(90deg,#2ba2a2,#fff,#f472b6)",
       "box-shadow:0 0 18px 4px rgba(255,255,255,.7)",
       "opacity:0",
@@ -987,6 +986,7 @@ export default async function splitFiction(options = {}) {
   setSplitVars(splitPct);
   window.__sfFairyActive = true;
   document.body.classList.add("_sfActive");
+  if (isSpinMode) document.body.classList.add("_sfSpinMode");
 
   // Assign --tile-idx to each Spotify mosaic tile so the hover-dissolve stagger
   // animation works. The real DOM only has one set of tiles — no clone needed.
@@ -1140,7 +1140,6 @@ export default async function splitFiction(options = {}) {
 
   function onDragMove(e) {
     if (isSpinMode || !dragging) return;
-    if (!dragging) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     applySplit((clientX / window.innerWidth) * 100);
   }
@@ -1160,10 +1159,30 @@ export default async function splitFiction(options = {}) {
     document.addEventListener("touchend",  onDragEnd);
   }
 
+  let _spinRafPending = false;
   function onSpinPointerMove(e) {
     const point = e.touches ? e.touches[0] : e;
     if (!point) return;
-    applySpinFromPoint(point.clientX, point.clientY);
+    const cx = point.clientX;
+    const cy = point.clientY;
+    // Geometry updated synchronously so cursor detection is current on the same event.
+    const dx = cx - window.innerWidth / 2;
+    const dy = cy - window.innerHeight / 2;
+    if (Math.abs(dx) >= 0.001 || Math.abs(dy) >= 0.001) {
+      splitAngle = Math.atan2(dy, dx);
+      spinGeometry = buildSplitPolygons(window.innerWidth, window.innerHeight, splitAngle);
+      window.__sfSplitAngle = splitAngle;
+    }
+    if (_spinRafPending) return;
+    _spinRafPending = true;
+    requestAnimationFrame(() => {
+      _spinRafPending = false;
+      if (cleanedUp) return;
+      leftLens.style.clipPath = spinGeometry.leftClip;
+      rightOvl.style.clipPath = spinGeometry.rightClip;
+      sparkWrap.style.clipPath = spinGeometry.rightClip;
+      seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
+    });
   }
 
   if (isSpinMode) {
@@ -1242,6 +1261,7 @@ export default async function splitFiction(options = {}) {
     // them here (before DOM removal) ensures the split line vanishes in the same
     // paint as everything else, whether cleanup is instant or after a fade.
     document.body.classList.remove("_sfActive");
+    document.body.classList.remove("_sfSpinMode");
     clearSplitVars();
     try { document.head.removeChild(fairyStyle); } catch (_) {}
     try { document.head.removeChild(sparkStyle); } catch (_) {}
@@ -1319,6 +1339,7 @@ export default async function splitFiction(options = {}) {
   // pre-strip below would otherwise corrupt a new SF session started in the gap.
   if (!cleanedUp) {
     document.body.classList.remove("_sfActive");
+    document.body.classList.remove("_sfSpinMode");
     clearSplitVars();
     all.forEach((el) => { el.style.opacity = "0"; });
     await wait(SPLIT_MS);
