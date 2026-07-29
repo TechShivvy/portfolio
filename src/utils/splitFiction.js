@@ -18,7 +18,7 @@
 //   • Draggable seam → applySplit() → CSS vars update → everything follows.
 //   • Clean teardown: every node, listener, CSS var, and global is restored.
 
-const HOLD_MS  = 600000; // 10 minutes (indefinite until Esc or EXIT button)
+const HOLD_MS  = 60000; // 1 minute (exits cleanly via Esc or EXIT button)
 const SPLIT_MS = 900;
 const MIN_PCT  = 10;
 const MAX_PCT  = 90;
@@ -855,7 +855,7 @@ export default async function splitFiction() {
   const exitBtn = document.createElement("button");
   exitBtn.id = "_sfExitBtn";
   exitBtn.title = "Exit Split Fiction (Esc)";
-  exitBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/></svg>`;
+  exitBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/></svg>`;
   exitBtn.style.cssText = [
     "position:fixed",
     "bottom:24px",
