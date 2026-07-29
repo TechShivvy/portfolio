@@ -669,12 +669,10 @@ function buildLaserStage() {
 
   const colors = ["red", "green", "blue"];
   const INTERACTIVE_SELECTOR = [
-    'a', 'button', 'input', 'select', 'textarea', 'label',
-    '[role="button"]', '[onclick]', '[tabindex]:not([tabindex="-1"])',
-    '[class*="btn"]', '[class*="Btn"]', '[class*="button"]', '[class*="Button"]',
-    '[class*="tab"]', '[class*="Tab"]', '[class*="nav"]', '[class*="Nav"]',
-    '[class*="chip"]', '[class*="Chip"]', '[class*="card"]', '[class*="Card"]',
-    '[class*="menu"]', '[class*="Menu"]', '[class*="link"]', '[class*="Link"]'
+    'a[href]', 'button', 'input', 'select', 'textarea', 'label',
+    '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
+    '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
+    '[onclick]', '[tabindex]:not([tabindex="-1"])',
   ].join(', ');
 
   function isInteractive(el) {
@@ -738,19 +736,6 @@ function buildLaserStage() {
     const currentPct = window.__sfSplitPct ?? 50;
     const splitX = (currentPct / 100) * window.innerWidth;
     return x <= splitX;
-  }
-
-  function startFiring(x, y) {
-    if (!isLeftSciFi(x)) return;
-    lastX = x; lastY = y;
-    spawnAimedLaser(x, y);
-    fireInterval = setInterval(() => {
-      if (isLeftSciFi(lastX)) {
-        spawnAimedLaser(lastX, lastY);
-      } else {
-        stopFiring();
-      }
-    }, 90);
   }
 
   function stopFiring() {
@@ -874,17 +859,17 @@ export default async function splitFiction() {
   exitBtn.style.cssText = [
     "position:fixed",
     "bottom:24px",
-    "left:-160px",
+    "left:-80px",
+    "width:42px",
     "height:42px",
-    "padding:0 16px",
     "z-index:99998",
-    "background:rgba(13,13,13,0.9)",
+    "background:rgba(13,13,13,0.8)",
     "border:1px solid #00e5ff",
-    "border-radius:6px",
+    "border-radius:8px",
     "display:flex",
     "align-items:center",
     "justify-content:center",
-    "cursor:pointer",
+    "cursor:var(--cursor-pointer,pointer)",
     "transition:left 0.45s cubic-bezier(0.22,0.61,0.36,1),box-shadow 0.25s ease",
     "box-shadow:none",
   ].join(";");
