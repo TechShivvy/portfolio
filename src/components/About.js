@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./_About.module.css";
-import AboutLines from "../utils/about";
+import AboutLines from "./AboutLines";
 import InteractiveTerminal from "./InteractiveTerminal";
 import useFadeIn from "../utils/useFadeIn";
 import aboutData from "../content/about";
