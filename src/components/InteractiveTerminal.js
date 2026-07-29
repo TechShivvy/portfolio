@@ -100,7 +100,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       const args = parts.slice(1);
       if (!cmd) return;
 
-      const newHistory = [cmd, ...historyList].slice(0, 50);
+      const newHistory = [raw.trim(), ...historyList].slice(0, 50);
       setHistoryList(newHistory);
       setHistIdx(-1);
 
