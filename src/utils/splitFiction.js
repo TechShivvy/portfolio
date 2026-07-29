@@ -547,11 +547,10 @@ function buildSparkles() {
   return { wrap, styleEl };
 }
 
-// ─── Progress indicator: unified battery (left) + vine+flowers (right) ──────
+// ─── Progress indicator: unified battery + vine with seam-aware side swapping ─
 // Single full-width SVG, 8px tall, pinned to the bottom edge of the navbar.
 // One clipPath rect grows 0→1000 (viewBox) as the page scrolls, revealing
-// both halves as one continuous bar: battery cells (0→seam) then wavy vine
-// (seam→1000). Seam drag calls updateVine() which rebuilds path + flowers.
+// both halves as one continuous bar: battery and vine swap sides by seam.
 
 function buildProgressBar(initPct) {
   // Inject the battery+vine SVG directly into the existing #progress-container
@@ -633,15 +632,14 @@ function buildProgressBar(initPct) {
   svg.id = "_sfProgressSvg";
   wrap.appendChild(svg);
 
-  // Generate wavy path from sx to beyond 1000 so it always reaches the edge.
-  // Period=90 VB units, amplitude=±2.5 around y=4. Adjacent bezier arcs share
-  // end-points at y=4 so the wave is smooth and continuous.
-  function makePath(sx) {
+  // Generate a wavy path between two x positions.
+  function makePath(xStart, xEnd) {
     const period = 90, amp = 2.5, cy = 4;
-    let d = "M " + sx.toFixed(1) + "," + cy;
+    const dir = xEnd >= xStart ? 1 : -1;
+    let d = "M " + xStart.toFixed(1) + "," + cy;
     let phase = 0;
-    for (let x = sx; x < 1010; x += period, phase++) {
-      const nx   = Math.min(x + period, 1010);
+    for (let x = xStart; dir > 0 ? x < xEnd : x > xEnd; x += period * dir, phase++) {
+      const nx = dir > 0 ? Math.min(x + period, xEnd) : Math.max(x - period, xEnd);
       const yOff = (phase % 2 === 0 ? -amp : amp).toFixed(2);
       const cp1x = (x + (nx - x) * 0.35).toFixed(1);
       const cp2x = (x + (nx - x) * 0.65).toFixed(1);
@@ -653,10 +651,11 @@ function buildProgressBar(initPct) {
   }
 
   // Approximate the vine's y at any SVG-space x (for flower placement).
-  function vineYAt(x, sx) {
+  function vineYAt(x, xStart, dir) {
     const period = 90, amp = 2.5, cy = 4;
-    const phase  = Math.floor((x - sx) / period);
-    const t      = ((x - sx) % period) / period;
+    const dx = (x - xStart) * dir;
+    const phase = Math.floor(dx / period);
+    const t = (dx % period) / period;
     return cy + (phase % 2 === 0 ? -amp : amp) * Math.sin(t * Math.PI);
   }
 
@@ -664,12 +663,16 @@ function buildProgressBar(initPct) {
   // Leaves alternate above/below the vine every 28 VB units (green ovals, tilted).
   // Flowers have 5 round petals in a ring + yellow center, every 72 VB units.
   const FLOWER_COLS = ["#f9a8d4", "#d8b4fe", "#fbcfe8", "#c4b5fd"];
-  function buildFlowers(sx) {
+  function buildFlowers(xStart, xEnd) {
     while (flowerG.firstChild) flowerG.removeChild(flowerG.firstChild);
+    const dir = xEnd >= xStart ? 1 : -1;
+    const minX = Math.min(xStart, xEnd);
+    const maxX = Math.max(xStart, xEnd);
+
     // Leaves
-    for (let x = sx + 18; x < 990; x += 28) {
-      const vy   = vineYAt(x, sx);
-      const side = (Math.floor((x - sx) / 28) % 2 === 0) ? -1 : 1;
+    for (let x = xStart + 18 * dir; dir > 0 ? x < maxX - 10 : x > minX + 10; x += 28 * dir) {
+      const vy   = vineYAt(x, xStart, dir);
+      const side = (Math.floor(Math.abs(x - xStart) / 28) % 2 === 0) ? -1 : 1;
       const lx   = x, ly = vy + side * 2.5;
       const leaf = document.createElementNS(NS, "ellipse");
       leaf.setAttribute("cx", lx.toFixed(2));
@@ -684,8 +687,8 @@ function buildProgressBar(initPct) {
     }
     // Flowers
     let fi = 0;
-    for (let x = sx + 50; x < 990; x += 72, fi++) {
-      const vy    = vineYAt(x, sx);
+    for (let x = xStart + 50 * dir; dir > 0 ? x < maxX - 8 : x > minX + 8; x += 72 * dir, fi++) {
+      const vy    = vineYAt(x, xStart, dir);
       const color = FLOWER_COLS[fi % FLOWER_COLS.length];
       for (let p = 0; p < 5; p++) {
         const a     = (p / 5) * Math.PI * 2 - Math.PI / 2;
@@ -705,15 +708,22 @@ function buildProgressBar(initPct) {
     }
   }
 
-  // Single update function: syncs battery width, vine path, and flowers.
-  function updateVine(svb) {
-    batRect.setAttribute("width", String(svb));
-    vineP.setAttribute("d", makePath(svb));
-    buildFlowers(svb);
-  }
-  updateVine(seamVb); // initial render
+  // Single update: keep battery and vine on the correct side of the seam.
+  function updateSplitProgress(svb, techOnLeft = true) {
+    const split = Math.max(0, Math.min(1000, svb));
+    const techStart = techOnLeft ? 0 : split;
+    const techEnd = techOnLeft ? split : 1000;
+    const fairyStart = techOnLeft ? split : 0;
+    const fairyEnd = techOnLeft ? 1000 : split;
 
-  return { wrap, origBar, clipR, updateVine };
+    batRect.setAttribute("x", String(Math.min(techStart, techEnd)));
+    batRect.setAttribute("width", String(Math.abs(techEnd - techStart)));
+    vineP.setAttribute("d", makePath(fairyStart, fairyEnd));
+    buildFlowers(fairyStart, fairyEnd);
+  }
+  updateSplitProgress(seamVb, true); // initial render (classic split starts tech-left)
+
+  return { wrap, origBar, clipR, updateSplitProgress };
 }
 
 // Drives the unified clip rect — returns a cancel fn for cleanup.
@@ -1004,7 +1014,7 @@ export default async function splitFiction(options = {}) {
   const fairyStyle = buildFairyStylesheet();
   const seam       = buildSeam(isSpinMode);
   const { wrap: sparkWrap, styleEl: sparkStyle } = buildSparkles();
-  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateVine: updateProgVine } = buildProgressBar(splitPct);
+  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateSplitProgress } = buildProgressBar(splitPct);
   const stopProgressTick = startProgressTick(progClipR);
 
   document.body.appendChild(leftLens);
@@ -1092,11 +1102,13 @@ export default async function splitFiction(options = {}) {
     setSplitVars(splitPct);
     seam.style.left = splitPct + "%";
     // Keep battery/vine split in sync with the draggable seam.
-    updateProgVine(splitPct * 10);
+    updateSplitProgress(splitPct * 10, true);
   }
 
-  function computeSpinProgressSplitVb() {
-    if (!isSpinMode || !spinGeometry) return splitPct * 10;
+  function computeSpinProgressState() {
+    if (!isSpinMode || !spinGeometry) {
+      return { splitVb: splitPct * 10, techOnLeft: true };
+    }
     const barRect = progWrap?.getBoundingClientRect?.();
     const y = barRect ? barRect.top + barRect.height / 2 : 0;
 
@@ -1104,16 +1116,24 @@ export default async function splitFiction(options = {}) {
     const rightFairy = isRightSide(window.innerWidth, y);
 
     if (leftFairy === rightFairy) {
-      return leftFairy ? 0 : 1000;
+      // Entire navbar row is on one side: full vine for fairy, full battery for tech.
+      return leftFairy
+        ? { splitVb: 1000, techOnLeft: false }
+        : { splitVb: 1000, techOnLeft: true };
     }
 
     if (Math.abs(spinGeometry.lineDirY) < 1e-6) {
-      return leftFairy ? 0 : 1000;
+      return leftFairy
+        ? { splitVb: 1000, techOnLeft: false }
+        : { splitVb: 1000, techOnLeft: true };
     }
 
     const t = (y - spinGeometry.centerY) / spinGeometry.lineDirY;
     const crossX = spinGeometry.centerX + t * spinGeometry.lineDirX;
-    return Math.max(0, Math.min(1000, (crossX / window.innerWidth) * 1000));
+    return {
+      splitVb: Math.max(0, Math.min(1000, (crossX / window.innerWidth) * 1000)),
+      techOnLeft: !leftFairy,
+    };
   }
 
   function applySpinFromPoint(clientX, clientY) {
@@ -1129,7 +1149,8 @@ export default async function splitFiction(options = {}) {
     rightOvl.style.clipPath = spinGeometry.rightClip;
     sparkWrap.style.clipPath = spinGeometry.rightClip;
     seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
-    updateProgVine(computeSpinProgressSplitVb());
+    const progressState = computeSpinProgressState();
+    updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
     window.__sfSplitAngle = splitAngle;
     window.__sfSplitPct = 50;
   }
@@ -1207,7 +1228,8 @@ export default async function splitFiction(options = {}) {
       rightOvl.style.clipPath = spinGeometry.rightClip;
       sparkWrap.style.clipPath = spinGeometry.rightClip;
       seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
-      updateProgVine(computeSpinProgressSplitVb());
+      const progressState = computeSpinProgressState();
+      updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
     });
   }
 
