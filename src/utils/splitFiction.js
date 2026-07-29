@@ -406,6 +406,9 @@ body._sfActive #_sfExitBtn:hover {
   border-color: #00e5ff !important;
   box-shadow: 0 0 10px 2px rgba(0, 229, 255, 0.6) !important;
 }
+body._sfActive button[aria-label='Scroll to top'] {
+  z-index: 99998 !important;
+}
 /* Responsive sizing — mirrors the scroll-up button's @media (max-width:768px) rule
    so both buttons stay on the same horizontal line at all zoom levels. */
 @media (max-width: 768px) {
@@ -1092,6 +1095,27 @@ export default async function splitFiction(options = {}) {
     updateProgVine(splitPct * 10);
   }
 
+  function computeSpinProgressSplitVb() {
+    if (!isSpinMode || !spinGeometry) return splitPct * 10;
+    const barRect = progWrap?.getBoundingClientRect?.();
+    const y = barRect ? barRect.top + barRect.height / 2 : 0;
+
+    const leftFairy = isRightSide(0, y);
+    const rightFairy = isRightSide(window.innerWidth, y);
+
+    if (leftFairy === rightFairy) {
+      return leftFairy ? 0 : 1000;
+    }
+
+    if (Math.abs(spinGeometry.lineDirY) < 1e-6) {
+      return leftFairy ? 0 : 1000;
+    }
+
+    const t = (y - spinGeometry.centerY) / spinGeometry.lineDirY;
+    const crossX = spinGeometry.centerX + t * spinGeometry.lineDirX;
+    return Math.max(0, Math.min(1000, (crossX / window.innerWidth) * 1000));
+  }
+
   function applySpinFromPoint(clientX, clientY) {
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
@@ -1105,6 +1129,7 @@ export default async function splitFiction(options = {}) {
     rightOvl.style.clipPath = spinGeometry.rightClip;
     sparkWrap.style.clipPath = spinGeometry.rightClip;
     seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
+    updateProgVine(computeSpinProgressSplitVb());
     window.__sfSplitAngle = splitAngle;
     window.__sfSplitPct = 50;
   }
@@ -1182,6 +1207,7 @@ export default async function splitFiction(options = {}) {
       rightOvl.style.clipPath = spinGeometry.rightClip;
       sparkWrap.style.clipPath = spinGeometry.rightClip;
       seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
+      updateProgVine(computeSpinProgressSplitVb());
     });
   }
 
