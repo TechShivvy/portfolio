@@ -136,17 +136,19 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
         if (args[0] === "8") {
           // Exit 8: seamless corridor loop + anomaly detection game
           captureScrollPos();
+          const isFast = args[1]?.toLowerCase() === "fast";
           const gameInstance = startExit8({
             setLines,
             inputRef,
             rootEl: document.getElementById("root"),
             onQuit: () => runCommand("exit 0"),
+            isFast,
           });
           exit8GameRef.current = gameInstance;
           setLines((prev) => [
             ...prev,
             exitEcho,
-            { text: ">> corridor initiated. something is wrong in here.", type: "danger" },
+            { text: `>> corridor initiated${isFast ? " [FAST MODE ⚡]" : ""}. something is wrong in here.`, type: "danger" },
             { text: ">> spot anomalies. press ENTER or tap [!] to call them.", type: "output" },
             { text: ">> reach exit 8. ESC or EXIT to quit.  // false calls reset you.", type: "output" },
           ]);

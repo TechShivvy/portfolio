@@ -18,10 +18,14 @@
 //   • Draggable seam → applySplit() → CSS vars update → everything follows.
 //   • Clean teardown: every node, listener, CSS var, and global is restored.
 
-const HOLD_MS  = 4200;
+const HOLD_MS  = 60000; // 1 minute (exits cleanly via Esc or EXIT button)
 const SPLIT_MS = 900;
 const MIN_PCT  = 10;
 const MAX_PCT  = 90;
+
+const RETICLE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5" fill="%2300ffcc"/><line x1="12" y1="2" x2="12" y2="8" stroke="%2300ffcc" stroke-width="1.5"/><line x1="12" y1="16" x2="12" y2="22" stroke="%2300ffcc" stroke-width="1.5"/><line x1="2" y1="12" x2="8" y2="12" stroke="%2300ffcc" stroke-width="1.5"/><line x1="16" y1="12" x2="22" y2="12" stroke="%2300ffcc" stroke-width="1.5"/></svg>') 12 12, crosshair`;
+
+const INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9" fill="none" stroke="%23ff0077" stroke-width="1.5" stroke-dasharray="3 2"/><circle cx="14" cy="14" r="2.5" fill="%23ff0077"/><line x1="14" y1="1" x2="14" y2="5" stroke="%23ff0077" stroke-width="1.5"/><line x1="14" y1="23" x2="14" y2="27" stroke="%23ff0077" stroke-width="1.5"/><line x1="1" y1="14" x2="5" y2="14" stroke="%23ff0077" stroke-width="1.5"/><line x1="23" y1="14" x2="27" y2="14" stroke="%23ff0077" stroke-width="1.5"/></svg>') 14 14, pointer`;
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const prefersReducedMotion = () =>
@@ -606,6 +610,206 @@ function buildSeam() {
   return el;
 }
 
+// ─── Laser Cursor Playground Stage (Sci-Fi / Left side) ────────────────────
+function buildLaserStage() {
+  const stageStyle = document.createElement("style");
+  stageStyle.id = "_sfLaserStyle";
+  stageStyle.textContent = `
+    #_sfLaserStage {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99999;
+    }
+    ._sfLaser {
+      position: fixed;
+      width: 7px;
+      height: 28px;
+      border-radius: 4px;
+      pointer-events: none;
+      transform-origin: center;
+      will-change: transform, opacity;
+      z-index: 99999;
+      filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 4px #000);
+    }
+    ._sfLaser.red   {
+      background: linear-gradient(to bottom, #ffffff 0%, #ff0055 30%, #b3003b 100%);
+      box-shadow: 0 0 10px 2px #ff0055, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    }
+    ._sfLaser.green {
+      background: linear-gradient(to bottom, #ffffff 0%, #00ff66 30%, #009933 100%);
+      box-shadow: 0 0 10px 2px #00ff66, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    }
+    ._sfLaser.blue  {
+      background: linear-gradient(to bottom, #ffffff 0%, #00d9ff 30%, #0066cc 100%);
+      box-shadow: 0 0 10px 2px #00d9ff, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    }
+    ._sfFlash {
+      position: fixed;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.9) 30%, rgba(0,0,0,0) 70%);
+      box-shadow: 0 0 12px 3px #ffffff, 0 0 0 1px #000;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: _sfFlashPop 0.25s ease-out forwards;
+      z-index: 99999;
+    }
+    @keyframes _sfFlashPop {
+      0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+    }
+  `;
+  document.head.appendChild(stageStyle);
+
+  const stage = document.createElement("div");
+  stage.id = "_sfLaserStage";
+  document.body.appendChild(stage);
+
+  const colors = ["red", "green", "blue"];
+  const INTERACTIVE_SELECTOR = [
+    'a[href]', 'button', 'input', 'select', 'textarea', 'label',
+    '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
+    '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
+    '[onclick]', '[tabindex]:not([tabindex="-1"])',
+  ].join(', ');
+
+  function isInteractive(el) {
+    if (!el || el === document.body || el === document.documentElement) return null;
+    const closestMatch = el.closest(INTERACTIVE_SELECTOR);
+    if (closestMatch) return closestMatch;
+    const style = window.getComputedStyle(el);
+    if (style.cursor === "pointer" || style.cursor.includes("pointer")) return el;
+    return null;
+  }
+
+  function spawnLaser(x, y, angleDeg, distance) {
+    const flash = document.createElement("div");
+    flash.className = "_sfFlash";
+    flash.style.left = x + "px";
+    flash.style.top = y + "px";
+    stage.appendChild(flash);
+    setTimeout(() => flash.remove(), 250);
+
+    const laser = document.createElement("div");
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    laser.className = "_sfLaser " + color;
+    laser.style.left = x + "px";
+    laser.style.top = y + "px";
+    laser.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
+    stage.appendChild(laser);
+
+    const dist = distance || (300 + Math.random() * 250);
+    const duration = 500 + Math.random() * 200;
+
+    const anim = laser.animate(
+      [
+        { transform: `translate(-50%, -50%) rotate(${angleDeg}deg) translateY(0px)`, opacity: 1 },
+        { transform: `translate(-50%, -50%) rotate(${angleDeg}deg) translateY(-${dist}px)`, opacity: 0 },
+      ],
+      { duration, easing: "cubic-bezier(0.15, 0.6, 0.4, 1)" }
+    );
+
+    anim.onfinish = () => laser.remove();
+  }
+
+  function spawnAimedLaser(x, y) {
+    // Shoot straight up (angleDeg = 0)
+    spawnLaser(x, y, 0, 450);
+  }
+
+  function spawnRandomBurst(x, y, count) {
+    const n = count || 6 + Math.floor(Math.random() * 6);
+    for (let i = 0; i < n; i++) {
+      const angleDeg = Math.random() * 360;
+      const distance = 220 + Math.random() * 300;
+      setTimeout(() => spawnLaser(x, y, angleDeg, distance), i * 12);
+    }
+  }
+
+  let fireInterval = null;
+  let lastX = window.innerWidth / 2;
+  let lastY = window.innerHeight / 2;
+
+  function isLeftSciFi(x) {
+    const currentPct = window.__sfSplitPct ?? 50;
+    const splitX = (currentPct / 100) * window.innerWidth;
+    return x <= splitX;
+  }
+
+  function stopFiring() {
+    if (fireInterval) {
+      clearInterval(fireInterval);
+      fireInterval = null;
+    }
+  }
+
+  function startFiring(x, y) {
+    if (!isLeftSciFi(x)) return;
+    stopFiring();
+    lastX = x; lastY = y;
+    spawnAimedLaser(x, y);
+    fireInterval = setInterval(() => {
+      if (isLeftSciFi(lastX)) {
+        spawnAimedLaser(lastX, lastY);
+      } else {
+        stopFiring();
+      }
+    }, 90);
+  }
+
+  const handleMouseDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (!isLeftSciFi(e.clientX)) return;
+    if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
+    if (isInteractive(e.target)) return;
+    startFiring(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e) => {
+    lastX = e.clientX;
+    lastY = e.clientY;
+  };
+
+  const handleClick = (e) => {
+    if (!isLeftSciFi(e.clientX)) return;
+    if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
+    const el = isInteractive(e.target);
+    if (el) spawnRandomBurst(e.clientX, e.clientY);
+  };
+
+  document.addEventListener("mousedown", handleMouseDown);
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("click", handleClick);
+
+  window.addEventListener("mouseup", stopFiring, true);
+  window.addEventListener("pointerup", stopFiring, true);
+  window.addEventListener("touchend", stopFiring, true);
+  window.addEventListener("touchcancel", stopFiring, true);
+  window.addEventListener("mouseleave", stopFiring, true);
+  window.addEventListener("blur", stopFiring);
+
+  const destroy = () => {
+    stopFiring();
+    document.removeEventListener("mousedown", handleMouseDown);
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("click", handleClick);
+
+    window.removeEventListener("mouseup", stopFiring, true);
+    window.removeEventListener("pointerup", stopFiring, true);
+    window.removeEventListener("touchend", stopFiring, true);
+    window.removeEventListener("touchcancel", stopFiring, true);
+    window.removeEventListener("mouseleave", stopFiring, true);
+    window.removeEventListener("blur", stopFiring);
+
+    try { stage.remove(); } catch (_) {}
+    try { stageStyle.remove(); } catch (_) {}
+  };
+
+  return { destroy };
+}
+
 // ─── Main effect ───────────────────────────────────────────────────────────
 export default async function splitFiction() {
   // Idempotent guard — seam id acts as the "running" sentinel.
@@ -615,6 +819,10 @@ export default async function splitFiction() {
 
   const reduced = prefersReducedMotion();
   let splitPct  = 50;
+
+  // Capture cursor before any SF changes so cleanup can fully restore it.
+  const originalCursor = getComputedStyle(document.documentElement)
+    .getPropertyValue("--cursor-default").trim();
 
   // ── Activate ──────────────────────────────────────────────────────────
   window.__sfFairyActive = true;
@@ -678,6 +886,9 @@ export default async function splitFiction() {
     exitBtn.style.left = "24px";
   }));
 
+  // ── Laser Stage ────────────────────────────────────────────────────────
+  const laserStage = buildLaserStage();
+
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
   // per frame); only the seam's `left` needs a direct inline update.
@@ -721,24 +932,52 @@ export default async function splitFiction() {
   document.addEventListener("mouseup",   onDragEnd);
   document.addEventListener("touchend",  onDragEnd);
 
-  // ── Cursor per side ────────────────────────────────────────────────────
-  // Right of the seam → native cursor (auto); left → custom site cursor.
-  const originalCursor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--cursor-default").trim();
+  // Only semantic / truly-clickable elements — broad class wildcards like
+  // [class*="card"] match non-interactive wrapper divs and cause false positives.
+  const INTERACTIVE_SEL = [
+    'a[href]', 'button', 'input', 'select', 'textarea', 'label',
+    '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
+    '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
+    '[onclick]', '[tabindex]:not([tabindex="-1"])',
+  ].join(', ');
 
-  function updateCursor(clientX) {
-    const splitX = (splitPct / 100) * window.innerWidth;
-    document.documentElement.style.setProperty(
-      "--cursor-default",
-      clientX > splitX ? "auto" : originalCursor
-    );
+  function isInteractiveElement(el) {
+    if (!el || el === document.body || el === document.documentElement) return false;
+    // Walk up at most 4 levels: handles text spans inside buttons, etc.
+    let node = el;
+    for (let i = 0; i < 4; i++) {
+      if (!node || node === document.body) break;
+      if (node.matches?.(INTERACTIVE_SEL)) return true;
+      const cur = window.getComputedStyle(node).cursor;
+      if (cur === "pointer") return true;
+      node = node.parentElement;
+    }
+    return false;
   }
 
-  function onCursorMove(e) { updateCursor(e.clientX); }
+  function updateCursor(e) {
+    const clientX = typeof e === "number" ? e : e?.clientX ?? 0;
+    const splitX = (splitPct / 100) * window.innerWidth;
+    if (clientX > splitX) {
+      document.documentElement.style.setProperty("--cursor-default", "auto");
+    } else {
+      // e.target is reliable here: pointer-events:none overlays (leftLens, laserStage)
+      // are bypassed by the browser when dispatching mouse events, so e.target always
+      // points at the real underlying element — no elementFromPoint needed.
+      const hoveredEl = typeof e === "object" ? e?.target : null;
+      const isOverInteractive = hoveredEl ? isInteractiveElement(hoveredEl) : false;
+      document.documentElement.style.setProperty(
+        "--cursor-default",
+        isOverInteractive ? INTERACTIVE_CURSOR : RETICLE_CURSOR
+      );
+    }
+  }
+
+  function onCursorMove(e) { updateCursor(e); }
   document.addEventListener("mousemove", onCursorMove);
+  document.addEventListener("mouseover", onCursorMove);
 
   // Handle the trigger moment: set cursor based on wherever the pointer is now.
-  // Falls back to the left-half (originalCursor) when the position is unknown.
   updateCursor(typeof window.__lastMouseX === "number"
     ? window.__lastMouseX
     : 0);
@@ -753,6 +992,8 @@ export default async function splitFiction() {
   // Removes every node, listener, CSS var, and global this effect touched.
   // Called by auto-dismiss, Esc, and external effects (tenet, exit8, etc.).
   function cleanup() {
+    try { laserStage?.destroy(); } catch (_) {}
+
     // Listeners
     seam.removeEventListener("mousedown",  onDragStart);
     seam.removeEventListener("touchstart", onDragStart);
@@ -761,6 +1002,7 @@ export default async function splitFiction() {
     document.removeEventListener("mouseup",   onDragEnd);
     document.removeEventListener("touchend",  onDragEnd);
     document.removeEventListener("mousemove", onCursorMove);
+    document.removeEventListener("mouseover", onCursorMove);
     document.removeEventListener("keydown",   onKeyDown);
 
     // Injected DOM nodes

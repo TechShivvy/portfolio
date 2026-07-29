@@ -1,7 +1,68 @@
 // Exit 8 — seamless corridor loop + anomaly detection game
 // Exports a factory function that returns a game instance with full cleanup
 
-export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
+// ── Audio Helper ───────────────────────────────────────────────────
+let winAudioInstance = null;
+
+const getWinAudio = () => {
+  if (!winAudioInstance) {
+    winAudioInstance = new Audio(`${import.meta.env.BASE_URL || "/"}raavana_mavanda.mpeg`);
+    winAudioInstance.preload = "auto";
+  }
+  return winAudioInstance;
+};
+
+// Pre-trigger browser load
+try {
+  getWinAudio().load();
+} catch (_) {}
+
+const playWinAudio = () => {
+  try {
+    const audio = getWinAudio();
+    audio.volume = 0.7;
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        playSynthVictorySound();
+      });
+    }
+  } catch (_) {
+    playSynthVictorySound();
+  }
+};
+
+const playSynthVictorySound = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const notes = [
+      { freq: 523.25, duration: 0.12, time: 0 },    // C5
+      { freq: 659.25, duration: 0.12, time: 0.12 }, // E5
+      { freq: 783.99, duration: 0.12, time: 0.24 }, // G5
+      { freq: 1046.50, duration: 0.4, time: 0.36 }, // C6
+    ];
+
+    notes.forEach(({ freq, duration, time }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + time);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + time);
+      osc.stop(ctx.currentTime + time + duration);
+    });
+  } catch (_) {}
+};
+
+export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast = false }) {
   // Guard: prevent concurrent game instances
   if (startExit8._active) return { teardown: () => {} };
   startExit8._active = true;
@@ -191,7 +252,9 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
         st.cancelBackScroll = null;
         return;
       }
-      const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
+      const mult = isFast ? 0.65 : 0.35;
+      const maxStep = isFast ? 140 : 60;
+      const stepPx = Math.max(4, Math.min(maxStep, Math.round(-top * mult)));
       window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
       backRaf = requestAnimationFrame(tick);
     };
@@ -379,10 +442,13 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     document.body.style.overflowX = "";
 
     startExit8._active = false;
+    if (!st._won) { try { const a = getWinAudio(); a.pause(); a.currentTime = 0; } catch (_) {} }
   };
 
   // ── Win sequence ───────────────────────────────────────────────────
   const winGame = () => {
+    st._won = true;
+    playWinAudio();
     const escapedHeroEl = st.heroEl;
     const heroOrigText = st.heroOrig ?? "SHIVCHARAN";
     teardown();
@@ -563,7 +629,8 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
     if (!st.scrollingBack) {
       const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
       st._lastForwardT = now;
-      const px = Math.max(1, Math.round((500 * dt) / 1000));
+      const speed = isFast ? 1400 : 500;
+      const px = Math.max(1, Math.round((speed * dt) / 1000));
       window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
     } else {
       st._lastForwardT = null;

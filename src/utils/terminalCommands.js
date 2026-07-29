@@ -23,7 +23,7 @@ export default function buildCommands(scrollToSection) {
       { text: "  clear               - clear terminal", type: "output" },
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
-      { text: "  exit 8              - the loop. spot 8 anomalies.", type: "output" },
+      { text: "  exit 8 [fast]        - the loop. spot 8 anomalies (fast mode: exit 8 fast)", type: "output" },
       { text: "  split-fiction        - split the world in two: sci-fi left, fairy right.  [Ctrl+K f]", type: "output" },
       { text: "  tenet               - play the whole intro in reverse, then power off.  [Ctrl+K x]", type: "output" },
       { text: "  suicide             - closes the tab. for real.  [Ctrl+K q]", type: "output" },
