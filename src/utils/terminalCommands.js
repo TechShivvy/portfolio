@@ -1,5 +1,6 @@
 import TIMELINE from "../content/timeline";
 import tenet from "./tenet";
+import splitFiction from "./splitFiction";
 import buildVirtualFiles from "./virtualFiles";
 
 // ─── Command definitions ────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ export default function buildCommands(scrollToSection) {
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
       { text: "  exit 8              - the loop. spot 8 anomalies.", type: "output" },
+      { text: "  split-fiction        - split the world in two: sci-fi left, fairy right.  [Ctrl+K f]", type: "output" },
       { text: "  tenet               - play the whole intro in reverse, then power off.  [Ctrl+K x]", type: "output" },
       { text: "  suicide             - closes the tab. for real.  [Ctrl+K q]", type: "output" },
     ],
@@ -214,6 +216,13 @@ export default function buildCommands(scrollToSection) {
         return [{ text: "suicide - closes the current tab. no questions asked.", type: "info" }];
       setTimeout(() => window.location.replace("about:blank"), 600);
       return [{ text: ">> bye o/", type: "info" }];
+    },
+
+    "split-fiction": (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "split-fiction - split the world in two: sci-fi on the left, fairy on the right. drag the seam.", type: "info" }];
+      setTimeout(() => splitFiction(), 300);
+      return [{ text: ">> splitting the world...", type: "accent" }];
     },
 
     tenet: (args) => {
