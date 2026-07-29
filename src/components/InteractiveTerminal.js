@@ -215,12 +215,19 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       const parts = input.split(/\s+/);
       const editingCommand = parts.length <= 1;
       const token = (parts[parts.length - 1] || "").toLowerCase();
-      if (!token) return;
+      if (!token) {
+        // Refocus on empty token to prevent focus loss
+        inputRef.current?.focus();
+        return;
+      }
       const pool = editingCommand
         ? Object.keys(buildCommands(scrollToSection)).filter((c) => !c.startsWith("-"))
         : Object.keys(buildVirtualFiles(scrollToSection));
       const matches = pool.filter((c) => c.startsWith(token));
-      if (matches.length === 0) return;
+      if (matches.length === 0) {
+        inputRef.current?.focus();
+        return;
+      }
       // Longest common prefix across all matches.
       let prefix = matches[0];
       for (const m of matches) {
@@ -231,16 +238,27 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       if (matches.length > 1) {
         setLines((prev) => [...prev, { text: matches.join("   "), type: "output" }]);
       }
+      // Refocus after autocomplete
+      setTimeout(() => inputRef.current?.focus(), 0);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       const next = Math.min(histIdx + 1, historyList.length - 1);
       setHistIdx(next);
       setInput(historyList[next] ?? "");
+      // Refocus after history navigation
+      setTimeout(() => inputRef.current?.focus(), 0);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       const next = Math.max(histIdx - 1, -1);
       setHistIdx(next);
       setInput(next === -1 ? "" : historyList[next]);
+      // Refocus after history navigation
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else if (e.key === "Escape") {
+      // Prevent Escape from triggering fullscreen exit or other browser behavior
+      e.preventDefault();
+      // Keep focus on input
+      inputRef.current?.focus();
     }
   };
 
