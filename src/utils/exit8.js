@@ -60,7 +60,12 @@ const playSynthVictorySound = () => {
 export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast = false }) {
   // Guard: prevent concurrent game instances
   if (startExit8._active) return { teardown: () => {} };
+
+  // Mutual exclusion: dismiss Split Fiction if it's running.
+  if (window.__sfDismiss) { window.__sfDismiss(); }
+
   startExit8._active = true;
+  window.__exit8Active = true;
 
   // Preload audio async (completely decoupled from game startup, loads in background)
   setTimeout(() => { try { getWinAudio().load(); } catch (_) {} }, 0);
@@ -440,6 +445,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
     document.body.style.overflowX = "";
 
     startExit8._active = false;
+    window.__exit8Active = false;
     if (!st._won) { try { const a = getWinAudio(); a.pause(); a.currentTime = 0; } catch (_) {} }
   };
 

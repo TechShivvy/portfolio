@@ -15,6 +15,9 @@ document.documentElement.style.setProperty(
   `url('${base}middle-finger.cur'), pointer`
 );
 
+// Tracked so SF can read the cursor's position at activation time.
+document.addEventListener("mousemove", (e) => { window.__lastMouseX = e.clientX; }, { passive: true });
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
