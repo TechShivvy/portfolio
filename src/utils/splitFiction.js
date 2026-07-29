@@ -647,7 +647,7 @@ export default async function splitFiction() {
   const exitBtn = document.createElement("button");
   exitBtn.id = "_sfExitBtn";
   exitBtn.title = "Exit Split Fiction (Esc)";
-  exitBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/></svg>`;
+  exitBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/></svg>`;
   exitBtn.style.cssText = [
     "position:fixed",
     "bottom:24px",
@@ -655,8 +655,8 @@ export default async function splitFiction() {
     "width:42px",
     "height:42px",
     "z-index:99998",
-    "background:rgba(13,0,21,0.85)",
-    "border:1px solid #a855f7",
+    "background:rgba(13,13,13,0.8)",
+    "border:1px solid #00e5ff",
     "border-radius:8px",
     "display:flex",
     "align-items:center",
@@ -666,7 +666,7 @@ export default async function splitFiction() {
     "box-shadow:none",
   ].join(";");
   exitBtn.addEventListener("mouseenter", () => {
-    exitBtn.style.boxShadow = "0 0 10px 2px rgba(168,85,247,0.6)";
+    exitBtn.style.boxShadow = "0 0 10px 2px rgba(0,229,255,0.6)";
   });
   exitBtn.addEventListener("mouseleave", () => {
     exitBtn.style.boxShadow = "none";
