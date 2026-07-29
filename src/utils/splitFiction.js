@@ -59,6 +59,7 @@ function buildLeftLens() {
     "z-index:99990",
     "backdrop-filter:" + f,
     "-webkit-backdrop-filter:" + f,
+    "will-change:backdrop-filter",
     "opacity:0",
     "transition:opacity " + SPLIT_MS + "ms ease",
   ].join(";");
@@ -274,6 +275,29 @@ body._sfActive [class*='Btn'] {
 body._sfActive [class*='card-buttons'] {
   border: none !important;
   box-shadow: none !important;
+}
+/* SF exit button: exempt from generic button overrides — preserve its teal
+   circular look so it stays visually aligned with the scroll-up button. */
+body._sfActive #_sfExitBtn {
+  border: 1px solid #00e5ff !important;
+  border-radius: 50% !important;
+  background: rgba(13, 13, 13, 0.8) !important;
+  box-shadow: none !important;
+}
+body._sfActive #_sfExitBtn:hover {
+  background: rgba(13, 13, 13, 0.8) !important;
+  border-color: #00e5ff !important;
+  box-shadow: 0 0 10px 2px rgba(0, 229, 255, 0.6) !important;
+}
+/* Responsive sizing — mirrors the scroll-up button's @media (max-width:768px) rule
+   so both buttons stay on the same horizontal line at all zoom levels. */
+@media (max-width: 768px) {
+  body._sfActive #_sfExitBtn {
+    width: 38px !important;
+    height: 38px !important;
+    bottom: 16px !important;
+    left: 16px !important;
+  }
 }
 body._sfActive button:hover,
 body._sfActive [class*='button']:hover,
@@ -825,9 +849,12 @@ export default async function splitFiction() {
     .getPropertyValue("--cursor-default").trim();
 
   // ── Activate ──────────────────────────────────────────────────────────
+  // Set CSS vars BEFORE adding _sfActive — the fairy supplement stylesheet
+  // reads var(--split-abs) immediately on activation. If vars aren't set yet,
+  // the gradient hard-stop defaults to 0px and the whole page flips fairy.
+  setSplitVars(splitPct);
   window.__sfFairyActive = true;
   document.body.classList.add("_sfActive");
-  setSplitVars(splitPct);
 
   // Assign --tile-idx to each Spotify mosaic tile so the hover-dissolve stagger
   // animation works. The real DOM only has one set of tiles — no clone needed.
@@ -865,10 +892,11 @@ export default async function splitFiction() {
     "z-index:99998",
     "background:rgba(13,13,13,0.8)",
     "border:1px solid #00e5ff",
-    "border-radius:8px",
+    "border-radius:50%",
     "display:flex",
     "align-items:center",
     "justify-content:center",
+    "padding:0",
     "cursor:var(--cursor-pointer,pointer)",
     "transition:left 0.45s cubic-bezier(0.22,0.61,0.36,1),box-shadow 0.25s ease",
     "box-shadow:none",
@@ -901,6 +929,13 @@ export default async function splitFiction() {
     updateProgVine(splitPct * 10);
   }
   applySplit(splitPct); // sync seam.left with the CSS var on first paint
+
+  // ── Resize handler — keeps --split-abs in sync when viewport changes ─────
+  // zoom in/out changes window.innerWidth, so we must recompute the px value.
+  function onResize() {
+    setSplitVars(splitPct);
+  }
+  window.addEventListener("resize", onResize);
 
   // ── Drag logic ─────────────────────────────────────────────────────────
   let dragging = false;
@@ -991,8 +1026,20 @@ export default async function splitFiction() {
   // ── Cleanup ────────────────────────────────────────────────────────────
   // Removes every node, listener, CSS var, and global this effect touched.
   // Called by auto-dismiss, Esc, and external effects (tenet, exit8, etc.).
+  let cleanedUp = false;
   function cleanup() {
+    if (cleanedUp) return;
+    cleanedUp = true;
+
     try { laserStage?.destroy(); } catch (_) {}
+
+    // CSS first — body class + vars drive section gradient hard-stops; removing
+    // them here (before DOM removal) ensures the split line vanishes in the same
+    // paint as everything else, whether cleanup is instant or after a fade.
+    document.body.classList.remove("_sfActive");
+    clearSplitVars();
+    try { document.head.removeChild(fairyStyle); } catch (_) {}
+    try { document.head.removeChild(sparkStyle); } catch (_) {}
 
     // Listeners
     seam.removeEventListener("mousedown",  onDragStart);
@@ -1004,23 +1051,19 @@ export default async function splitFiction() {
     document.removeEventListener("mousemove", onCursorMove);
     document.removeEventListener("mouseover", onCursorMove);
     document.removeEventListener("keydown",   onKeyDown);
+    window.removeEventListener("resize", onResize);
 
     // Injected DOM nodes
     [leftLens, rightOvl, seam, sparkWrap, exitBtn].forEach((el) => {
-      try { document.body.removeChild(el); } catch (_) {}
+      try { el.remove(); } catch (_) {}
     });
-    try { document.head.removeChild(sparkStyle); } catch (_) {}
-    try { document.head.removeChild(fairyStyle); } catch (_) {}
     // Restore #progress-container: remove SVG, restore original bar.
     const sfSvg = document.getElementById("_sfProgressSvg");
-    if (sfSvg && sfSvg.parentNode) sfSvg.parentNode.removeChild(sfSvg);
+    if (sfSvg) sfSvg.remove();
     if (progOrigBar) progOrigBar.style.display = "";
     stopProgressTick();
 
-    // Snap mosaic tiles to their resting state instantly before removing
-    // body._sfActive, so the browser doesn't play out a residual dissolve
-    // animation (tiles fading back in one-by-one) after SF is torn down.
-    // Clearing the inline transition lets the next rAF restore normal behaviour.
+    // Snap mosaic tiles to their resting state instantly.
     const allTiles = document.querySelectorAll("[class*='mosaicTile']");
     allTiles.forEach((tile) => {
       tile.style.setProperty("transition", "none");
@@ -1032,14 +1075,7 @@ export default async function splitFiction() {
       allTiles.forEach((tile) => tile.style.removeProperty("transition"));
     });
 
-    // CSS variables
-    clearSplitVars();
-
-    // Body class + cursor
-    document.body.classList.remove("_sfActive");
     document.documentElement.style.setProperty("--cursor-default", originalCursor);
-
-    // Globals
     window.__sfFairyActive = false;
     delete window.__sfSplitPct;
     delete window.__sfDismiss;
@@ -1068,8 +1104,14 @@ export default async function splitFiction() {
 
   await wait(HOLD_MS);
 
-  all.forEach((el) => { el.style.opacity = "0"; });
-  await wait(SPLIT_MS);
+  // Guard: if cleanup was already called (Esc / exit8 / exit btn), skip — the
+  // pre-strip below would otherwise corrupt a new SF session started in the gap.
+  if (!cleanedUp) {
+    document.body.classList.remove("_sfActive");
+    clearSplitVars();
+    all.forEach((el) => { el.style.opacity = "0"; });
+    await wait(SPLIT_MS);
+  }
 
   cleanup();
 }
