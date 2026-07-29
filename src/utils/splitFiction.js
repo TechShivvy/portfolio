@@ -632,14 +632,13 @@ function buildProgressBar(initPct) {
   svg.id = "_sfProgressSvg";
   wrap.appendChild(svg);
 
-  // Generate a wavy path between two x positions.
+  // Generate a wavy path between two x positions (always left → right).
   function makePath(xStart, xEnd) {
     const period = 90, amp = 2.5, cy = 4;
-    const dir = xEnd >= xStart ? 1 : -1;
     let d = "M " + xStart.toFixed(1) + "," + cy;
     let phase = 0;
-    for (let x = xStart; dir > 0 ? x < xEnd : x > xEnd; x += period * dir, phase++) {
-      const nx = dir > 0 ? Math.min(x + period, xEnd) : Math.max(x - period, xEnd);
+    for (let x = xStart; x < xEnd; x += period, phase++) {
+      const nx = Math.min(x + period, xEnd);
       const yOff = (phase % 2 === 0 ? -amp : amp).toFixed(2);
       const cp1x = (x + (nx - x) * 0.35).toFixed(1);
       const cp2x = (x + (nx - x) * 0.65).toFixed(1);
@@ -651,60 +650,74 @@ function buildProgressBar(initPct) {
   }
 
   // Approximate the vine's y at any SVG-space x (for flower placement).
-  function vineYAt(x, xStart, dir) {
+  function vineYAt(x, xStart) {
     const period = 90, amp = 2.5, cy = 4;
-    const dx = (x - xStart) * dir;
+    const dx = x - xStart;
     const phase = Math.floor(dx / period);
     const t = (dx % period) / period;
     return cy + (phase % 2 === 0 ? -amp : amp) * Math.sin(t * Math.PI);
   }
 
-  // Leaves + 5-petal circle flowers along the vine.
-  // Leaves alternate above/below the vine every 28 VB units (green ovals, tilted).
-  // Flowers have 5 round petals in a ring + yellow center, every 72 VB units.
   const FLOWER_COLS = ["#f9a8d4", "#d8b4fe", "#fbcfe8", "#c4b5fd"];
-  function buildFlowers(xStart, xEnd) {
-    while (flowerG.firstChild) flowerG.removeChild(flowerG.firstChild);
-    const dir = xEnd >= xStart ? 1 : -1;
-    const minX = Math.min(xStart, xEnd);
-    const maxX = Math.max(xStart, xEnd);
+  // Pre-allocate max elements; buildFlowers updates attributes in-place instead of rebuild.
+  const MAX_LEAVES = 36, MAX_FLOWERS = 14;
+  const leafEls = Array.from({ length: MAX_LEAVES }, () => {
+    const el = document.createElementNS(NS, "ellipse");
+    el.setAttribute("rx", "2.6"); el.setAttribute("ry", "1.0");
+    el.setAttribute("fill", "#86efac"); el.setAttribute("opacity", "0.9");
+    el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
+  const petalEls = Array.from({ length: MAX_FLOWERS * 5 }, () => {
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("r", "1.6"); el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
+  const dotEls = Array.from({ length: MAX_FLOWERS }, () => {
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("r", "1.1"); el.setAttribute("fill", "#fde68a");
+    el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
 
-    // Leaves
-    for (let x = xStart + 18 * dir; dir > 0 ? x < maxX - 10 : x > minX + 10; x += 28 * dir) {
-      const vy   = vineYAt(x, xStart, dir);
-      const side = (Math.floor(Math.abs(x - xStart) / 28) % 2 === 0) ? -1 : 1;
-      const lx   = x, ly = vy + side * 2.5;
-      const leaf = document.createElementNS(NS, "ellipse");
+  // Leaves alternate above/below every 28 VB units; flowers every 72 VB units.
+  function buildFlowers(xStart, xEnd) {
+    let li = 0;
+    for (let x = xStart + 18; x < xEnd - 10; x += 28, li++) {
+      if (li >= MAX_LEAVES) break;
+      const vy   = vineYAt(x, xStart);
+      const side = (Math.floor((x - xStart) / 28) % 2 === 0) ? -1 : 1;
+      const lx = x, ly = vy + side * 2.5;
+      const leaf = leafEls[li];
       leaf.setAttribute("cx", lx.toFixed(2));
       leaf.setAttribute("cy", ly.toFixed(2));
-      leaf.setAttribute("rx", "2.6");
-      leaf.setAttribute("ry", "1.0");
-      leaf.setAttribute("fill", "#86efac");
-      leaf.setAttribute("opacity", "0.9");
       leaf.setAttribute("transform",
-        "rotate(" + (side * 38).toFixed(0) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
-      flowerG.appendChild(leaf);
+        "rotate(" + (side * 38) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
+      leaf.removeAttribute("display");
     }
-    // Flowers
+    for (; li < MAX_LEAVES; li++) leafEls[li].setAttribute("display", "none");
+
     let fi = 0;
-    for (let x = xStart + 50 * dir; dir > 0 ? x < maxX - 8 : x > minX + 8; x += 72 * dir, fi++) {
-      const vy    = vineYAt(x, xStart, dir);
+    for (let x = xStart + 50; x < xEnd - 8; x += 72, fi++) {
+      if (fi >= MAX_FLOWERS) break;
+      const vy    = vineYAt(x, xStart);
       const color = FLOWER_COLS[fi % FLOWER_COLS.length];
       for (let p = 0; p < 5; p++) {
-        const a     = (p / 5) * Math.PI * 2 - Math.PI / 2;
-        const petal = document.createElementNS(NS, "circle");
+        const a = (p / 5) * Math.PI * 2 - Math.PI / 2;
+        const petal = petalEls[fi * 5 + p];
         petal.setAttribute("cx", (x + Math.cos(a) * 2.6).toFixed(2));
         petal.setAttribute("cy", (vy + Math.sin(a) * 2.6).toFixed(2));
-        petal.setAttribute("r", "1.6");
         petal.setAttribute("fill", color);
-        flowerG.appendChild(petal);
+        petal.removeAttribute("display");
       }
-      const dot = document.createElementNS(NS, "circle");
+      const dot = dotEls[fi];
       dot.setAttribute("cx", x.toFixed(2));
       dot.setAttribute("cy", vy.toFixed(2));
-      dot.setAttribute("r", "1.1");
-      dot.setAttribute("fill", "#fde68a");
-      flowerG.appendChild(dot);
+      dot.removeAttribute("display");
+    }
+    for (; fi < MAX_FLOWERS; fi++) {
+      for (let p = 0; p < 5; p++) petalEls[fi * 5 + p].setAttribute("display", "none");
+      dotEls[fi].setAttribute("display", "none");
     }
   }
 
@@ -1103,8 +1116,7 @@ export default async function splitFiction(options = {}) {
     window.__sfSplitAngle = Math.PI / 2;
     setSplitVars(splitPct);
     seam.style.left = splitPct + "%";
-    // Keep battery/vine split in sync with the draggable seam.
-    updateSplitProgress(splitPct * 10, true);
+    if (!isSpinMode) updateSplitProgress(splitPct * 10, true);
   }
 
   function computeSpinProgressState() {
@@ -1141,6 +1153,13 @@ export default async function splitFiction(options = {}) {
     };
   }
 
+  function applyProgBg(splitVb, techOnLeft) {
+    if (!progWrap) return;
+    const pct = splitVb / 10;
+    const [c1, c2] = techOnLeft ? ["#000", "#0d0015"] : ["#0d0015", "#000"];
+    progWrap.style.background = `linear-gradient(to right, ${c1} ${pct}%, ${c2} ${pct}%)`;
+  }
+
   function applySpinFromPoint(clientX, clientY) {
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
@@ -1156,6 +1175,7 @@ export default async function splitFiction(options = {}) {
     seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
     const progressState = computeSpinProgressState();
     updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
+    applyProgBg(progressState.splitVb, progressState.techOnLeft);
     window.__sfSplitAngle = splitAngle;
     window.__sfSplitPct = 50;
   }
@@ -1236,6 +1256,7 @@ export default async function splitFiction(options = {}) {
       seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
       const progressState = computeSpinProgressState();
       updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
+      applyProgBg(progressState.splitVb, progressState.techOnLeft);
     });
   }
 
@@ -1342,6 +1363,7 @@ export default async function splitFiction(options = {}) {
     // Restore #progress-container: remove SVG, restore original bar.
     const sfSvg = document.getElementById("_sfProgressSvg");
     if (sfSvg) sfSvg.remove();
+    if (progWrap) progWrap.style.removeProperty("background");
     if (progOrigBar) progOrigBar.style.display = "";
     stopProgressTick();
 
