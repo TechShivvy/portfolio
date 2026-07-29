@@ -1,7 +1,7 @@
 // Exit 8 — seamless corridor loop + anomaly detection game
 // Exports a factory function that returns a game instance with full cleanup
 
-export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
+export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast = false }) {
   // Pre-buffer audio file as soon as the minigame starts
   try { getWinAudio().load(); } catch (_) {}
 
@@ -194,7 +194,9 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit }) {
         st.cancelBackScroll = null;
         return;
       }
-      const stepPx = Math.max(4, Math.min(60, Math.round(-top * 0.35)));
+      const mult = isFast ? 0.65 : 0.35;
+      const maxStep = isFast ? 140 : 60;
+      const stepPx = Math.max(4, Math.min(maxStep, Math.round(-top * mult)));
       window.scrollTo({ top: window.scrollY - stepPx, left: 0, behavior: "instant" });
       backRaf = requestAnimationFrame(tick);
     };
@@ -628,7 +630,8 @@ const playSynthVictorySound = () => {
     if (!st.scrollingBack) {
       const dt = st._lastForwardT == null ? 16.67 : Math.min(now - st._lastForwardT, 50);
       st._lastForwardT = now;
-      const px = Math.max(1, Math.round((500 * dt) / 1000));
+      const speed = isFast ? 1400 : 500;
+      const px = Math.max(1, Math.round((speed * dt) / 1000));
       window.scrollTo({ top: window.scrollY + px, left: 0, behavior: "instant" });
     } else {
       st._lastForwardT = null;
