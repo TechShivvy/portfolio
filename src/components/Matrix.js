@@ -110,11 +110,17 @@ const MatrixAnimation = ({ startAnimation }) => {
         } else {
           context.fillStyle = COLOR_MATRIX;
         }
-        // Right-half columns swap to runic chars during splitFiction.
-        // Threshold tracks the draggable split position in real time.
+        // Right-side columns swap to runic chars during splitFiction.
+        // In spin mode, side detection follows the rotated seam geometry.
         const splitX = (window.__sfSplitPct || 50) / 100 * cssW;
+        const glyphX = i * fontSize;
+        const glyphY = (matrix[i] * fontSize) % cssH;
+        const onRightSide =
+          typeof window.__sfIsRightAt === "function"
+            ? window.__sfIsRightAt(glyphX, glyphY)
+            : glyphX >= splitX;
         const pool =
-          window.__sfFairyActive && i * fontSize >= splitX
+          window.__sfFairyActive && onRightSide
             ? fairyChars
             : charactersArray;
         const text = pool[Math.floor(Math.random() * pool.length)];
