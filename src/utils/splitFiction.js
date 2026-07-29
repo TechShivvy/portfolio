@@ -1016,6 +1016,8 @@ export default async function splitFiction(options = {}) {
   const { wrap: sparkWrap, styleEl: sparkStyle } = buildSparkles();
   const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateSplitProgress } = buildProgressBar(splitPct);
   const stopProgressTick = startProgressTick(progClipR);
+  // Cached once; #progress-container is position:fixed so Y is stable until resize.
+  let _cachedProgBarY = null;
 
   document.body.appendChild(leftLens);
   document.body.appendChild(rightOvl);
@@ -1109,8 +1111,11 @@ export default async function splitFiction(options = {}) {
     if (!isSpinMode || !spinGeometry) {
       return { splitVb: splitPct * 10, techOnLeft: true };
     }
-    const barRect = progWrap?.getBoundingClientRect?.();
-    const y = barRect ? barRect.top + barRect.height / 2 : 0;
+    if (_cachedProgBarY === null) {
+      const barRect = progWrap?.getBoundingClientRect?.();
+      _cachedProgBarY = barRect ? barRect.top + barRect.height / 2 : 0;
+    }
+    const y = _cachedProgBarY;
 
     const leftFairy = isRightSide(0, y);
     const rightFairy = isRightSide(window.innerWidth, y);
@@ -1164,6 +1169,7 @@ export default async function splitFiction(options = {}) {
   // ── Resize handler — keeps --split-abs in sync when viewport changes ─────
   // zoom in/out changes window.innerWidth, so we must recompute the px value.
   function onResize() {
+    _cachedProgBarY = null;
     if (isSpinMode) {
       applySpinFromPoint(window.innerWidth / 2 + Math.cos(splitAngle), window.innerHeight / 2 + Math.sin(splitAngle));
       return;
