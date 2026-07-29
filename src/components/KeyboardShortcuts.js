@@ -24,7 +24,9 @@ const ACTIONS = {
   r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
   8: { label: "exit 8", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8" })) },
+  9: { label: "exit 8 fast", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8 fast" })) },
   f: { label: "split fiction", run: () => splitFiction() },
+  2: { label: "split fiction spin", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "split-fiction 2" })) },
   6: { label: "67", run: () => {
     if (document.body.classList.contains("sixseven")) {
       document.body.classList.remove("sixseven");
@@ -47,7 +49,9 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "r"], desc: "raw HTML portfolio (no CSS)" },
   { keys: ["Ctrl+K", "x"], desc: "tenet (reverse intro + close tab)" },
   { keys: ["Ctrl+K", "8"], desc: "exit 8 (anomaly detection game)" },
+  { keys: ["Ctrl+K", "9"], desc: "exit 8 fast mode" },
   { keys: ["Ctrl+K", "f"], desc: "split fiction (sci-fi | fairy world split)" },
+  { keys: ["Ctrl+K", "2"], desc: "split fiction 2 (rotating seam mode)" },
   { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 4.2s)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },

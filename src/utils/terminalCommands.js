@@ -23,8 +23,8 @@ export default function buildCommands(scrollToSection) {
       { text: "  clear               - clear terminal", type: "output" },
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
-      { text: "  exit 8 [fast]        - the loop. spot 8 anomalies (fast mode: exit 8 fast)", type: "output" },
-      { text: "  split-fiction        - split the world in two: sci-fi left, fairy right.  [Ctrl+K f]", type: "output" },
+      { text: "  exit 8 [fast]        - the loop. spot 8 anomalies (fast mode: exit 8 fast).  [Ctrl+K 8 / Ctrl+K 9]", type: "output" },
+      { text: "  split-fiction [2]    - split the world in two (2 = rotating seam mode).  [Ctrl+K f / Ctrl+K 2]", type: "output" },
       { text: "  tenet               - play the whole intro in reverse, then power off.  [Ctrl+K x]", type: "output" },
       { text: "  suicide             - closes the tab. for real.  [Ctrl+K q]", type: "output" },
     ],
@@ -220,9 +220,11 @@ export default function buildCommands(scrollToSection) {
 
     "split-fiction": (args) => {
       if (args[0] === "-h" || args[0] === "--help")
-        return [{ text: "split-fiction - split the world in two: sci-fi on the left, fairy on the right. drag the seam.", type: "info" }];
-      setTimeout(() => splitFiction(), 300);
-      return [{ text: ">> splitting the world...", type: "accent" }];
+        return [{ text: "split-fiction [2|spin] - classic draggable seam, or rotating seam mode.", type: "info" }];
+      const mode = args[0];
+      const isSpinMode = mode === "2" || mode === "spin" || mode === "mode2";
+      setTimeout(() => splitFiction(isSpinMode ? { mode: "spin" } : undefined), 300);
+      return [{ text: isSpinMode ? ">> splitting the world (spin mode)..." : ">> splitting the world...", type: "accent" }];
     },
 
     tenet: (args) => {

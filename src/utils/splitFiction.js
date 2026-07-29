@@ -43,6 +43,122 @@ function clearSplitVars() {
   document.documentElement.style.removeProperty("--split-abs");
 }
 
+function lineSegmentIntersection(linePointX, linePointY, lineDirX, lineDirY, segmentStart, segmentEnd) {
+  const segmentDirX = segmentEnd.x - segmentStart.x;
+  const segmentDirY = segmentEnd.y - segmentStart.y;
+  const determinant = lineDirX * segmentDirY - lineDirY * segmentDirX;
+  if (Math.abs(determinant) < 1e-8) return null;
+
+  const t =
+    ((segmentStart.x - linePointX) * segmentDirY -
+      (segmentStart.y - linePointY) * segmentDirX) /
+    determinant;
+  const u =
+    ((segmentStart.x - linePointX) * lineDirY -
+      (segmentStart.y - linePointY) * lineDirX) /
+    determinant;
+
+  if (u < 0 || u > 1) return null;
+
+  return {
+    x: linePointX + t * lineDirX,
+    y: linePointY + t * lineDirY,
+  };
+}
+
+function orderPointsClockwise(points) {
+  const centroid = points.reduce(
+    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+    { x: 0, y: 0 }
+  );
+  centroid.x /= points.length;
+  centroid.y /= points.length;
+
+  points.sort((a, b) => {
+    const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+    const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+    return angleA - angleB;
+  });
+}
+
+function signedDistance(px, py, cx, cy, nx, ny) {
+  const vectorX = px - cx;
+  const vectorY = py - cy;
+  return vectorX * nx + vectorY * ny;
+}
+
+function buildSplitPolygons(width, height, angleRad) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const lineDirX = Math.cos(angleRad);
+  const lineDirY = Math.sin(angleRad);
+  const normalX = lineDirY;
+  const normalY = -lineDirX;
+
+  const viewportCorners = [
+    { x: 0, y: 0 },
+    { x: width, y: 0 },
+    { x: width, y: height },
+    { x: 0, y: height },
+  ];
+
+  const viewportEdges = [
+    [{ x: 0, y: 0 }, { x: width, y: 0 }],
+    [{ x: width, y: 0 }, { x: width, y: height }],
+    [{ x: width, y: height }, { x: 0, y: height }],
+    [{ x: 0, y: height }, { x: 0, y: 0 }],
+  ];
+
+  const rawIntersections = [];
+  for (const edge of viewportEdges) {
+    const hit = lineSegmentIntersection(
+      centerX,
+      centerY,
+      lineDirX,
+      lineDirY,
+      edge[0],
+      edge[1]
+    );
+    if (hit) rawIntersections.push(hit);
+  }
+
+  const intersections = rawIntersections.filter((point, idx, arr) => {
+    return !arr.slice(0, idx).some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 0.5);
+  });
+
+  let leftSidePoints = [];
+  let rightSidePoints = [];
+
+  for (const corner of viewportCorners) {
+    const distance = signedDistance(corner.x, corner.y, centerX, centerY, normalX, normalY);
+    if (distance < 0) {
+      leftSidePoints.push(corner);
+    } else {
+      rightSidePoints.push(corner);
+    }
+  }
+
+  leftSidePoints.push(...intersections);
+  rightSidePoints.push(...intersections);
+
+  orderPointsClockwise(leftSidePoints);
+  orderPointsClockwise(rightSidePoints);
+
+  const toClipPath = (points) =>
+    points.map((point) => `${point.x.toFixed(2)}px ${point.y.toFixed(2)}px`).join(", ");
+
+  return {
+    leftClip: `polygon(${toClipPath(leftSidePoints)})`,
+    rightClip: `polygon(${toClipPath(rightSidePoints)})`,
+    centerX,
+    centerY,
+    lineDirX,
+    lineDirY,
+    normalX,
+    normalY,
+  };
+}
+
 // ─── Left sci-fi lens ─────────────────────────────────────────────────────
 // Same filter values as the previous clone-stack implementation.
 function buildLeftLens() {
@@ -105,7 +221,7 @@ function buildFairyStylesheet() {
   const el = document.createElement("style");
   el.id = "_sfFairyStyle";
 
-  const SECTIONS = [
+  const SECTION_TARGETS = [
     "[class*='about-section']",
     "[class*='project-section']",
     "[class*='timelineSection']",
@@ -115,7 +231,8 @@ function buildFairyStylesheet() {
     "#beyond-code",
     // Footer is a native <footer> element with no CSS-module class on the root.
     "footer",
-  ].map((s) => "body._sfActive " + s).join(",\n");
+  ];
+  const SECTIONS = SECTION_TARGETS.map((s) => "body._sfActive " + s).join(",\n");
 
   el.textContent = `
 /* ══ Split Fiction v2 — fairy supplement (body._sfActive scope) ══
@@ -289,6 +406,9 @@ body._sfActive #_sfExitBtn:hover {
   border-color: #00e5ff !important;
   box-shadow: 0 0 10px 2px rgba(0, 229, 255, 0.6) !important;
 }
+body._sfActive button[aria-label='Scroll to top'] {
+  z-index: 99998 !important;
+}
 /* Responsive sizing — mirrors the scroll-up button's @media (max-width:768px) rule
    so both buttons stay on the same horizontal line at all zoom levels. */
 @media (max-width: 768px) {
@@ -427,11 +547,10 @@ function buildSparkles() {
   return { wrap, styleEl };
 }
 
-// ─── Progress indicator: unified battery (left) + vine+flowers (right) ──────
+// ─── Progress indicator: unified battery + vine with seam-aware side swapping ─
 // Single full-width SVG, 8px tall, pinned to the bottom edge of the navbar.
 // One clipPath rect grows 0→1000 (viewBox) as the page scrolls, revealing
-// both halves as one continuous bar: battery cells (0→seam) then wavy vine
-// (seam→1000). Seam drag calls updateVine() which rebuilds path + flowers.
+// both halves as one continuous bar: battery and vine swap sides by seam.
 
 function buildProgressBar(initPct) {
   // Inject the battery+vine SVG directly into the existing #progress-container
@@ -513,15 +632,13 @@ function buildProgressBar(initPct) {
   svg.id = "_sfProgressSvg";
   wrap.appendChild(svg);
 
-  // Generate wavy path from sx to beyond 1000 so it always reaches the edge.
-  // Period=90 VB units, amplitude=±2.5 around y=4. Adjacent bezier arcs share
-  // end-points at y=4 so the wave is smooth and continuous.
-  function makePath(sx) {
+  // Generate a wavy path between two x positions (always left → right).
+  function makePath(xStart, xEnd) {
     const period = 90, amp = 2.5, cy = 4;
-    let d = "M " + sx.toFixed(1) + "," + cy;
+    let d = "M " + xStart.toFixed(1) + "," + cy;
     let phase = 0;
-    for (let x = sx; x < 1010; x += period, phase++) {
-      const nx   = Math.min(x + period, 1010);
+    for (let x = xStart; x < xEnd; x += period, phase++) {
+      const nx = Math.min(x + period, xEnd);
       const yOff = (phase % 2 === 0 ? -amp : amp).toFixed(2);
       const cp1x = (x + (nx - x) * 0.35).toFixed(1);
       const cp2x = (x + (nx - x) * 0.65).toFixed(1);
@@ -533,67 +650,93 @@ function buildProgressBar(initPct) {
   }
 
   // Approximate the vine's y at any SVG-space x (for flower placement).
-  function vineYAt(x, sx) {
+  function vineYAt(x, xStart) {
     const period = 90, amp = 2.5, cy = 4;
-    const phase  = Math.floor((x - sx) / period);
-    const t      = ((x - sx) % period) / period;
+    const dx = x - xStart;
+    const phase = Math.floor(dx / period);
+    const t = (dx % period) / period;
     return cy + (phase % 2 === 0 ? -amp : amp) * Math.sin(t * Math.PI);
   }
 
-  // Leaves + 5-petal circle flowers along the vine.
-  // Leaves alternate above/below the vine every 28 VB units (green ovals, tilted).
-  // Flowers have 5 round petals in a ring + yellow center, every 72 VB units.
   const FLOWER_COLS = ["#f9a8d4", "#d8b4fe", "#fbcfe8", "#c4b5fd"];
-  function buildFlowers(sx) {
-    while (flowerG.firstChild) flowerG.removeChild(flowerG.firstChild);
-    // Leaves
-    for (let x = sx + 18; x < 990; x += 28) {
-      const vy   = vineYAt(x, sx);
-      const side = (Math.floor((x - sx) / 28) % 2 === 0) ? -1 : 1;
-      const lx   = x, ly = vy + side * 2.5;
-      const leaf = document.createElementNS(NS, "ellipse");
+  // Pre-allocate max elements; buildFlowers updates attributes in-place instead of rebuild.
+  const MAX_LEAVES = 36, MAX_FLOWERS = 14;
+  const leafEls = Array.from({ length: MAX_LEAVES }, () => {
+    const el = document.createElementNS(NS, "ellipse");
+    el.setAttribute("rx", "2.6"); el.setAttribute("ry", "1.0");
+    el.setAttribute("fill", "#86efac"); el.setAttribute("opacity", "0.9");
+    el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
+  const petalEls = Array.from({ length: MAX_FLOWERS * 5 }, () => {
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("r", "1.6"); el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
+  const dotEls = Array.from({ length: MAX_FLOWERS }, () => {
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("r", "1.1"); el.setAttribute("fill", "#fde68a");
+    el.setAttribute("display", "none");
+    flowerG.appendChild(el); return el;
+  });
+
+  // Leaves alternate above/below every 28 VB units; flowers every 72 VB units.
+  function buildFlowers(xStart, xEnd) {
+    let li = 0;
+    for (let x = xStart + 18; x < xEnd - 10; x += 28, li++) {
+      if (li >= MAX_LEAVES) break;
+      const vy   = vineYAt(x, xStart);
+      const side = (Math.floor((x - xStart) / 28) % 2 === 0) ? -1 : 1;
+      const lx = x, ly = vy + side * 2.5;
+      const leaf = leafEls[li];
       leaf.setAttribute("cx", lx.toFixed(2));
       leaf.setAttribute("cy", ly.toFixed(2));
-      leaf.setAttribute("rx", "2.6");
-      leaf.setAttribute("ry", "1.0");
-      leaf.setAttribute("fill", "#86efac");
-      leaf.setAttribute("opacity", "0.9");
       leaf.setAttribute("transform",
-        "rotate(" + (side * 38).toFixed(0) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
-      flowerG.appendChild(leaf);
+        "rotate(" + (side * 38) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
+      leaf.removeAttribute("display");
     }
-    // Flowers
+    for (; li < MAX_LEAVES; li++) leafEls[li].setAttribute("display", "none");
+
     let fi = 0;
-    for (let x = sx + 50; x < 990; x += 72, fi++) {
-      const vy    = vineYAt(x, sx);
+    for (let x = xStart + 50; x < xEnd - 8; x += 72, fi++) {
+      if (fi >= MAX_FLOWERS) break;
+      const vy    = vineYAt(x, xStart);
       const color = FLOWER_COLS[fi % FLOWER_COLS.length];
       for (let p = 0; p < 5; p++) {
-        const a     = (p / 5) * Math.PI * 2 - Math.PI / 2;
-        const petal = document.createElementNS(NS, "circle");
+        const a = (p / 5) * Math.PI * 2 - Math.PI / 2;
+        const petal = petalEls[fi * 5 + p];
         petal.setAttribute("cx", (x + Math.cos(a) * 2.6).toFixed(2));
         petal.setAttribute("cy", (vy + Math.sin(a) * 2.6).toFixed(2));
-        petal.setAttribute("r", "1.6");
         petal.setAttribute("fill", color);
-        flowerG.appendChild(petal);
+        petal.removeAttribute("display");
       }
-      const dot = document.createElementNS(NS, "circle");
+      const dot = dotEls[fi];
       dot.setAttribute("cx", x.toFixed(2));
       dot.setAttribute("cy", vy.toFixed(2));
-      dot.setAttribute("r", "1.1");
-      dot.setAttribute("fill", "#fde68a");
-      flowerG.appendChild(dot);
+      dot.removeAttribute("display");
+    }
+    for (; fi < MAX_FLOWERS; fi++) {
+      for (let p = 0; p < 5; p++) petalEls[fi * 5 + p].setAttribute("display", "none");
+      dotEls[fi].setAttribute("display", "none");
     }
   }
 
-  // Single update function: syncs battery width, vine path, and flowers.
-  function updateVine(svb) {
-    batRect.setAttribute("width", String(svb));
-    vineP.setAttribute("d", makePath(svb));
-    buildFlowers(svb);
-  }
-  updateVine(seamVb); // initial render
+  // Single update: keep battery and vine on the correct side of the seam.
+  function updateSplitProgress(svb, techOnLeft = true) {
+    const split = Math.max(0, Math.min(1000, svb));
+    const techStart = techOnLeft ? 0 : split;
+    const techEnd = techOnLeft ? split : 1000;
+    const fairyStart = techOnLeft ? split : 0;
+    const fairyEnd = techOnLeft ? 1000 : split;
 
-  return { wrap, origBar, clipR, updateVine };
+    batRect.setAttribute("x", String(Math.min(techStart, techEnd)));
+    batRect.setAttribute("width", String(Math.abs(techEnd - techStart)));
+    vineP.setAttribute("d", makePath(fairyStart, fairyEnd));
+    buildFlowers(fairyStart, fairyEnd);
+  }
+  updateSplitProgress(seamVb, true); // initial render (classic split starts tech-left)
+
+  return { wrap, origBar, clipR, updateSplitProgress };
 }
 
 // Drives the unified clip rect — returns a cancel fn for cleanup.
@@ -613,29 +756,46 @@ function startProgressTick(clipR) {
 }
 
 // ─── Draggable seam ────────────────────────────────────────────────────────
-function buildSeam() {
+function buildSeam(isSpinMode) {
   const el = document.createElement("div");
   el.id = "_splitFictionSeam";
-  el.style.cssText = [
-    "position:fixed",
-    "top:0",
-    "left:50%",          // overwritten by applySplit() immediately
-    "width:7px",
-    "height:100vh",
-    "margin-left:-3.5px",
-    "z-index:99993",
-    "pointer-events:auto",
-    "cursor:col-resize",
-    "background:linear-gradient(180deg,#2ba2a2,#fff,#f472b6)",
-    "box-shadow:0 0 18px 4px rgba(255,255,255,.7)",
-    "opacity:0",
-    "transition:opacity " + SPLIT_MS + "ms ease",
-  ].join(";");
+  if (isSpinMode) {
+    el.style.cssText = [
+      "position:fixed",
+      "top:50%",
+      "left:50%",
+      "width:220vmax",
+      "height:10px",
+      "transform:translate(-50%,-50%) rotate(90deg)",
+      "z-index:99993",
+      "pointer-events:none",
+      "background:linear-gradient(90deg,#2ba2a2,#fff,#f472b6)",
+      "box-shadow:0 0 18px 4px rgba(255,255,255,.7)",
+      "opacity:0",
+      "transition:opacity " + SPLIT_MS + "ms ease",
+    ].join(";");
+  } else {
+    el.style.cssText = [
+      "position:fixed",
+      "top:0",
+      "left:50%",          // overwritten by applySplit() immediately
+      "width:7px",
+      "height:100vh",
+      "margin-left:-3.5px",
+      "z-index:99993",
+      "pointer-events:auto",
+      "cursor:col-resize",
+      "background:linear-gradient(180deg,#2ba2a2,#fff,#f472b6)",
+      "box-shadow:0 0 18px 4px rgba(255,255,255,.7)",
+      "opacity:0",
+      "transition:opacity " + SPLIT_MS + "ms ease",
+    ].join(";");
+  }
   return el;
 }
 
 // ─── Laser Cursor Playground Stage (Sci-Fi / Left side) ────────────────────
-function buildLaserStage() {
+function buildLaserStage(isLeftSciFi) {
   const stageStyle = document.createElement("style");
   stageStyle.id = "_sfLaserStyle";
   stageStyle.textContent = `
@@ -756,12 +916,6 @@ function buildLaserStage() {
   let lastX = window.innerWidth / 2;
   let lastY = window.innerHeight / 2;
 
-  function isLeftSciFi(x) {
-    const currentPct = window.__sfSplitPct ?? 50;
-    const splitX = (currentPct / 100) * window.innerWidth;
-    return x <= splitX;
-  }
-
   function stopFiring() {
     if (fireInterval) {
       clearInterval(fireInterval);
@@ -770,12 +924,12 @@ function buildLaserStage() {
   }
 
   function startFiring(x, y) {
-    if (!isLeftSciFi(x)) return;
+    if (!isLeftSciFi(x, y)) return;
     stopFiring();
     lastX = x; lastY = y;
     spawnAimedLaser(x, y);
     fireInterval = setInterval(() => {
-      if (isLeftSciFi(lastX)) {
+      if (isLeftSciFi(lastX, lastY)) {
         spawnAimedLaser(lastX, lastY);
       } else {
         stopFiring();
@@ -785,7 +939,7 @@ function buildLaserStage() {
 
   const handleMouseDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
-    if (!isLeftSciFi(e.clientX)) return;
+    if (!isLeftSciFi(e.clientX, e.clientY)) return;
     if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
     if (isInteractive(e.target)) return;
     startFiring(e.clientX, e.clientY);
@@ -797,7 +951,7 @@ function buildLaserStage() {
   };
 
   const handleClick = (e) => {
-    if (!isLeftSciFi(e.clientX)) return;
+    if (!isLeftSciFi(e.clientX, e.clientY)) return;
     if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
     const el = isInteractive(e.target);
     if (el) spawnRandomBurst(e.clientX, e.clientY);
@@ -835,14 +989,17 @@ function buildLaserStage() {
 }
 
 // ─── Main effect ───────────────────────────────────────────────────────────
-export default async function splitFiction() {
+export default async function splitFiction(options = {}) {
   // Idempotent guard — seam id acts as the "running" sentinel.
   if (document.getElementById("_splitFictionSeam")) return;
   // Mutual exclusion with exit8.
   if (window.__exit8Active) return;
 
   const reduced = prefersReducedMotion();
+  const isSpinMode = options?.mode === "spin";
   let splitPct  = 50;
+  let splitAngle = Math.PI / 2;
+  let spinGeometry = null;
 
   // Capture cursor before any SF changes so cleanup can fully restore it.
   const originalCursor = getComputedStyle(document.documentElement)
@@ -855,6 +1012,7 @@ export default async function splitFiction() {
   setSplitVars(splitPct);
   window.__sfFairyActive = true;
   document.body.classList.add("_sfActive");
+  if (isSpinMode) document.body.classList.add("_sfSpinMode");
 
   // Assign --tile-idx to each Spotify mosaic tile so the hover-dissolve stagger
   // animation works. The real DOM only has one set of tiles — no clone needed.
@@ -867,15 +1025,25 @@ export default async function splitFiction() {
   const leftLens   = buildLeftLens();
   const rightOvl   = buildRightOverlay();
   const fairyStyle = buildFairyStylesheet();
-  const seam       = buildSeam();
+  const seam       = buildSeam(isSpinMode);
   const { wrap: sparkWrap, styleEl: sparkStyle } = buildSparkles();
-  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateVine: updateProgVine } = buildProgressBar(splitPct);
+  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateSplitProgress } = buildProgressBar(splitPct);
   const stopProgressTick = startProgressTick(progClipR);
+  // Cached once; #progress-container is position:fixed so Y is stable until resize.
+  let _cachedProgBarY = null;
 
   document.body.appendChild(leftLens);
   document.body.appendChild(rightOvl);
   document.body.appendChild(seam);
   document.body.appendChild(sparkWrap);
+
+  if (isSpinMode) {
+    leftLens.style.width = "100vw";
+    rightOvl.style.left = "0";
+    rightOvl.style.right = "0";
+    sparkWrap.style.left = "0";
+    sparkWrap.style.right = "0";
+  }
   // progWrap is #progress-container (already in DOM) — no appendChild needed.
 
   // ── Exit button (bottom-left, slides in like exit8's EXIT btn) ─────────
@@ -915,7 +1083,29 @@ export default async function splitFiction() {
   }));
 
   // ── Laser Stage ────────────────────────────────────────────────────────
-  const laserStage = buildLaserStage();
+  function isRightSide(x, y) {
+    if (!isSpinMode) {
+      const splitX = (splitPct / 100) * window.innerWidth;
+      return x > splitX;
+    }
+    if (!spinGeometry) return x > window.innerWidth / 2;
+    return (
+      signedDistance(
+        x,
+        y,
+        spinGeometry.centerX,
+        spinGeometry.centerY,
+        spinGeometry.normalX,
+        spinGeometry.normalY
+      ) >= 0
+    );
+  }
+
+  function isLeftSide(x, y) {
+    return !isRightSide(x, y);
+  }
+
+  const laserStage = buildLaserStage((x, y) => isLeftSide(x, y));
 
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
@@ -923,16 +1113,87 @@ export default async function splitFiction() {
   function applySplit(pct) {
     splitPct = Math.max(MIN_PCT, Math.min(MAX_PCT, pct));
     window.__sfSplitPct = splitPct;
+    window.__sfSplitAngle = Math.PI / 2;
     setSplitVars(splitPct);
     seam.style.left = splitPct + "%";
-    // Keep battery/vine split in sync with the draggable seam.
-    updateProgVine(splitPct * 10);
+    if (!isSpinMode) updateSplitProgress(splitPct * 10, true);
+  }
+
+  function computeSpinProgressState() {
+    if (!isSpinMode || !spinGeometry) {
+      return { splitVb: splitPct * 10, techOnLeft: true };
+    }
+    if (_cachedProgBarY === null) {
+      const barRect = progWrap?.getBoundingClientRect?.();
+      _cachedProgBarY = barRect ? barRect.top + barRect.height / 2 : 0;
+    }
+    const y = _cachedProgBarY;
+
+    const leftFairy = isRightSide(0, y);
+    const rightFairy = isRightSide(window.innerWidth, y);
+
+    if (leftFairy === rightFairy) {
+      // Entire navbar row is on one side: full vine for fairy, full battery for tech.
+      return leftFairy
+        ? { splitVb: 1000, techOnLeft: false }
+        : { splitVb: 1000, techOnLeft: true };
+    }
+
+    if (Math.abs(spinGeometry.lineDirY) < 1e-6) {
+      return leftFairy
+        ? { splitVb: 1000, techOnLeft: false }
+        : { splitVb: 1000, techOnLeft: true };
+    }
+
+    const t = (y - spinGeometry.centerY) / spinGeometry.lineDirY;
+    const crossX = spinGeometry.centerX + t * spinGeometry.lineDirX;
+    return {
+      splitVb: Math.max(0, Math.min(1000, (crossX / window.innerWidth) * 1000)),
+      techOnLeft: !leftFairy,
+    };
+  }
+
+  function applyProgBg(splitVb, techOnLeft) {
+    if (!progWrap) return;
+    const pct = splitVb / 10;
+    const [c1, c2] = techOnLeft ? ["#000", "#0d0015"] : ["#0d0015", "#000"];
+    progWrap.style.background = `linear-gradient(to right, ${c1} ${pct}%, ${c2} ${pct}%)`;
+  }
+
+  function applySpinFromPoint(clientX, clientY) {
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    if (Math.abs(deltaX) < 0.001 && Math.abs(deltaY) < 0.001) return;
+
+    splitAngle = Math.atan2(deltaY, deltaX);
+    spinGeometry = buildSplitPolygons(window.innerWidth, window.innerHeight, splitAngle);
+    leftLens.style.clipPath = spinGeometry.leftClip;
+    rightOvl.style.clipPath = spinGeometry.rightClip;
+    sparkWrap.style.clipPath = spinGeometry.rightClip;
+    seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
+    const progressState = computeSpinProgressState();
+    updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
+    applyProgBg(progressState.splitVb, progressState.techOnLeft);
+    window.__sfSplitAngle = splitAngle;
+    window.__sfSplitPct = 50;
   }
   applySplit(splitPct); // sync seam.left with the CSS var on first paint
+  if (isSpinMode) {
+    applySpinFromPoint(window.innerWidth / 2, 0);
+  }
+
+  window.__sfIsRightAt = (x, y) => isRightSide(x, y);
 
   // ── Resize handler — keeps --split-abs in sync when viewport changes ─────
   // zoom in/out changes window.innerWidth, so we must recompute the px value.
   function onResize() {
+    _cachedProgBarY = null;
+    if (isSpinMode) {
+      applySpinFromPoint(window.innerWidth / 2 + Math.cos(splitAngle), window.innerHeight / 2 + Math.sin(splitAngle));
+      return;
+    }
     setSplitVars(splitPct);
   }
   window.addEventListener("resize", onResize);
@@ -943,13 +1204,14 @@ export default async function splitFiction() {
   const draggables = [leftLens, rightOvl, seam, sparkWrap];
 
   function onDragStart(e) {
+    if (isSpinMode) return;
     e.preventDefault();
     dragging = true;
     draggables.forEach((el) => { el.style.transition = "none"; });
   }
 
   function onDragMove(e) {
-    if (!dragging) return;
+    if (isSpinMode || !dragging) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     applySplit((clientX / window.innerWidth) * 100);
   }
@@ -960,12 +1222,49 @@ export default async function splitFiction() {
     draggables.forEach((el) => { el.style.transition = transition; });
   }
 
-  seam.addEventListener("mousedown",  onDragStart);
-  seam.addEventListener("touchstart", onDragStart, { passive: false });
-  document.addEventListener("mousemove", onDragMove);
-  document.addEventListener("touchmove", onDragMove, { passive: false });
-  document.addEventListener("mouseup",   onDragEnd);
-  document.addEventListener("touchend",  onDragEnd);
+  if (!isSpinMode) {
+    seam.addEventListener("mousedown",  onDragStart);
+    seam.addEventListener("touchstart", onDragStart, { passive: false });
+    document.addEventListener("mousemove", onDragMove);
+    document.addEventListener("touchmove", onDragMove, { passive: false });
+    document.addEventListener("mouseup",   onDragEnd);
+    document.addEventListener("touchend",  onDragEnd);
+  }
+
+  let _spinRafPending = false;
+  function onSpinPointerMove(e) {
+    const point = e.touches ? e.touches[0] : e;
+    if (!point) return;
+    const cx = point.clientX;
+    const cy = point.clientY;
+    // Geometry updated synchronously so cursor detection is current on the same event.
+    const dx = cx - window.innerWidth / 2;
+    const dy = cy - window.innerHeight / 2;
+    if (Math.abs(dx) >= 0.001 || Math.abs(dy) >= 0.001) {
+      splitAngle = Math.atan2(dy, dx);
+      spinGeometry = buildSplitPolygons(window.innerWidth, window.innerHeight, splitAngle);
+      window.__sfSplitAngle = splitAngle;
+    }
+    if (_spinRafPending) return;
+    _spinRafPending = true;
+    requestAnimationFrame(() => {
+      _spinRafPending = false;
+      if (cleanedUp) return;
+      leftLens.style.clipPath = spinGeometry.leftClip;
+      rightOvl.style.clipPath = spinGeometry.rightClip;
+      sparkWrap.style.clipPath = spinGeometry.rightClip;
+      seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
+      const progressState = computeSpinProgressState();
+      updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
+      applyProgBg(progressState.splitVb, progressState.techOnLeft);
+    });
+  }
+
+  if (isSpinMode) {
+    document.addEventListener("mousemove", onSpinPointerMove);
+    document.addEventListener("touchstart", onSpinPointerMove, { passive: true });
+    document.addEventListener("touchmove", onSpinPointerMove, { passive: true });
+  }
 
   // Only semantic / truly-clickable elements — broad class wildcards like
   // [class*="card"] match non-interactive wrapper divs and cause false positives.
@@ -992,8 +1291,8 @@ export default async function splitFiction() {
 
   function updateCursor(e) {
     const clientX = typeof e === "number" ? e : e?.clientX ?? 0;
-    const splitX = (splitPct / 100) * window.innerWidth;
-    if (clientX > splitX) {
+    const clientY = typeof e === "number" ? window.innerHeight / 2 : e?.clientY ?? window.innerHeight / 2;
+    if (isRightSide(clientX, clientY)) {
       document.documentElement.style.setProperty("--cursor-default", "auto");
     } else {
       // e.target is reliable here: pointer-events:none overlays (leftLens, laserStage)
@@ -1037,6 +1336,7 @@ export default async function splitFiction() {
     // them here (before DOM removal) ensures the split line vanishes in the same
     // paint as everything else, whether cleanup is instant or after a fade.
     document.body.classList.remove("_sfActive");
+    document.body.classList.remove("_sfSpinMode");
     clearSplitVars();
     try { document.head.removeChild(fairyStyle); } catch (_) {}
     try { document.head.removeChild(sparkStyle); } catch (_) {}
@@ -1048,6 +1348,9 @@ export default async function splitFiction() {
     document.removeEventListener("touchmove", onDragMove);
     document.removeEventListener("mouseup",   onDragEnd);
     document.removeEventListener("touchend",  onDragEnd);
+    document.removeEventListener("mousemove", onSpinPointerMove);
+    document.removeEventListener("touchstart", onSpinPointerMove);
+    document.removeEventListener("touchmove", onSpinPointerMove);
     document.removeEventListener("mousemove", onCursorMove);
     document.removeEventListener("mouseover", onCursorMove);
     document.removeEventListener("keydown",   onKeyDown);
@@ -1060,6 +1363,7 @@ export default async function splitFiction() {
     // Restore #progress-container: remove SVG, restore original bar.
     const sfSvg = document.getElementById("_sfProgressSvg");
     if (sfSvg) sfSvg.remove();
+    if (progWrap) progWrap.style.removeProperty("background");
     if (progOrigBar) progOrigBar.style.display = "";
     stopProgressTick();
 
@@ -1078,12 +1382,15 @@ export default async function splitFiction() {
     document.documentElement.style.setProperty("--cursor-default", originalCursor);
     window.__sfFairyActive = false;
     delete window.__sfSplitPct;
+    delete window.__sfSplitAngle;
+    delete window.__sfIsRightAt;
     delete window.__sfDismiss;
   }
 
   // Expose dismiss for external callers (tenet, exit8, re-trigger guard).
   window.__sfDismiss   = cleanup;
   window.__sfSplitPct  = splitPct;
+  window.__sfSplitAngle = splitAngle;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   const all = [leftLens, rightOvl, seam, sparkWrap];
@@ -1108,6 +1415,7 @@ export default async function splitFiction() {
   // pre-strip below would otherwise corrupt a new SF session started in the gap.
   if (!cleanedUp) {
     document.body.classList.remove("_sfActive");
+    document.body.classList.remove("_sfSpinMode");
     clearSplitVars();
     all.forEach((el) => { el.style.opacity = "0"; });
     await wait(SPLIT_MS);
