@@ -870,7 +870,7 @@ export default async function splitFiction() {
   const exitBtn = document.createElement("button");
   exitBtn.id = "_sfExitBtn";
   exitBtn.title = "Exit Split Fiction (Esc)";
-  exitBtn.innerHTML = `<span style="font-family:monospace;font-size:12px;font-weight:900;color:#00e5ff;margin-right:6px;letter-spacing:1px;">EXIT SF</span><svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/></svg>`;
+  exitBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="1" x2="1" y2="13" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/></svg>`;
   exitBtn.style.cssText = [
     "position:fixed",
     "bottom:24px",
