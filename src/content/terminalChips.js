@@ -13,6 +13,10 @@ export const CHIPS = [
   "replay",
   "sudo",
   "exit 8",
+  "exit 8 fast",
+  "split-fiction",
+  "split-fiction 2",
   "tenet",
+  "pokeball",
   "clear",
 ];
