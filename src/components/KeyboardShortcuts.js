@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./_KeyboardShortcuts.module.css";
 import tenet from "../utils/tenet";
 import splitFiction from "../utils/splitFiction";
+import throwPokeball from "../utils/pokeball";
 
 // ─── Site-wide keyboard shortcuts ────────────────────────────────────────────
 // `?` or `Ctrl+/`  -> toggle this shortcuts panel (works anywhere on the site)
@@ -35,6 +36,7 @@ const ACTIONS = {
       setTimeout(() => document.body.classList.remove("sixseven"), 4200);
     }
   }},
+  p: { label: "pokéball", run: () => throwPokeball() },
   q: { label: "suicide", run: () => window.location.replace("about:blank") },
 };
 
@@ -53,6 +55,7 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "f"], desc: "split fiction (sci-fi | fairy world split)" },
   { keys: ["Ctrl+K", "2"], desc: "split fiction 2 (rotating seam mode)" },
   { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 4.2s)" },
+  { keys: ["Ctrl+K", "p"], desc: "pokéball (catch the hero text)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
   { section: "terminal" },
   { keys: ["Enter"], desc: "run command" },

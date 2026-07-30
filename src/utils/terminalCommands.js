@@ -1,6 +1,7 @@
 import TIMELINE from "../content/timeline";
 import tenet from "./tenet";
 import splitFiction from "./splitFiction";
+import throwPokeball from "./pokeball";
 import buildVirtualFiles from "./virtualFiles";
 
 // ─── Command definitions ────────────────────────────────────────────────────
@@ -274,6 +275,13 @@ export default function buildCommands(scrollToSection) {
     "--no-css": () => {
       setTimeout(() => { window.location.href = "/portfolio/raw.html"; }, 400);
       return [{ text: ">> loading brutalist edition... (circa 1997)", type: "info" }];
+    },
+
+    pokeball: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "pokeball - throw a pokéball at the hero text. 50/50 catch rate.", type: "info" }];
+      setTimeout(() => throwPokeball(), 300);
+      return [{ text: ">> throwing pokéball...", type: "accent" }];
     },
   };
 }
