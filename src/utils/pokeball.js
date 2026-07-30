@@ -179,19 +179,24 @@ export default function throwPokeball() {
       #__pb-toast {
         position: fixed;
         left: 50%;
-        bottom: 80px;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
         transform: translateX(-50%) translateY(16px);
         opacity: 0;
         background: rgba(8,8,8,.93);
         color: #a0ffa0;
         font-family: monospace;
-        font-size: 1rem;
+        font-size: clamp(.78rem, 3.4vw, 1rem);
         padding: 11px 22px;
         border-radius: 6px;
         border: 1px solid #3f3;
         z-index: 99998;
         pointer-events: none;
         letter-spacing: .05em;
+        white-space: nowrap;
+        max-width: calc(100vw - 32px);
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
         transition: opacity .35s ease, transform .35s ease;
       }
       #__pb-toast.pb-show {
