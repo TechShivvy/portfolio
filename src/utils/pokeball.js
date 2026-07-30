@@ -99,6 +99,8 @@ export default function throwPokeball() {
 
     // ── Caught path ───────────────────────────────────────────────────────────
     function onCaught() {
+      // Toast + green glow appear together = outcome reveal
+      showToast("★  Shivcharan was caught!", "caught");
       ball.animate(
         [
           { transform: `translateY(${dy}px)`, boxShadow: "0 0 12px rgba(200,30,30,.5)"  },
@@ -107,8 +109,7 @@ export default function throwPokeball() {
         { duration: 400, easing: "ease", fill: "forwards" }
       );
 
-      showToast("★  Shivcharan was caught!", "caught");
-
+      // Hold so the user can read, then ball exits
       setTimeout(() => {
         ball.animate(
           [
@@ -118,10 +119,10 @@ export default function throwPokeball() {
           { duration: 500, easing: "ease", fill: "forwards" }
         ).onfinish = () => {
           ball.remove();
-          restoreH1("ease");
-          dismissToast(1000);
+          // Pause after hero is fully back so toast doesn't vanish simultaneously
+          restoreH1("ease", () => setTimeout(dismissToast, 500));
         };
-      }, 1800);
+      }, 1400);
     }
 
     // ── Escaped path ──────────────────────────────────────────────────────────
@@ -146,7 +147,8 @@ export default function throwPokeball() {
         ],
         { duration: 280, easing: "ease" }
       ).onfinish = () => {
-        // Burst open: expand → vanish
+        // Toast + burst appear together = outcome reveal
+        showToast(msg, "escaped");
         ball.animate(
           [
             { transform: `translateY(${dy}px) scale(1)`,    boxShadow: "0 0 12px rgba(200,30,30,.5)" },
@@ -156,25 +158,25 @@ export default function throwPokeball() {
           { duration: 350, easing: "ease", fill: "forwards" }
         ).onfinish = () => {
           ball.remove();
-          restoreH1("spring"); // overshoot bounce = hero breaks free
-          showToast(msg, "escaped");
-          dismissToast(1200);
+          setTimeout(() => restoreH1("spring", () => setTimeout(dismissToast, 400)), 300);
         };
       };
     }
 
     // ── Shared helpers ────────────────────────────────────────────────────────
-    function restoreH1(style) {
+    function restoreH1(style, onDone) {
+      const dur = style === "spring" ? 450 : 500;
       h1.style.transition = "none";
       void h1.offsetWidth; // flush so the transition fires from scale(0)
-      if (style === "spring") {
-        h1.style.transition = "transform .45s cubic-bezier(.34,1.56,.64,1), opacity .25s ease";
-      } else {
-        h1.style.transition = "transform .5s ease, opacity .5s ease";
-      }
+      h1.style.transition = style === "spring"
+        ? "transform .45s cubic-bezier(.34,1.56,.64,1), opacity .25s ease"
+        : "transform .5s ease, opacity .5s ease";
       h1.style.transform = "";
       h1.style.opacity   = "";
-      setTimeout(() => { h1.style.transition = ""; }, style === "spring" ? 450 : 500);
+      setTimeout(() => {
+        h1.style.transition = "";
+        if (onDone) onDone();
+      }, dur);
     }
 
     function showToast(msg, type) {
@@ -190,13 +192,11 @@ export default function throwPokeball() {
       toast.classList.add("pb-show");
     }
 
-    function dismissToast(delay) {
-      setTimeout(() => {
-        const t = document.getElementById("__pb-toast");
-        if (!t) return;
-        t.classList.remove("pb-show");
-        setTimeout(() => t.remove(), 400);
-      }, delay);
+    function dismissToast() {
+      const t = document.getElementById("__pb-toast");
+      if (!t) return;
+      t.classList.remove("pb-show");
+      setTimeout(() => t.remove(), 400);
     }
   }
 
