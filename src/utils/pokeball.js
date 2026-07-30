@@ -48,6 +48,10 @@ export default function throwPokeball() {
     const rect = h1.getBoundingClientRect();
     const dy   = (rect.top + rect.height / 2) - (by + 30);
 
+    // Decide outcome upfront; wiggle count acts as a natural tension-builder
+    const wiggleCount = Math.floor(Math.random() * 3) + 1; // 1 – 3
+    const caught      = Math.random() < 0.5;
+
     // ── Phase 1: throw (spin up to h1) ─────────────────────────────────────
     ball.animate(
       [
@@ -72,7 +76,7 @@ export default function throwPokeball() {
       h1.style.transform  = "scale(0)";
       h1.style.opacity    = "0";
 
-      // ── Phase 3: 3 capture wiggles ──────────────────────────────────────
+      // ── Phase 3: 1–3 capture wiggles ────────────────────────────────────
       const wiggle = (cb) => {
         ball.animate(
           [
@@ -87,50 +91,113 @@ export default function throwPokeball() {
         ).onfinish = cb;
       };
 
-      // Small pause so h1 fully vanishes before wiggles start
-      setTimeout(() => wiggle(() => wiggle(() => wiggle(() => {
+      const runWiggles = (n, cb) => n === 0 ? cb() : wiggle(() => runWiggles(n - 1, cb));
 
-        // ── Phase 4: success glow + "caught!" toast ──────────────────────
+      // Small pause so h1 fully vanishes before wiggles start
+      setTimeout(() => runWiggles(wiggleCount, caught ? onCaught : onEscaped), 350);
+    };
+
+    // ── Caught path ───────────────────────────────────────────────────────────
+    function onCaught() {
+      ball.animate(
+        [
+          { transform: `translateY(${dy}px)`, boxShadow: "0 0 12px rgba(200,30,30,.5)"  },
+          { transform: `translateY(${dy}px)`, boxShadow: "0 0 32px rgba(50,255,80,.85)" },
+        ],
+        { duration: 400, easing: "ease", fill: "forwards" }
+      );
+
+      showToast("★  Shivcharan was caught!", "caught");
+
+      setTimeout(() => {
         ball.animate(
           [
-            { transform: `translateY(${dy}px)`, boxShadow: "0 0 12px rgba(200,30,30,.5)"  },
-            { transform: `translateY(${dy}px)`, boxShadow: "0 0 32px rgba(50,255,80,.85)" },
+            { transform: `translateY(${dy}px) scale(1)`,      opacity: 1 },
+            { transform: `translateY(${dy - 30}px) scale(0)`, opacity: 0 },
           ],
-          { duration: 400, easing: "ease", fill: "forwards" }
-        );
+          { duration: 500, easing: "ease", fill: "forwards" }
+        ).onfinish = () => {
+          ball.remove();
+          restoreH1("ease");
+          dismissToast(1000);
+        };
+      }, 1800);
+    }
 
-        const toast = document.createElement("div");
-        toast.id = "__pb-toast";
-        toast.textContent = "★  Shivcharan was caught!";
-        document.body.appendChild(toast);
-        void toast.offsetWidth; // force reflow so CSS transition fires
-        toast.classList.add("pb-show");
+    // ── Escaped path ──────────────────────────────────────────────────────────
+    function onEscaped() {
+      const MSGS = [
+        "Shivcharan broke free!",
+        "Critical escape! HP restored.",
+        "Target: uncontainable.",
+        "Too powerful to be caught.",
+      ];
+      const msg = MSGS[Math.floor(Math.random() * MSGS.length)];
 
-        // ── Phase 5: ball exits, hero text restored ───────────────────────
-        setTimeout(() => {
-          ball.animate(
-            [
-              { transform: `translateY(${dy}px) scale(1)`,      opacity: 1 },
-              { transform: `translateY(${dy - 30}px) scale(0)`, opacity: 0 },
-            ],
-            { duration: 500, easing: "ease", fill: "forwards" }
-          ).onfinish = () => {
-            ball.remove();
+      // Violent shake telegraphs the breakout
+      ball.animate(
+        [
+          { transform: `translateY(${dy}px) rotate(0deg)`   },
+          { transform: `translateY(${dy}px) rotate(-38deg)` },
+          { transform: `translateY(${dy}px) rotate(38deg)`  },
+          { transform: `translateY(${dy}px) rotate(-28deg)` },
+          { transform: `translateY(${dy}px) rotate(28deg)`  },
+          { transform: `translateY(${dy}px) rotate(0deg)`   },
+        ],
+        { duration: 280, easing: "ease" }
+      ).onfinish = () => {
+        // Burst open: expand → vanish
+        ball.animate(
+          [
+            { transform: `translateY(${dy}px) scale(1)`,    boxShadow: "0 0 12px rgba(200,30,30,.5)" },
+            { transform: `translateY(${dy}px) scale(1.35)`, boxShadow: "0 0 60px rgba(255,120,50,1)" },
+            { transform: `translateY(${dy}px) scale(0)`,    boxShadow: "0 0  0px rgba(255,120,50,0)" },
+          ],
+          { duration: 350, easing: "ease", fill: "forwards" }
+        ).onfinish = () => {
+          ball.remove();
+          restoreH1("spring"); // overshoot bounce = hero breaks free
+          showToast(msg, "escaped");
+          dismissToast(1200);
+        };
+      };
+    }
 
-            h1.style.transition = "transform .5s ease, opacity .5s ease";
-            h1.style.transform  = "";
-            h1.style.opacity    = "";
-            setTimeout(() => { h1.style.transition = ""; }, 500);
+    // ── Shared helpers ────────────────────────────────────────────────────────
+    function restoreH1(style) {
+      h1.style.transition = "none";
+      void h1.offsetWidth; // flush so the transition fires from scale(0)
+      if (style === "spring") {
+        h1.style.transition = "transform .45s cubic-bezier(.34,1.56,.64,1), opacity .25s ease";
+      } else {
+        h1.style.transition = "transform .5s ease, opacity .5s ease";
+      }
+      h1.style.transform = "";
+      h1.style.opacity   = "";
+      setTimeout(() => { h1.style.transition = ""; }, style === "spring" ? 450 : 500);
+    }
 
-            setTimeout(() => {
-              toast.classList.remove("pb-show");
-              setTimeout(() => toast.remove(), 400);
-            }, 1000);
-          };
-        }, 1800);
+    function showToast(msg, type) {
+      const toast = document.createElement("div");
+      toast.id = "__pb-toast";
+      toast.textContent = msg;
+      if (type === "escaped") {
+        toast.style.color       = "#ffb09a";
+        toast.style.borderColor = "#f64";
+      }
+      document.body.appendChild(toast);
+      void toast.offsetWidth; // force reflow so CSS transition fires
+      toast.classList.add("pb-show");
+    }
 
-      }))), 350);
-    };
+    function dismissToast(delay) {
+      setTimeout(() => {
+        const t = document.getElementById("__pb-toast");
+        if (!t) return;
+        t.classList.remove("pb-show");
+        setTimeout(() => t.remove(), 400);
+      }, delay);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
