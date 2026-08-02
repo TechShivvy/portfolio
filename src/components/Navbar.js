@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./_Navbar.module.css";
+import Progressbar from "./Progressbar";
 
 function Navbar() {
   const [isNavbarVisible, setIsNavbarVisible] = useState(false);
@@ -44,6 +45,9 @@ function Navbar() {
           <a href="#contact">&nbsp;contact&nbsp;</a>
         </li>
       </ul>
+      {/* Lives inside the nav so it can anchor to the navbar's bottom edge via
+          top:100% instead of a JS-measured offset — see _Progressbar.module.css. */}
+      <Progressbar />
     </nav>
   );
 }

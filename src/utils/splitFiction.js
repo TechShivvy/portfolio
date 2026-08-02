@@ -563,14 +563,24 @@ function buildProgressBar(initPct) {
   // Hide the original React fill bar; we own the visuals during SF.
   if (origBar) origBar.style.display = "none";
 
-  const seamVb = initPct * 10; // seam in 0–1000 viewBox units
+  // viewBox width tracks the container's actual px width so 1 SVG unit == 1 CSS
+  // px at every viewport size — otherwise a fixed viewBox with
+  // preserveAspectRatio="none" stretches every cell/leaf/petal horizontally by
+  // (viewportWidth / viewBoxWidth), which is why the bar looked elongated.
+  let VB_W = wrap?.getBoundingClientRect?.().width || window.innerWidth || 1000;
+  VB_W = Math.max(1, VB_W);
+
+  // Public API (initPct, updateSplitProgress svb, clip width) still speaks in
+  // 0–1000 "scroll units" so call sites elsewhere don't need to change; convert
+  // to px internally at the boundary.
+  const seamVb = initPct * 10; // seam in 0–1000 scroll units
 
   const NS  = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("width",  "100%");
   svg.setAttribute("height", "100%");
   // viewBox 8 units tall; battery and vine both centered at y=4.
-  svg.setAttribute("viewBox", "0 0 1000 8");
+  svg.setAttribute("viewBox", `0 0 ${VB_W} 8`);
   svg.setAttribute("preserveAspectRatio", "none");
   svg.style.cssText = "display:block;overflow:visible;width:100%;height:100%";
 
@@ -599,11 +609,12 @@ function buildProgressBar(initPct) {
 
   svg.appendChild(defs);
 
-  // Battery rect (0 → seam), centered at y=4 (y=2, h=4).
+  // Battery rect (0 → seam), centered at y=4 (y=2, h=4). Real x/width are set
+  // by updateSplitProgress() below; these are just placeholders pre-layout.
   const batRect = document.createElementNS(NS, "rect");
   batRect.id = "_sfBatRect";
   batRect.setAttribute("x", "0"); batRect.setAttribute("y", "2");
-  batRect.setAttribute("width", String(seamVb));
+  batRect.setAttribute("width", "0");
   batRect.setAttribute("height", "4");
   batRect.setAttribute("fill", "url(#_sfBatPat)");
   batRect.setAttribute("clip-path", "url(#_sfProgCP)");
@@ -659,75 +670,106 @@ function buildProgressBar(initPct) {
   }
 
   const FLOWER_COLS = ["#f9a8d4", "#d8b4fe", "#fbcfe8", "#c4b5fd"];
-  // Pre-allocate max elements; buildFlowers updates attributes in-place instead of rebuild.
-  const MAX_LEAVES = 36, MAX_FLOWERS = 14;
-  const leafEls = Array.from({ length: MAX_LEAVES }, () => {
+  // Element pools grow on demand and are reused across relayouts (resize, drag,
+  // spin) — no per-frame allocation once warm. Spacing below is now real px, so
+  // wide viewports need more leaves/flowers than the old fixed MAX_* caps
+  // allowed; a generous ceiling still guards against a pathological width.
+  const POOL_CEILING = 400;
+  const leafEls = [], petalEls = [], dotEls = [];
+  function makeLeaf() {
     const el = document.createElementNS(NS, "ellipse");
     el.setAttribute("rx", "2.6"); el.setAttribute("ry", "1.0");
     el.setAttribute("fill", "#86efac"); el.setAttribute("opacity", "0.9");
     el.setAttribute("display", "none");
     flowerG.appendChild(el); return el;
-  });
-  const petalEls = Array.from({ length: MAX_FLOWERS * 5 }, () => {
+  }
+  function makePetal() {
     const el = document.createElementNS(NS, "circle");
     el.setAttribute("r", "1.6"); el.setAttribute("display", "none");
     flowerG.appendChild(el); return el;
-  });
-  const dotEls = Array.from({ length: MAX_FLOWERS }, () => {
+  }
+  function makeDot() {
     const el = document.createElementNS(NS, "circle");
     el.setAttribute("r", "1.1"); el.setAttribute("fill", "#fde68a");
     el.setAttribute("display", "none");
     flowerG.appendChild(el); return el;
-  });
+  }
+  function leafAt(i) {
+    if (i >= POOL_CEILING) return null;
+    while (leafEls.length <= i) leafEls.push(makeLeaf());
+    return leafEls[i];
+  }
+  function petalAt(i) {
+    if (i >= POOL_CEILING * 5) return null;
+    while (petalEls.length <= i) petalEls.push(makePetal());
+    return petalEls[i];
+  }
+  function dotAt(i) {
+    if (i >= POOL_CEILING) return null;
+    while (dotEls.length <= i) dotEls.push(makeDot());
+    return dotEls[i];
+  }
 
-  // Leaves alternate above/below every 28 VB units; flowers every 72 VB units.
+  // Leaves alternate above/below every 28px; flowers every 72px.
   function buildFlowers(xStart, xEnd) {
     let li = 0;
     for (let x = xStart + 18; x < xEnd - 10; x += 28, li++) {
-      if (li >= MAX_LEAVES) break;
+      const leaf = leafAt(li);
+      if (!leaf) break;
       const vy   = vineYAt(x, xStart);
       const side = (Math.floor((x - xStart) / 28) % 2 === 0) ? -1 : 1;
       const lx = x, ly = vy + side * 2.5;
-      const leaf = leafEls[li];
       leaf.setAttribute("cx", lx.toFixed(2));
       leaf.setAttribute("cy", ly.toFixed(2));
       leaf.setAttribute("transform",
         "rotate(" + (side * 38) + "," + lx.toFixed(2) + "," + ly.toFixed(2) + ")");
       leaf.removeAttribute("display");
     }
-    for (; li < MAX_LEAVES; li++) leafEls[li].setAttribute("display", "none");
+    for (; li < leafEls.length; li++) leafEls[li].setAttribute("display", "none");
 
     let fi = 0;
     for (let x = xStart + 50; x < xEnd - 8; x += 72, fi++) {
-      if (fi >= MAX_FLOWERS) break;
+      const dot = dotAt(fi);
+      if (!dot) break;
       const vy    = vineYAt(x, xStart);
       const color = FLOWER_COLS[fi % FLOWER_COLS.length];
       for (let p = 0; p < 5; p++) {
         const a = (p / 5) * Math.PI * 2 - Math.PI / 2;
-        const petal = petalEls[fi * 5 + p];
+        const petal = petalAt(fi * 5 + p);
+        if (!petal) continue;
         petal.setAttribute("cx", (x + Math.cos(a) * 2.6).toFixed(2));
         petal.setAttribute("cy", (vy + Math.sin(a) * 2.6).toFixed(2));
         petal.setAttribute("fill", color);
         petal.removeAttribute("display");
       }
-      const dot = dotEls[fi];
       dot.setAttribute("cx", x.toFixed(2));
       dot.setAttribute("cy", vy.toFixed(2));
       dot.removeAttribute("display");
     }
-    for (; fi < MAX_FLOWERS; fi++) {
-      for (let p = 0; p < 5; p++) petalEls[fi * 5 + p].setAttribute("display", "none");
+    for (; fi < dotEls.length; fi++) {
+      for (let p = 0; p < 5; p++) {
+        const petal = petalEls[fi * 5 + p];
+        if (petal) petal.setAttribute("display", "none");
+      }
       dotEls[fi].setAttribute("display", "none");
     }
   }
 
+  // 0–1000 scroll unit -> px (viewBox is VB_W wide, not 1000).
+  const toX = (u) => (u / 1000) * VB_W;
+
+  // Cached so resize can re-run layout at the new width without a scroll/drag event.
+  let lastSvb = seamVb, lastTechOnLeft = true;
+
   // Single update: keep battery and vine on the correct side of the seam.
   function updateSplitProgress(svb, techOnLeft = true) {
-    const split = Math.max(0, Math.min(1000, svb));
+    lastSvb = svb; lastTechOnLeft = techOnLeft;
+    const split = toX(Math.max(0, Math.min(1000, svb)));
+    const full = VB_W;
     const techStart = techOnLeft ? 0 : split;
-    const techEnd = techOnLeft ? split : 1000;
+    const techEnd = techOnLeft ? split : full;
     const fairyStart = techOnLeft ? split : 0;
-    const fairyEnd = techOnLeft ? 1000 : split;
+    const fairyEnd = techOnLeft ? full : split;
 
     batRect.setAttribute("x", String(Math.min(techStart, techEnd)));
     batRect.setAttribute("width", String(Math.abs(techEnd - techStart)));
@@ -736,11 +778,24 @@ function buildProgressBar(initPct) {
   }
   updateSplitProgress(seamVb, true); // initial render (classic split starts tech-left)
 
-  return { wrap, origBar, clipR, updateSplitProgress };
+  // Re-measure the container width and re-lay everything out — called on resize.
+  function measureVbW() {
+    const w = wrap?.getBoundingClientRect?.().width || window.innerWidth || 1000;
+    VB_W = Math.max(1, w);
+    svg.setAttribute("viewBox", `0 0 ${VB_W} 8`);
+  }
+  function resizeProgressBar() {
+    measureVbW();
+    updateSplitProgress(lastSvb, lastTechOnLeft);
+  }
+
+  return { wrap, origBar, clipR, updateSplitProgress, resizeProgressBar, getVbW: () => VB_W };
 }
 
 // Drives the unified clip rect — returns a cancel fn for cleanup.
-function startProgressTick(clipR) {
+// getVbW returns the SVG's current viewBox width (px) so the clip stays correct
+// across resizes, since the viewBox is no longer a fixed 0–1000.
+function startProgressTick(clipR, getVbW) {
   let raf = null;
   function tick() {
     raf = requestAnimationFrame(tick);
@@ -748,8 +803,7 @@ function startProgressTick(clipR) {
     const range =
       document.documentElement.scrollHeight - document.documentElement.clientHeight;
     const pct = range > 0 ? Math.max(0, Math.min((scrollTop / range) * 100, 100)) : 0;
-    // viewBox is 0-1000, so scroll 0-100% maps to clipRect width 0-1000.
-    clipR.setAttribute("width", (pct * 10).toFixed(1));
+    clipR.setAttribute("width", ((pct / 100) * getVbW()).toFixed(1));
   }
   raf = requestAnimationFrame(tick);
   return () => cancelAnimationFrame(raf);
@@ -1027,8 +1081,16 @@ export default async function splitFiction(options = {}) {
   const fairyStyle = buildFairyStylesheet();
   const seam       = buildSeam(isSpinMode);
   const { wrap: sparkWrap, styleEl: sparkStyle } = buildSparkles();
-  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateSplitProgress } = buildProgressBar(splitPct);
-  const stopProgressTick = startProgressTick(progClipR);
+  const { wrap: progWrap, origBar: progOrigBar, clipR: progClipR, updateSplitProgress, resizeProgressBar, getVbW } = buildProgressBar(splitPct);
+  const stopProgressTick = startProgressTick(progClipR, getVbW);
+  let _progResizeRaf = null;
+  function scheduleProgResize() {
+    if (_progResizeRaf !== null) return;
+    _progResizeRaf = requestAnimationFrame(() => {
+      _progResizeRaf = null;
+      resizeProgressBar();
+    });
+  }
   // Cached once; #progress-container is position:fixed so Y is stable until resize.
   let _cachedProgBarY = null;
 
@@ -1190,6 +1252,7 @@ export default async function splitFiction(options = {}) {
   // zoom in/out changes window.innerWidth, so we must recompute the px value.
   function onResize() {
     _cachedProgBarY = null;
+    scheduleProgResize();
     if (isSpinMode) {
       applySpinFromPoint(window.innerWidth / 2 + Math.cos(splitAngle), window.innerHeight / 2 + Math.sin(splitAngle));
       return;
@@ -1366,6 +1429,7 @@ export default async function splitFiction(options = {}) {
     if (progWrap) progWrap.style.removeProperty("background");
     if (progOrigBar) progOrigBar.style.display = "";
     stopProgressTick();
+    if (_progResizeRaf !== null) cancelAnimationFrame(_progResizeRaf);
 
     // Snap mosaic tiles to their resting state instantly.
     const allTiles = document.querySelectorAll("[class*='mosaicTile']");

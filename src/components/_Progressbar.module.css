@@ -1,11 +1,20 @@
 .progress-container {
   display: block;
-  position: fixed;
-  top: 50px;
+  /* Absolutely positioned INSIDE #navbar at top:100%, so the browser computes
+     the shared edge from the navbar's own box at full sub-pixel precision.
+     Previously this was position:fixed with `top` set from a JS-measured,
+     Math.round()ed navbar height — that number rounds wrong and goes stale at
+     any non-100% browser zoom, leaving a sub-pixel hairline of page background
+     showing between the navbar and the bar (measured up to 0.9px at 110%). */
+  position: absolute;
+  top: 100%;
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #ccc;
+  /* Translucent instead of a flat color: the unfilled track blends with
+     whatever section is scrolled behind it (light or dark) instead of
+     showing as a fixed-gray seam against the navbar. */
+  background-color: rgba(128, 128, 128, 0.35);
   z-index: 9999;
   opacity: 0;
   transition: opacity 0.4s ease;

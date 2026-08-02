@@ -5,16 +5,8 @@ function Progressbar() {
   const barRef = useRef(null);
   const tickingRef = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [top, setTop] = useState("50px");
 
   useEffect(() => {
-    // Anchor the bar to the bottom of the navbar so it never overlaps it,
-    // regardless of navbar height (which differs between mobile and desktop).
-    const measureTop = () => {
-      const nav = document.getElementById("navbar");
-      setTop(nav ? `${Math.round(nav.getBoundingClientRect().height)}px` : "50px");
-    };
-
     const update = () => {
       tickingRef.current = false;
       const scrollTop =
@@ -37,27 +29,22 @@ function Progressbar() {
       }
     };
 
-    const onResize = () => {
-      measureTop();
-      requestTick();
-    };
-
-    measureTop();
     update();
     window.addEventListener("scroll", requestTick, { passive: true });
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", requestTick);
 
     return () => {
       window.removeEventListener("scroll", requestTick);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", requestTick);
     };
   }, []);
 
+  // Rendered inside <nav id="navbar"> (see Navbar.js) and anchored with
+  // top:100% — no JS positioning, so it stays flush at every zoom level.
   return (
     <div
       className={`${styles["progress-container"]} ${isVisible ? styles["progress-container--visible"] : ""}`}
       id="progress-container"
-      style={{ top }}
     >
       <div
         className={styles["progress-bar"]}
