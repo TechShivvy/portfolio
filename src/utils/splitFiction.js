@@ -1339,8 +1339,15 @@ export default async function splitFiction(options = {}) {
   let spinGeometry = null;
 
   // Capture cursor before any SF changes so cleanup can fully restore it.
+  // Both vars: index.css's `* a, button { cursor: var(--cursor-pointer) }`
+  // has higher specificity than the `* { cursor: var(--cursor-default) }`
+  // fallback, so real <a>/<button> elements never honor --cursor-default —
+  // updateCursor() below has to write to both or the reticle can never show
+  // over a real link/button on the tech side.
   const originalCursor = getComputedStyle(document.documentElement)
     .getPropertyValue("--cursor-default").trim();
+  const originalCursorPointer = getComputedStyle(document.documentElement)
+    .getPropertyValue("--cursor-pointer").trim();
 
   // ── Activate ──────────────────────────────────────────────────────────
   // Set CSS vars BEFORE adding _sfActive — the fairy supplement stylesheet
@@ -1640,15 +1647,31 @@ export default async function splitFiction(options = {}) {
     const clientY = typeof e === "number" ? window.innerHeight / 2 : e?.clientY ?? window.innerHeight / 2;
     if (isRightSide(clientX, clientY)) {
       document.documentElement.style.setProperty("--cursor-default", "auto");
+      // Restore the real site's middle-finger cursor on real links/buttons —
+      // only the tech side gets the laser reticle treatment.
+      document.documentElement.style.setProperty("--cursor-pointer", originalCursorPointer);
     } else {
       // e.target is reliable here: pointer-events:none overlays (leftLens, laserStage)
       // are bypassed by the browser when dispatching mouse events, so e.target always
       // points at the real underlying element — no elementFromPoint needed.
       const hoveredEl = typeof e === "object" ? e?.target : null;
-      const isOverInteractive = hoveredEl ? !!findInteractiveTarget(hoveredEl) : false;
+      // #_sfExitBtn is itself a real <button> with its own inline
+      // `cursor:var(--cursor-pointer,...)` and its own teal hover glow — it's
+      // explicitly exempt from laser interaction elsewhere in this file
+      // (handlePointerDown), so it must keep the ordinary pointer here too,
+      // not the laser-target reticle.
+      const isExempt = hoveredEl ? !!hoveredEl.closest?.("#_sfExitBtn") : false;
+      const isOverInteractive = !isExempt && hoveredEl ? !!findInteractiveTarget(hoveredEl) : false;
+      const cursorValue = isOverInteractive ? INTERACTIVE_CURSOR : RETICLE_CURSOR;
+      document.documentElement.style.setProperty("--cursor-default", cursorValue);
+      // Real <a>/<button> elements (e.g. the project card GitHub/Preview
+      // links) match index.css's `* a, button` rule, which outranks the
+      // universal `*` rule that --cursor-default feeds — so they ignore
+      // --cursor-default entirely and need --cursor-pointer set too, or
+      // they keep showing the site-wide middle-finger cursor even in SF mode.
       document.documentElement.style.setProperty(
-        "--cursor-default",
-        isOverInteractive ? INTERACTIVE_CURSOR : RETICLE_CURSOR
+        "--cursor-pointer",
+        isExempt ? originalCursorPointer : cursorValue
       );
     }
   }
@@ -1727,6 +1750,7 @@ export default async function splitFiction(options = {}) {
     });
 
     document.documentElement.style.setProperty("--cursor-default", originalCursor);
+    document.documentElement.style.setProperty("--cursor-pointer", originalCursorPointer);
     window.__sfFairyActive = false;
     delete window.__sfSplitPct;
     delete window.__sfSplitAngle;
