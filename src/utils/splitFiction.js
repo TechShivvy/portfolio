@@ -31,6 +31,37 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+// ─── Shared interactivity test ─────────────────────────────────────────────
+// Only semantic / truly-clickable elements — broad class wildcards like
+// [class*="card"] match non-interactive wrapper divs and cause false positives.
+const INTERACTIVE_SELECTOR = [
+  'a[href]', 'button', 'input', 'select', 'textarea', 'label',
+  '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
+  '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
+  '[onclick]', '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+// Walks up at most 4 levels (handles text spans inside buttons, etc.). Uses an
+// EXACT cursor === "pointer" match, never a substring check: this site's
+// custom cursor chain (see INTERACTIVE_CURSOR below) is a full
+// `url(...) 14 14, pointer` value applied via --cursor-default, which every
+// element inherits. A `.includes("pointer")` check against that computed
+// value is therefore true for EVERY element on the page whenever the pointer
+// sits over any one interactive element — it degrades into a global on/off
+// flag instead of a per-element test. Single source of truth for both the
+// laser stage and the reticle/pointer cursor swap below.
+function findInteractiveTarget(el) {
+  if (!el || el === document.body || el === document.documentElement) return null;
+  let node = el;
+  for (let i = 0; i < 4; i++) {
+    if (!node || node === document.body) break;
+    if (node.matches?.(INTERACTIVE_SELECTOR)) return node;
+    if (window.getComputedStyle(node).cursor === "pointer") return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
 // ─── CSS variable helpers ──────────────────────────────────────────────────
 function setSplitVars(pct) {
   const absPx = (pct / 100) * window.innerWidth;
@@ -848,47 +879,127 @@ function buildSeam(isSpinMode) {
   return el;
 }
 
+// ─── Laser pew-pew audio ────────────────────────────────────────────────────
+// One shared, lazily-created context (never one-per-shot — at a 90ms fire
+// rate that would leak a context every 90ms). Closed and nulled by destroy().
+let _laserCtx = null;
+let _lastPewAt = 0;
+
+function playPew() {
+  if (prefersReducedMotion()) return;
+  if (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) return;
+  const now = performance.now();
+  if (now - _lastPewAt < 60) return; // rate limit — never faster than the fire interval
+  _lastPewAt = now;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!_laserCtx) _laserCtx = new AudioCtx();
+    if (_laserCtx.state === "suspended") _laserCtx.resume();
+
+    const t = _laserCtx.currentTime;
+    const osc = _laserCtx.createOscillator();
+    const gain = _laserCtx.createGain();
+    osc.type = "sawtooth";
+    // Downward pitch sweep = the classic "pew". Slight random start freq so a
+    // held burst doesn't sound like one looped sample.
+    osc.frequency.setValueAtTime(820 + Math.random() * 160, t);
+    osc.frequency.exponentialRampToValueAtTime(110, t + 0.09);
+    gain.gain.setValueAtTime(0.08, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+    osc.connect(gain);
+    gain.connect(_laserCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.12);
+  } catch (_) {}
+}
+
+// Bounded ray (bolt travel, t in [0, maxDist]) vs. bounded segment (seam,
+// u in [0, 1]) intersection. Unlike lineSegmentIntersection above — which
+// treats its first argument as an unbounded line — both inputs here are
+// bounded, since a bolt must stop at the seam and the seam segment is finite.
+function raySegmentIntersection(originX, originY, dirX, dirY, maxDist, segA, segB) {
+  const segX = segB.x - segA.x;
+  const segY = segB.y - segA.y;
+  const det = dirX * segY - dirY * segX;
+  if (Math.abs(det) < 1e-8) return null; // parallel (e.g. classic mode's vertical seam)
+  const dx = segA.x - originX;
+  const dy = segA.y - originY;
+  const t = (dx * segY - segX * dy) / det;
+  const u = (dx * dirY - dirX * dy) / det;
+  if (t < 0 || t > maxDist || u < 0 || u > 1) return null;
+  return { x: originX + t * dirX, y: originY + t * dirY, t };
+}
+
 // ─── Laser Cursor Playground Stage (Sci-Fi / Left side) ────────────────────
-function buildLaserStage(isLeftSciFi) {
+// Empty space: hold-to-fire aimed bolts, straight up, repeating while held.
+// Interactive elements: a radial "boom" burst + impact ring + guaranteed
+// highlight — every time, deterministically, on pointerdown (not click), so
+// neither a slight drag nor a keyboard-synthesized activation loses it.
+//
+// isLeftSciFi(x,y)   — is this point on the tech side.
+// getSeamSegment()   — {a,b} endpoints of the current seam, for bolt-vs-seam
+//                       clipping and the butterfly handoff. Burst bolts fly
+//                       in every direction so they can cross it in classic
+//                       mode too, not just spin mode; the straight-up aimed
+//                       bolts are parallel to the classic vertical seam and
+//                       never cross it there, by design.
+// reduced            — prefers-reduced-motion: mutes audio/butterflies and
+//                       fires single bolts instead of a repeating interval.
+function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
   const stageStyle = document.createElement("style");
   stageStyle.id = "_sfLaserStyle";
   stageStyle.textContent = `
-    #_sfLaserStage {
+    #_sfLaserStage, #_sfButterflyStage {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 99999;
     }
+    #_sfButterflyStage { z-index: 99992; }
     ._sfLaser {
       position: fixed;
-      width: 7px;
-      height: 28px;
-      border-radius: 4px;
+      width: 5px;
+      height: 34px;
+      border-radius: 3px;
       pointer-events: none;
       transform-origin: center;
       will-change: transform, opacity;
       z-index: 99999;
-      filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 4px #000);
+      /* Warm dark rim, not #000 — a black halo is what made the old bolt
+         look cut out of the bright inverted lens field. */
+      filter: drop-shadow(0 0 1px rgba(60, 20, 0, 0.85));
     }
-    ._sfLaser.red   {
-      background: linear-gradient(to bottom, #ffffff 0%, #ff0055 30%, #b3003b 100%);
-      box-shadow: 0 0 10px 2px #ff0055, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    /* Three-color plasma family — all sit on the warm side of the wheel,
+       the optical complement of the tech-side cyan (#00e5ff), so the trio
+       reads as one cohesive "energy weapon" palette instead of the old
+       arbitrary red/green/blue. Every variant fades to transparent on BOTH
+       ends — no hard edge anywhere, which is what read as "chopped" before. */
+    ._sfLaser.amber {
+      background: linear-gradient(to bottom,
+        rgba(255, 242, 204, 0) 0%, #fff2cc 14%, #ff7a1a 46%,
+        rgba(255, 60, 0, 0.55) 78%, rgba(255, 60, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 180, 60, 0.9), 0 0 14px 3px rgba(255, 122, 26, 0.55);
     }
-    ._sfLaser.green {
-      background: linear-gradient(to bottom, #ffffff 0%, #00ff66 30%, #009933 100%);
-      box-shadow: 0 0 10px 2px #00ff66, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    ._sfLaser.gold {
+      background: linear-gradient(to bottom,
+        rgba(255, 250, 220, 0) 0%, #fff8dc 14%, #ffb020 46%,
+        rgba(200, 120, 0, 0.55) 78%, rgba(200, 120, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 200, 80, 0.9), 0 0 14px 3px rgba(255, 176, 32, 0.55);
     }
-    ._sfLaser.blue  {
-      background: linear-gradient(to bottom, #ffffff 0%, #00d9ff 30%, #0066cc 100%);
-      box-shadow: 0 0 10px 2px #00d9ff, inset 0 0 4px #ffffff, 0 0 0 1px #000000;
+    ._sfLaser.ember {
+      background: linear-gradient(to bottom,
+        rgba(255, 220, 200, 0) 0%, #ffe0cc 14%, #ff4d1a 46%,
+        rgba(180, 30, 0, 0.55) 78%, rgba(180, 30, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 120, 70, 0.9), 0 0 14px 3px rgba(255, 77, 26, 0.55);
     }
     ._sfFlash {
       position: fixed;
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.9) 30%, rgba(0,0,0,0) 70%);
-      box-shadow: 0 0 12px 3px #ffffff, 0 0 0 1px #000;
+      background: radial-gradient(circle, #fff6e0 0%, rgba(255, 150, 40, 0.85) 35%, rgba(255, 80, 0, 0) 70%);
+      box-shadow: 0 0 12px 3px rgba(255, 150, 40, 0.8);
       pointer-events: none;
       transform: translate(-50%, -50%);
       animation: _sfFlashPop 0.25s ease-out forwards;
@@ -898,6 +1009,40 @@ function buildLaserStage(isLeftSciFi) {
       0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
       100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
     }
+    ._sfImpact {
+      position: fixed;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 122, 26, 0.9);
+      box-shadow: 0 0 10px 2px rgba(255, 122, 26, 0.5);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: _sfImpactPop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+      z-index: 99999;
+    }
+    @keyframes _sfImpactPop {
+      0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.35); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    }
+    ._sfButterfly {
+      position: fixed;
+      width: 15px;
+      height: 13px;
+      pointer-events: none;
+      z-index: 99992;
+      will-change: transform, opacity;
+    }
+    ._sfButterfly svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      animation: _sfWingFlap 0.26s ease-in-out infinite;
+    }
+    @keyframes _sfWingFlap {
+      0%, 100% { transform: scaleX(1); }
+      50%      { transform: scaleX(0.4); }
+    }
   `;
   document.head.appendChild(stageStyle);
 
@@ -905,21 +1050,99 @@ function buildLaserStage(isLeftSciFi) {
   stage.id = "_sfLaserStage";
   document.body.appendChild(stage);
 
-  const colors = ["red", "green", "blue"];
-  const INTERACTIVE_SELECTOR = [
-    'a[href]', 'button', 'input', 'select', 'textarea', 'label',
-    '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
-    '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
-    '[onclick]', '[tabindex]:not([tabindex="-1"])',
-  ].join(', ');
+  const butterflyStage = document.createElement("div");
+  butterflyStage.id = "_sfButterflyStage";
+  document.body.appendChild(butterflyStage);
 
-  function isInteractive(el) {
-    if (!el || el === document.body || el === document.documentElement) return null;
-    const closestMatch = el.closest(INTERACTIVE_SELECTOR);
-    if (closestMatch) return closestMatch;
-    const style = window.getComputedStyle(el);
-    if (style.cursor === "pointer" || style.cursor.includes("pointer")) return el;
-    return null;
+  // ── Managed timers (so destroy() can't leak setTimeout callbacks) ────────
+  const pendingTimers = new Set();
+  function later(fn, ms) {
+    const id = setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+    pendingTimers.add(id);
+    return id;
+  }
+
+  // ── Bolt pool — avoids a createElement + remove() per shot at 90ms ───────
+  const POOL_SIZE = 24;
+  const boltPool = [];
+  function getBoltEl() {
+    for (let i = 0; i < boltPool.length; i++) {
+      if (!boltPool[i]._busy) return boltPool[i];
+    }
+    const el = document.createElement("div");
+    el.style.display = "none";
+    stage.appendChild(el);
+    boltPool.push(el);
+    return el;
+  }
+
+  const boltColors = ["amber", "gold", "ember"];
+
+  // Guarantees a hover/theme rule elsewhere on the page can never mask this
+  // highlight — inline !important beats any author-stylesheet !important
+  // regardless of selector specificity, which a `.className` toggle can't.
+  // (The fairy stylesheet's own `[class*='button']:hover` rule has higher
+  // specificity than a single class and was silently winning that fight,
+  // which is why the highlight only ever showed up on the terminal input —
+  // the one interactive element with no "button"-named class to collide with.)
+  function flashHit(targetEl) {
+    if (!targetEl) return;
+    const prevValue = targetEl.style.getPropertyValue("box-shadow");
+    const prevPriority = targetEl.style.getPropertyPriority("box-shadow");
+    targetEl.style.setProperty("box-shadow", "0 0 14px 3px rgba(255, 122, 26, 0.6)", "important");
+    later(() => {
+      if (prevValue) targetEl.style.setProperty("box-shadow", prevValue, prevPriority);
+      else targetEl.style.removeProperty("box-shadow");
+    }, 260);
+  }
+
+  const fairyColors = ["#f9a8d4", "#d8b4fe", "#86efac", "#fde68a", "#a5f3fc", "#fbcfe8"];
+  function spawnButterfly(x, y) {
+    if (reduced) return;
+    const color = fairyColors[Math.floor(Math.random() * fairyColors.length)];
+    const el = document.createElement("div");
+    el.className = "_sfButterfly";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    el.innerHTML = `<svg viewBox="0 0 24 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="7" cy="10" rx="7" ry="8" fill="${color}" opacity="0.85"/><ellipse cx="17" cy="10" rx="7" ry="8" fill="${color}" opacity="0.85"/><line x1="12" y1="4" x2="12" y2="16" stroke="rgba(0,0,0,0.3)" stroke-width="1"/></svg>`;
+    butterflyStage.appendChild(el);
+
+    const dx = 40 + Math.random() * 50;
+    const dy = -(50 + Math.random() * 60);
+    const midX = dx * 0.5 + (Math.random() * 20 - 10);
+    const midY = dy * 0.6;
+    const anim = el.animate(
+      [
+        { transform: "translate(-50%,-50%) translate(0px,0px) rotate(0deg)", opacity: 0 },
+        { transform: `translate(-50%,-50%) translate(${midX}px,${midY}px) rotate(${(Math.random() * 30 - 15).toFixed(1)}deg)`, opacity: 1, offset: 0.3 },
+        { transform: `translate(-50%,-50%) translate(${dx}px,${dy}px) rotate(${(Math.random() * 40 - 20).toFixed(1)}deg)`, opacity: 0 },
+      ],
+      { duration: 1400, easing: "ease-in-out" }
+    );
+    anim.onfinish = () => el.remove();
+  }
+
+  // ── Firing session state (reset per pointerdown / per burst) ─────────────
+  // Guarantees at least one butterfly per session once the seam is crossed,
+  // then tapers off — "don't spawn one per bolt, but never zero".
+  let sessionCrossings = 0;
+  let sessionButterflies = 0;
+  let lastButterflyAt = 0;
+
+  function resetSession() {
+    sessionCrossings = 0;
+    sessionButterflies = 0;
+  }
+
+  function onSeamCross(px, py) {
+    sessionCrossings++;
+    const wantCount = Math.max(1, Math.round(sessionCrossings * 0.35));
+    const now = performance.now();
+    if (sessionButterflies < wantCount && now - lastButterflyAt > 250) {
+      lastButterflyAt = now;
+      sessionButterflies++;
+      spawnButterfly(px, py);
+    }
   }
 
   function spawnLaser(x, y, angleDeg, distance) {
@@ -928,42 +1151,77 @@ function buildLaserStage(isLeftSciFi) {
     flash.style.left = x + "px";
     flash.style.top = y + "px";
     stage.appendChild(flash);
-    setTimeout(() => flash.remove(), 250);
+    later(() => flash.remove(), 250);
+    playPew();
 
-    const laser = document.createElement("div");
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    laser.className = "_sfLaser " + color;
+    let dist = distance || (300 + Math.random() * 250);
+    const duration = 500 + Math.random() * 200;
+
+    // Clip the bolt at the seam and hand off to a butterfly, instead of
+    // letting it fly through into the fairy half.
+    const theta = (angleDeg * Math.PI) / 180;
+    const dirX = Math.sin(theta);
+    const dirY = -Math.cos(theta);
+    const seam = getSeamSegment?.();
+    let crossPoint = null;
+    if (seam) {
+      const hit = raySegmentIntersection(x, y, dirX, dirY, dist, seam.a, seam.b);
+      if (hit) {
+        dist = Math.max(6, hit.t);
+        crossPoint = hit;
+      }
+    }
+
+    const laser = getBoltEl();
+    laser._busy = true;
+    laser.className = "_sfLaser " + boltColors[Math.floor(Math.random() * boltColors.length)];
+    laser.style.display = "";
     laser.style.left = x + "px";
     laser.style.top = y + "px";
     laser.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
-    stage.appendChild(laser);
-
-    const dist = distance || (300 + Math.random() * 250);
-    const duration = 500 + Math.random() * 200;
+    if (laser._anim) laser._anim.cancel();
 
     const anim = laser.animate(
       [
-        { transform: `translate(-50%, -50%) rotate(${angleDeg}deg) translateY(0px)`, opacity: 1 },
-        { transform: `translate(-50%, -50%) rotate(${angleDeg}deg) translateY(-${dist}px)`, opacity: 0 },
+        { transform: `translate(-50%,-50%) rotate(${angleDeg}deg) translateY(0px) scaleY(0.7)`, opacity: 0 },
+        { transform: `translate(-50%,-50%) rotate(${angleDeg}deg) translateY(-${(dist * 0.18).toFixed(1)}px) scaleY(1.25)`, opacity: 1, offset: 0.12 },
+        { transform: `translate(-50%,-50%) rotate(${angleDeg}deg) translateY(-${dist}px) scaleY(1)`, opacity: 0 },
       ],
       { duration, easing: "cubic-bezier(0.15, 0.6, 0.4, 1)" }
     );
+    laser._anim = anim;
+    anim.onfinish = () => { laser._busy = false; laser.style.display = "none"; };
 
-    anim.onfinish = () => laser.remove();
+    if (crossPoint) onSeamCross(crossPoint.x, crossPoint.y);
   }
 
   function spawnAimedLaser(x, y) {
-    // Shoot straight up (angleDeg = 0)
+    // Shoot straight up (angleDeg = 0).
     spawnLaser(x, y, 0, 450);
   }
 
-  function spawnRandomBurst(x, y, count) {
+  // The "boom" — a radial burst of bolts in every direction. Since these
+  // (unlike the aimed hold-fire bolts) aren't confined to straight-up, one
+  // fired near the seam can genuinely cross it and hand off to a butterfly,
+  // even in classic (non-spin) mode.
+  function spawnBurst(x, y, count) {
+    resetSession();
     const n = count || 6 + Math.floor(Math.random() * 6);
     for (let i = 0; i < n; i++) {
       const angleDeg = Math.random() * 360;
-      const distance = 220 + Math.random() * 300;
-      setTimeout(() => spawnLaser(x, y, angleDeg, distance), i * 12);
+      const dist = 220 + Math.random() * 300;
+      later(() => spawnLaser(x, y, angleDeg, dist), i * 12);
     }
+  }
+
+  function spawnImpact(x, y, targetEl) {
+    const ring = document.createElement("div");
+    ring.className = "_sfImpact";
+    ring.style.left = x + "px";
+    ring.style.top = y + "px";
+    stage.appendChild(ring);
+    later(() => ring.remove(), 340);
+    flashHit(targetEl);
   }
 
   let fireInterval = null;
@@ -981,7 +1239,9 @@ function buildLaserStage(isLeftSciFi) {
     if (!isLeftSciFi(x, y)) return;
     stopFiring();
     lastX = x; lastY = y;
+    resetSession();
     spawnAimedLaser(x, y);
+    if (reduced) return; // single bolt only — no repeating interval
     fireInterval = setInterval(() => {
       if (isLeftSciFi(lastX, lastY)) {
         spawnAimedLaser(lastX, lastY);
@@ -991,51 +1251,69 @@ function buildLaserStage(isLeftSciFi) {
     }, 90);
   }
 
-  const handleMouseDown = (e) => {
+  // Uniform in the sense that asked for: EVERY interactive element gets the
+  // exact same treatment, deterministically, on every attempt — impact ring +
+  // guaranteed highlight (via flashHit's inline !important, immune to any
+  // per-section hover rule) + the boom burst. Empty space instead gets
+  // hold-to-fire aimed bolts. Both paths key off the same shared
+  // findInteractiveTarget() test and both fire on pointerdown (not click),
+  // so neither a slight drag nor a keyboard-synthesized activation loses the
+  // effect the way the old click-only burst did.
+  const handlePointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     if (!isLeftSciFi(e.clientX, e.clientY)) return;
     if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
-    if (isInteractive(e.target)) return;
-    startFiring(e.clientX, e.clientY);
+    // Keyboard-synthesized activation reports clientX/Y === 0 — fall back to
+    // the last known real pointer position instead of firing from the corner.
+    const x = e.clientX || lastX;
+    const y = e.clientY || lastY;
+    lastX = x; lastY = y;
+    const hitEl = findInteractiveTarget(e.target);
+    if (hitEl) {
+      spawnImpact(x, y, hitEl);
+      spawnBurst(x, y);
+    } else {
+      startFiring(x, y);
+    }
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
     lastX = e.clientX;
     lastY = e.clientY;
   };
 
-  const handleClick = (e) => {
-    if (!isLeftSciFi(e.clientX, e.clientY)) return;
-    if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
-    const el = isInteractive(e.target);
-    if (el) spawnRandomBurst(e.clientX, e.clientY);
-  };
+  document.addEventListener("pointerdown", handlePointerDown);
+  document.addEventListener("pointermove", handlePointerMove);
 
-  document.addEventListener("mousedown", handleMouseDown);
-  document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("click", handleClick);
-
-  window.addEventListener("mouseup", stopFiring, true);
   window.addEventListener("pointerup", stopFiring, true);
-  window.addEventListener("touchend", stopFiring, true);
-  window.addEventListener("touchcancel", stopFiring, true);
-  window.addEventListener("mouseleave", stopFiring, true);
+  window.addEventListener("pointercancel", stopFiring, true);
+  // Bubble-phase, on the root element only — fires when the pointer actually
+  // leaves the viewport. The previous capture-phase listener on `window` was
+  // (mis)triggered by mouseleave on every DOM element boundary crossed while
+  // dragging, which is why holding the beam felt like it randomly cut out.
+  document.documentElement.addEventListener("mouseleave", stopFiring);
   window.addEventListener("blur", stopFiring);
 
   const destroy = () => {
     stopFiring();
-    document.removeEventListener("mousedown", handleMouseDown);
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("click", handleClick);
+    document.removeEventListener("pointerdown", handlePointerDown);
+    document.removeEventListener("pointermove", handlePointerMove);
 
-    window.removeEventListener("mouseup", stopFiring, true);
     window.removeEventListener("pointerup", stopFiring, true);
-    window.removeEventListener("touchend", stopFiring, true);
-    window.removeEventListener("touchcancel", stopFiring, true);
-    window.removeEventListener("mouseleave", stopFiring, true);
+    window.removeEventListener("pointercancel", stopFiring, true);
+    document.documentElement.removeEventListener("mouseleave", stopFiring);
     window.removeEventListener("blur", stopFiring);
 
+    pendingTimers.forEach((id) => clearTimeout(id));
+    pendingTimers.clear();
+
+    if (_laserCtx) {
+      try { _laserCtx.close(); } catch (_) {}
+      _laserCtx = null;
+    }
+
     try { stage.remove(); } catch (_) {}
+    try { butterflyStage.remove(); } catch (_) {}
     try { stageStyle.remove(); } catch (_) {}
   };
 
@@ -1167,7 +1445,30 @@ export default async function splitFiction(options = {}) {
     return !isRightSide(x, y);
   }
 
-  const laserStage = buildLaserStage((x, y) => isLeftSide(x, y));
+  // Endpoints of the current seam, for the laser stage's bolt-vs-seam clip.
+  // Classic mode: the seam is always vertical, and aimed bolts always fire
+  // straight up — parallel lines never intersect, so this naturally becomes
+  // a no-op there without needing a mode check. Spin mode: the seam can sit
+  // at any angle, so a vertical bolt can genuinely cross it.
+  function getSeamSegment() {
+    const BIG = Math.hypot(window.innerWidth, window.innerHeight) * 1.5;
+    if (isSpinMode && spinGeometry) {
+      return {
+        a: {
+          x: spinGeometry.centerX - spinGeometry.lineDirX * BIG,
+          y: spinGeometry.centerY - spinGeometry.lineDirY * BIG,
+        },
+        b: {
+          x: spinGeometry.centerX + spinGeometry.lineDirX * BIG,
+          y: spinGeometry.centerY + spinGeometry.lineDirY * BIG,
+        },
+      };
+    }
+    const splitX = (splitPct / 100) * window.innerWidth;
+    return { a: { x: splitX, y: -BIG }, b: { x: splitX, y: window.innerHeight + BIG } };
+  }
+
+  const laserStage = buildLaserStage((x, y) => isLeftSide(x, y), getSeamSegment, reduced);
 
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
@@ -1329,29 +1630,6 @@ export default async function splitFiction(options = {}) {
     document.addEventListener("touchmove", onSpinPointerMove, { passive: true });
   }
 
-  // Only semantic / truly-clickable elements — broad class wildcards like
-  // [class*="card"] match non-interactive wrapper divs and cause false positives.
-  const INTERACTIVE_SEL = [
-    'a[href]', 'button', 'input', 'select', 'textarea', 'label',
-    '[role="button"]', '[role="link"]', '[role="checkbox"]', '[role="radio"]',
-    '[role="tab"]', '[role="menuitem"]', '[role="option"]', '[role="switch"]',
-    '[onclick]', '[tabindex]:not([tabindex="-1"])',
-  ].join(', ');
-
-  function isInteractiveElement(el) {
-    if (!el || el === document.body || el === document.documentElement) return false;
-    // Walk up at most 4 levels: handles text spans inside buttons, etc.
-    let node = el;
-    for (let i = 0; i < 4; i++) {
-      if (!node || node === document.body) break;
-      if (node.matches?.(INTERACTIVE_SEL)) return true;
-      const cur = window.getComputedStyle(node).cursor;
-      if (cur === "pointer") return true;
-      node = node.parentElement;
-    }
-    return false;
-  }
-
   function updateCursor(e) {
     const clientX = typeof e === "number" ? e : e?.clientX ?? 0;
     const clientY = typeof e === "number" ? window.innerHeight / 2 : e?.clientY ?? window.innerHeight / 2;
@@ -1362,7 +1640,7 @@ export default async function splitFiction(options = {}) {
       // are bypassed by the browser when dispatching mouse events, so e.target always
       // points at the real underlying element — no elementFromPoint needed.
       const hoveredEl = typeof e === "object" ? e?.target : null;
-      const isOverInteractive = hoveredEl ? isInteractiveElement(hoveredEl) : false;
+      const isOverInteractive = hoveredEl ? !!findInteractiveTarget(hoveredEl) : false;
       document.documentElement.style.setProperty(
         "--cursor-default",
         isOverInteractive ? INTERACTIVE_CURSOR : RETICLE_CURSOR
