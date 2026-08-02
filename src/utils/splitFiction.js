@@ -970,28 +970,29 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
          look cut out of the bright inverted lens field. */
       filter: drop-shadow(0 0 1px rgba(60, 20, 0, 0.85));
     }
-    /* Three-color plasma family — all sit on the warm side of the wheel,
-       the optical complement of the tech-side cyan (#00e5ff), so the trio
-       reads as one cohesive "energy weapon" palette instead of the old
-       arbitrary red/green/blue. Every variant fades to transparent on BOTH
-       ends — no hard edge anywhere, which is what read as "chopped" before. */
+    /* Three-color plasma family, spread across well-separated hues (orange,
+       magenta, yellow-gold) so they're actually distinguishable in flight —
+       the previous amber/gold/ember trio all sat within ~25° of each other
+       on the wheel and read as one color. All three are still on the warm
+       side, opposite the tech-side cyan (#00e5ff). Every variant fades to
+       transparent on BOTH ends — no hard edge anywhere. */
     ._sfLaser.amber {
       background: linear-gradient(to bottom,
         rgba(255, 242, 204, 0) 0%, #fff2cc 14%, #ff7a1a 46%,
         rgba(255, 60, 0, 0.55) 78%, rgba(255, 60, 0, 0) 100%);
       box-shadow: 0 0 6px 1px rgba(255, 180, 60, 0.9), 0 0 14px 3px rgba(255, 122, 26, 0.55);
     }
+    ._sfLaser.magenta {
+      background: linear-gradient(to bottom,
+        rgba(255, 224, 240, 0) 0%, #ffe0f0 14%, #ff0077 46%,
+        rgba(153, 0, 68, 0.55) 78%, rgba(153, 0, 68, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 90, 170, 0.9), 0 0 14px 3px rgba(255, 0, 119, 0.55);
+    }
     ._sfLaser.gold {
       background: linear-gradient(to bottom,
-        rgba(255, 250, 220, 0) 0%, #fff8dc 14%, #ffb020 46%,
-        rgba(200, 120, 0, 0.55) 78%, rgba(200, 120, 0, 0) 100%);
-      box-shadow: 0 0 6px 1px rgba(255, 200, 80, 0.9), 0 0 14px 3px rgba(255, 176, 32, 0.55);
-    }
-    ._sfLaser.ember {
-      background: linear-gradient(to bottom,
-        rgba(255, 220, 200, 0) 0%, #ffe0cc 14%, #ff4d1a 46%,
-        rgba(180, 30, 0, 0.55) 78%, rgba(180, 30, 0, 0) 100%);
-      box-shadow: 0 0 6px 1px rgba(255, 120, 70, 0.9), 0 0 14px 3px rgba(255, 77, 26, 0.55);
+        rgba(255, 250, 200, 0) 0%, #fffacc 14%, #ffd400 46%,
+        rgba(153, 102, 0, 0.55) 78%, rgba(153, 102, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 224, 90, 0.9), 0 0 14px 3px rgba(255, 212, 0, 0.55);
     }
     ._sfFlash {
       position: fixed;
@@ -1076,7 +1077,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     return el;
   }
 
-  const boltColors = ["amber", "gold", "ember"];
+  const boltColors = ["amber", "magenta", "gold"];
 
   // Guarantees a hover/theme rule elsewhere on the page can never mask this
   // highlight — inline !important beats any author-stylesheet !important
@@ -1107,8 +1108,10 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     el.innerHTML = `<svg viewBox="0 0 24 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="7" cy="10" rx="7" ry="8" fill="${color}" opacity="0.85"/><ellipse cx="17" cy="10" rx="7" ry="8" fill="${color}" opacity="0.85"/><line x1="12" y1="4" x2="12" y2="16" stroke="rgba(0,0,0,0.3)" stroke-width="1"/></svg>`;
     butterflyStage.appendChild(el);
 
-    const dx = 40 + Math.random() * 50;
-    const dy = -(50 + Math.random() * 60);
+    // Longer, farther drift so the extended lifetime doesn't read as hovering
+    // in place.
+    const dx = 60 + Math.random() * 80;
+    const dy = -(80 + Math.random() * 100);
     const midX = dx * 0.5 + (Math.random() * 20 - 10);
     const midY = dy * 0.6;
     const anim = el.animate(
@@ -1117,14 +1120,15 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
         { transform: `translate(-50%,-50%) translate(${midX}px,${midY}px) rotate(${(Math.random() * 30 - 15).toFixed(1)}deg)`, opacity: 1, offset: 0.3 },
         { transform: `translate(-50%,-50%) translate(${dx}px,${dy}px) rotate(${(Math.random() * 40 - 20).toFixed(1)}deg)`, opacity: 0 },
       ],
-      { duration: 1400, easing: "ease-in-out" }
+      { duration: 2600, easing: "ease-in-out" }
     );
     anim.onfinish = () => el.remove();
   }
 
   // ── Firing session state (reset per pointerdown / per burst) ─────────────
   // Guarantees at least one butterfly per session once the seam is crossed,
-  // then tapers off — "don't spawn one per bolt, but never zero".
+  // then ramps up further with more crossings — "don't spawn one per bolt,
+  // but never too few".
   let sessionCrossings = 0;
   let sessionButterflies = 0;
   let lastButterflyAt = 0;
@@ -1136,9 +1140,9 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
 
   function onSeamCross(px, py) {
     sessionCrossings++;
-    const wantCount = Math.max(1, Math.round(sessionCrossings * 0.35));
+    const wantCount = Math.max(1, Math.round(sessionCrossings * 0.6));
     const now = performance.now();
-    if (sessionButterflies < wantCount && now - lastButterflyAt > 250) {
+    if (sessionButterflies < wantCount && now - lastButterflyAt > 150) {
       lastButterflyAt = now;
       sessionButterflies++;
       spawnButterfly(px, py);
