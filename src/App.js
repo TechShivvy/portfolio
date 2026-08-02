@@ -10,7 +10,6 @@ const Error404 = lazy(() => import("./components/Error404"));
 const Footer = lazy(() => import("./components/Footer"));
 const Home = lazy(() => import("./components/Home"));
 const Navbar = lazy(() => import("./components/Navbar"));
-const Progressbar = lazy(() => import("./components/Progressbar"));
 const Project = lazy(() => import("./components/Project"));
 const ScrollUp = lazy(() => import("./components/ScrollUp"));
 const Timeline = lazy(() => import("./components/Timeline"));
@@ -97,8 +96,8 @@ function App() {
               element={
                 <>
                   <Home />
+                  {/* Progressbar renders inside Navbar (anchored to its bottom edge). */}
                   <Navbar />
-                  <Progressbar />
                   <About />
                   <Timeline />
                   <Project />
