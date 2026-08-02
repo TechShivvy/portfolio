@@ -970,17 +970,18 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
          look cut out of the bright inverted lens field. */
       filter: drop-shadow(0 0 1px rgba(60, 20, 0, 0.85));
     }
-    /* Three-color plasma family, spread across well-separated hues (orange,
-       magenta, yellow-gold) so they're actually distinguishable in flight —
-       the previous amber/gold/ember trio all sat within ~25° of each other
-       on the wheel and read as one color. All three are still on the warm
+    /* Three-color plasma family pushed to the far ends of the warm range —
+       pure red, magenta, and pure yellow — so they're distinguishable at a
+       glance even mid-flight and glowing. The prior orange/gold pair sat
+       only ~25° apart on the wheel and still read as one color; this trio
+       is spread ~55°+ apart everywhere. All three are still on the warm
        side, opposite the tech-side cyan (#00e5ff). Every variant fades to
        transparent on BOTH ends — no hard edge anywhere. */
-    ._sfLaser.amber {
+    ._sfLaser.scarlet {
       background: linear-gradient(to bottom,
-        rgba(255, 242, 204, 0) 0%, #fff2cc 14%, #ff7a1a 46%,
-        rgba(255, 60, 0, 0.55) 78%, rgba(255, 60, 0, 0) 100%);
-      box-shadow: 0 0 6px 1px rgba(255, 180, 60, 0.9), 0 0 14px 3px rgba(255, 122, 26, 0.55);
+        rgba(255, 217, 204, 0) 0%, #ffd9cc 14%, #ff2200 46%,
+        rgba(140, 20, 0, 0.55) 78%, rgba(140, 20, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 110, 70, 0.9), 0 0 14px 3px rgba(255, 34, 0, 0.55);
     }
     ._sfLaser.magenta {
       background: linear-gradient(to bottom,
@@ -990,9 +991,9 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     }
     ._sfLaser.gold {
       background: linear-gradient(to bottom,
-        rgba(255, 250, 200, 0) 0%, #fffacc 14%, #ffd400 46%,
-        rgba(153, 102, 0, 0.55) 78%, rgba(153, 102, 0, 0) 100%);
-      box-shadow: 0 0 6px 1px rgba(255, 224, 90, 0.9), 0 0 14px 3px rgba(255, 212, 0, 0.55);
+        rgba(255, 252, 204, 0) 0%, #fffccc 14%, #ffee00 46%,
+        rgba(140, 128, 0, 0.55) 78%, rgba(140, 128, 0, 0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 238, 90, 0.9), 0 0 14px 3px rgba(255, 238, 0, 0.55);
     }
     ._sfFlash {
       position: fixed;
@@ -1077,7 +1078,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     return el;
   }
 
-  const boltColors = ["amber", "magenta", "gold"];
+  const boltColors = ["scarlet", "magenta", "gold"];
 
   // Guarantees a hover/theme rule elsewhere on the page can never mask this
   // highlight — inline !important beats any author-stylesheet !important
