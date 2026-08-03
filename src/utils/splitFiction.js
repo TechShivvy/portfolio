@@ -27,6 +27,27 @@ const RETICLE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.o
 
 const INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9" fill="none" stroke="%23ff0077" stroke-width="1.5" stroke-dasharray="3 2"/><circle cx="14" cy="14" r="2.5" fill="%23ff0077"/><line x1="14" y1="1" x2="14" y2="5" stroke="%23ff0077" stroke-width="1.5"/><line x1="14" y1="23" x2="14" y2="27" stroke="%23ff0077" stroke-width="1.5"/><line x1="1" y1="14" x2="5" y2="14" stroke="%23ff0077" stroke-width="1.5"/><line x1="23" y1="14" x2="27" y2="14" stroke="%23ff0077" stroke-width="1.5"/></svg>') 14 14, pointer`;
 
+// Fairy-side mirror of the two cursors above — same shape, opposite palette
+// (violet/lilac instead of cyan/magenta). Empty space gets a small sparkle
+// wand; real interactive elements get a bigger "bloom" so hover state reads
+// the same way it does on the tech side. Kept ≤32x32 — Firefox/Chromium cap
+// cursor images at 128x128 and silently ignore anything larger, and desktop
+// support is broadly reliable only up to ~32x32.
+//
+// To swap in a hand-authored .cur instead of these inline SVGs, replace the
+// two constants below with (and drop the file in public/ — a bare
+// '/fairy-cursor.cur' 404s once the site is served from a gh-pages subpath):
+//   const FAIRY_CURSOR = `url('${import.meta.env.BASE_URL}fairy-cursor.cur') 6 6, auto`;
+const FAIRY_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="20" y1="20" x2="9.5" y2="9.5" stroke="%23e8d5f5" stroke-width="2" stroke-linecap="round"/><circle cx="6" cy="6" r="5.5" fill="none" stroke="%23c482ff" stroke-width="0.75" opacity="0.35"/><path d="M6 1 L7.3 4.7 L11 6 L7.3 7.3 L6 11 L4.7 7.3 L1 6 L4.7 4.7 Z" fill="%23c482ff"/><circle cx="6" cy="6" r="1.3" fill="%23fffbe8"/></svg>') 6 6, auto`;
+
+const FAIRY_INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9" fill="none" stroke="%23c482ff" stroke-width="1.5" stroke-dasharray="3 2"/><path d="M14 6 L16 12 L22 14 L16 16 L14 22 L12 16 L6 14 L12 12 Z" fill="%23c482ff"/><circle cx="14" cy="14" r="2" fill="%23fffbe8"/></svg>') 14 14, pointer`;
+
+// Shared fairy palette — pink/violet/mint/gold/cyan/blush, reused by the
+// ambient sparkles (buildSparkles), the seam butterflies (buildLaserStage),
+// and the dust trail (buildFairyTrail) so all three read as one consistent
+// fairy theme instead of three separately-tuned color sets.
+const FAIRY_COLORS = ["#f9a8d4", "#d8b4fe", "#86efac", "#fde68a", "#a5f3fc", "#fbcfe8"];
+
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -554,7 +575,7 @@ function buildSparkles() {
     "transition:opacity " + SPLIT_MS + "ms ease",
   ].join(";");
 
-  const colors = ["#f9a8d4", "#d8b4fe", "#86efac", "#fde68a", "#a5f3fc", "#fbcfe8"];
+  const colors = FAIRY_COLORS;
   for (let i = 0; i < 35; i++) {
     const spark  = document.createElement("div");
     spark.className = "_sfSpark";
@@ -1098,7 +1119,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     }, 260);
   }
 
-  const fairyColors = ["#f9a8d4", "#d8b4fe", "#86efac", "#fde68a", "#a5f3fc", "#fbcfe8"];
+  const fairyColors = FAIRY_COLORS;
   function spawnButterfly(x, y) {
     if (reduced) return;
     const color = fairyColors[Math.floor(Math.random() * fairyColors.length)];
@@ -1325,6 +1346,297 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
   return { destroy };
 }
 
+// ─── Fairy Dust Trail (Fairy / Right side) ─────────────────────────────────
+// Mirrors buildLaserStage's structure and teardown contract. Empty space and
+// interactive elements get the same pointer-follow dust trail (no separate
+// "aim" mode — fairy dust doesn't target); pointerdown sprays a radial bloom.
+//
+// isRightFairy(x,y) — is this point on the fairy side.
+// getSeamSegment()  — {a,b} endpoints of the current seam, reused from the
+//                      laser stage's own geometry helper for the reverse
+//                      handoff: a dust particle whose drift crosses the seam
+//                      spawns a tech spark on the far side — the inverse of
+//                      onSeamCross's bolt-becomes-butterfly handoff.
+// reduced           — prefers-reduced-motion: disables the trail and bloom
+//                      entirely (mirrors playPew's pointer:coarse guard —
+//                      touch has no hover cursor, so the trail never attaches).
+function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
+  const stageStyle = document.createElement("style");
+  stageStyle.id = "_sfFairyTrailStyle";
+  stageStyle.textContent = `
+    #_sfFairyTrailStage, #_sfTechSparkStage {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99994;
+    }
+    /* Classic mode: rectangle clip tracks --split-abs with zero JS per frame,
+       same "single CSS-var writer" philosophy as the rest of this file. Spin
+       mode overrides this inline with the rotating polygon (see
+       applySpinFromPoint / onSpinPointerMove) — same pattern as sparkWrap. */
+    #_sfFairyTrailStage { clip-path: inset(0 0 0 var(--split-abs)); }
+    /* Tech spark stage is deliberately NOT clipped — same reason
+       _sfButterflyStage isn't: it renders the reverse-handoff spark on the
+       tech side, past the seam from where the trail stage is clipped. */
+    ._sfDust, ._sfDustStar {
+      position: absolute;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    ._sfDust { border-radius: 50%; }
+    ._sfBloomRing {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(196, 130, 255, 0.9);
+      box-shadow: 0 0 10px 2px rgba(196, 130, 255, 0.5);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: _sfBloomPop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+    }
+    @keyframes _sfBloomPop {
+      0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.35); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    }
+    ._sfTechSpark {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00e5ff;
+      box-shadow: 0 0 6px 2px rgba(0, 229, 255, 0.8);
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+  `;
+  document.head.appendChild(stageStyle);
+
+  const stage = document.createElement("div");
+  stage.id = "_sfFairyTrailStage";
+  document.body.appendChild(stage);
+
+  const sparkStage = document.createElement("div");
+  sparkStage.id = "_sfTechSparkStage";
+  document.body.appendChild(sparkStage);
+
+  // ── Managed timers (mirrors buildLaserStage's later()) ───────────────────
+  const pendingTimers = new Set();
+  function later(fn, ms) {
+    const id = setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+    pendingTimers.add(id);
+    return id;
+  }
+
+  // ── Pools — dust motes, star sparkles, tech sparks (mirrors boltPool's
+  // _busy-flag reuse pattern; SVG markup for stars is written once at
+  // pool-fill time instead of re-set on every reuse) ────────────────────────
+  function makePool(container, fill) {
+    const pool = [];
+    return function get() {
+      for (let i = 0; i < pool.length; i++) {
+        if (!pool[i]._busy) return pool[i];
+      }
+      const el = fill();
+      el.style.display = "none";
+      container.appendChild(el);
+      pool.push(el);
+      return el;
+    };
+  }
+  const getDustEl = makePool(stage, () => {
+    const el = document.createElement("div");
+    el.className = "_sfDust";
+    return el;
+  });
+  const getStarEl = makePool(stage, () => {
+    const el = document.createElement("div");
+    el.className = "_sfDustStar";
+    el.innerHTML = `<svg viewBox="0 0 12 12" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5 Z" fill="currentColor"/></svg>`;
+    return el;
+  });
+  const getTechSparkEl = makePool(sparkStage, () => {
+    const el = document.createElement("div");
+    el.className = "_sfTechSpark";
+    return el;
+  });
+
+  // ── Reverse seam handoff — own budget, independent of the laser stage's
+  // sessionCrossings/resetSession; sharing that counter would double-count
+  // against the bolt-to-butterfly budget in the other closure. ─────────────
+  let fairyCrossings = 0;
+  let techSparks = 0;
+  let lastSparkAt = 0;
+  function spawnTechSpark(x, y) {
+    const el = getTechSparkEl();
+    el._busy = true;
+    el.style.display = "";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    if (el._anim) el._anim.cancel();
+    const jx = Math.random() * 16 - 8;
+    const jy = Math.random() * 16 - 8;
+    const anim = el.animate(
+      [
+        { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+        {
+          transform: `translate(calc(-50% + ${jx}px), calc(-50% + ${jy}px)) scale(0.3)`,
+          opacity: 0,
+        },
+      ],
+      { duration: 750 + Math.random() * 200, easing: "ease-out" }
+    );
+    el._anim = anim;
+    anim.onfinish = () => { el._busy = false; el.style.display = "none"; };
+  }
+
+  function onFairySeamCross(px, py) {
+    fairyCrossings++;
+    const wantCount = Math.max(1, Math.round(fairyCrossings * 0.6));
+    const now = performance.now();
+    if (techSparks < wantCount && now - lastSparkAt > 150) {
+      lastSparkAt = now;
+      techSparks++;
+      spawnTechSpark(px, py);
+    }
+  }
+
+  // ── Particle core — 70% dust motes, 30% star sparkles, baked drift arc.
+  // (dx, dy, duration) let the same emitter serve both the falling trail
+  // (small sideways drift, downward gravity) and the radial bloom burst
+  // (large drift in every direction) without duplicating the animation code.
+  function emitParticle(x, y, dx, dy, duration) {
+    const isStar = Math.random() < 0.3;
+    const color = FAIRY_COLORS[Math.floor(Math.random() * FAIRY_COLORS.length)];
+    const el = isStar ? getStarEl() : getDustEl();
+    el._busy = true;
+    el.style.display = "";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+    if (isStar) {
+      const size = 8 + Math.random() * 6;
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+      el.style.color = color;
+      el.style.background = "";
+      el.style.boxShadow = "";
+    } else {
+      const size = 2 + Math.random() * 4;
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+      el.style.background = color;
+      el.style.boxShadow = `0 0 ${(size * 2.5).toFixed(0)}px 1px ${color}`;
+    }
+
+    const rot = Math.random() < 0.5 ? -180 : 180;
+    if (el._anim) el._anim.cancel();
+    const anim = el.animate(
+      [
+        { transform: "translate(-50%,-50%) scale(0.4) rotate(0deg)", opacity: 0 },
+        { transform: "translate(-50%,-50%) scale(1) rotate(0deg)", opacity: 1, offset: 0.18 },
+        {
+          transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.15) rotate(${rot}deg)`,
+          opacity: 0,
+        },
+      ],
+      { duration, easing: "ease-out" }
+    );
+    el._anim = anim;
+    anim.onfinish = () => { el._busy = false; el.style.display = "none"; };
+
+    // Reverse seam handoff: does this particle's drift cross the seam?
+    const seam = getSeamSegment?.();
+    if (seam) {
+      const dist = Math.hypot(dx, dy);
+      if (dist > 0.001) {
+        const hit = raySegmentIntersection(x, y, dx / dist, dy / dist, dist, seam.a, seam.b);
+        if (hit) onFairySeamCross(hit.x, hit.y);
+      }
+    }
+  }
+
+  function spawnParticle(x, y) {
+    const dx = Math.random() * 60 - 30;
+    const dy = 30 + Math.random() * 60; // downward = gravity
+    emitParticle(x, y, dx, dy, 700 + Math.random() * 500);
+  }
+
+  function spawnBloom(x, y) {
+    const ring = document.createElement("div");
+    ring.className = "_sfBloomRing";
+    ring.style.left = x + "px";
+    ring.style.top = y + "px";
+    stage.appendChild(ring);
+    later(() => ring.remove(), 340);
+
+    const n = 10 + Math.floor(Math.random() * 9);
+    for (let i = 0; i < n; i++) {
+      later(() => {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 100;
+        emitParticle(x, y, Math.cos(angle) * dist, Math.sin(angle) * dist, 500 + Math.random() * 300);
+      }, i * 12);
+    }
+  }
+
+  // ── Input — pointermove tracks position and distance-gates the trail spawn
+  // (density tracks pointer speed instead of a fixed timer); pointerdown
+  // sprays a bloom. Skipped entirely under reduced-motion / coarse pointer —
+  // touch has no hover cursor, so there's nothing to attach a trail to.
+  const coarsePointer =
+    typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  const active = !reduced && !coarsePointer;
+
+  let lastX = 0;
+  let lastY = 0;
+  let lastEmitX = null;
+  let lastEmitY = null;
+  const SPAWN_DIST = 7;
+
+  function handlePointerMove(e) {
+    lastX = e.clientX;
+    lastY = e.clientY;
+    if (!isRightFairy(lastX, lastY)) {
+      lastEmitX = null;
+      lastEmitY = null;
+      return;
+    }
+    if (lastEmitX === null || Math.hypot(lastX - lastEmitX, lastY - lastEmitY) >= SPAWN_DIST) {
+      lastEmitX = lastX;
+      lastEmitY = lastY;
+      spawnParticle(lastX, lastY);
+    }
+  }
+
+  function handlePointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (!isRightFairy(e.clientX, e.clientY)) return;
+    if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
+    // Keyboard-synthesized activation reports clientX/Y === 0 — same fallback
+    // as handlePointerDown in buildLaserStage.
+    spawnBloom(e.clientX || lastX, e.clientY || lastY);
+  }
+
+  if (active) {
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerdown", handlePointerDown);
+  }
+
+  const destroy = () => {
+    if (active) {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    }
+    pendingTimers.forEach((id) => clearTimeout(id));
+    pendingTimers.clear();
+    try { stage.remove(); } catch (_) {}
+    try { sparkStage.remove(); } catch (_) {}
+    try { stageStyle.remove(); } catch (_) {}
+  };
+
+  return { stage, destroy };
+}
+
 // ─── Main effect ───────────────────────────────────────────────────────────
 export default async function splitFiction(options = {}) {
   // Idempotent guard — seam id acts as the "running" sentinel.
@@ -1481,6 +1793,7 @@ export default async function splitFiction(options = {}) {
   }
 
   const laserStage = buildLaserStage((x, y) => isLeftSide(x, y), getSeamSegment, reduced);
+  const fairyTrail = buildFairyTrail((x, y) => isRightSide(x, y), getSeamSegment, reduced);
 
   // ── applySplit ─────────────────────────────────────────────────────────
   // Single writer for the split position. Overlays read via CSS var (no JS
@@ -1547,6 +1860,7 @@ export default async function splitFiction(options = {}) {
     leftLens.style.clipPath = spinGeometry.leftClip;
     rightOvl.style.clipPath = spinGeometry.rightClip;
     sparkWrap.style.clipPath = spinGeometry.rightClip;
+    fairyTrail.stage.style.clipPath = spinGeometry.rightClip;
     seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
     const progressState = computeSpinProgressState();
     updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
@@ -1629,6 +1943,7 @@ export default async function splitFiction(options = {}) {
       leftLens.style.clipPath = spinGeometry.leftClip;
       rightOvl.style.clipPath = spinGeometry.rightClip;
       sparkWrap.style.clipPath = spinGeometry.rightClip;
+      fairyTrail.stage.style.clipPath = spinGeometry.rightClip;
       seam.style.transform = `translate(-50%,-50%) rotate(${splitAngle}rad)`;
       const progressState = computeSpinProgressState();
       updateSplitProgress(progressState.splitVb, progressState.techOnLeft);
@@ -1646,10 +1961,20 @@ export default async function splitFiction(options = {}) {
     const clientX = typeof e === "number" ? e : e?.clientX ?? 0;
     const clientY = typeof e === "number" ? window.innerHeight / 2 : e?.clientY ?? window.innerHeight / 2;
     if (isRightSide(clientX, clientY)) {
-      document.documentElement.style.setProperty("--cursor-default", "auto");
-      // Restore the real site's middle-finger cursor on real links/buttons —
-      // only the tech side gets the laser reticle treatment.
-      document.documentElement.style.setProperty("--cursor-pointer", originalCursorPointer);
+      // Mirrors the tech branch below — e.target is reliable here too (same
+      // pointer-events:none overlays), and the same c81128d lesson applies:
+      // real <a>/<button> ignore --cursor-default (index.css's `* a, button`
+      // rule outranks the universal `*` rule), so both vars must be set or
+      // fairy-side links keep showing the site-wide middle-finger cursor.
+      const hoveredEl = typeof e === "object" ? e?.target : null;
+      const isExempt = hoveredEl ? !!hoveredEl.closest?.("#_sfExitBtn") : false;
+      const isOverInteractive = !isExempt && hoveredEl ? !!findInteractiveTarget(hoveredEl) : false;
+      const cursorValue = isOverInteractive ? FAIRY_INTERACTIVE_CURSOR : FAIRY_CURSOR;
+      document.documentElement.style.setProperty("--cursor-default", cursorValue);
+      document.documentElement.style.setProperty(
+        "--cursor-pointer",
+        isExempt ? originalCursorPointer : cursorValue
+      );
     } else {
       // e.target is reliable here: pointer-events:none overlays (leftLens, laserStage)
       // are bypassed by the browser when dispatching mouse events, so e.target always
@@ -1700,6 +2025,7 @@ export default async function splitFiction(options = {}) {
     cleanedUp = true;
 
     try { laserStage?.destroy(); } catch (_) {}
+    try { fairyTrail?.destroy(); } catch (_) {}
 
     // CSS first — body class + vars drive section gradient hard-stops; removing
     // them here (before DOM removal) ensures the split line vanishes in the same
