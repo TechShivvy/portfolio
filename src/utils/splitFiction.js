@@ -40,7 +40,11 @@ const INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.
 //   const FAIRY_CURSOR = `url('${import.meta.env.BASE_URL}fairy-cursor.cur') 6 6, auto`;
 const FAIRY_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="20" y1="20" x2="9.5" y2="9.5" stroke="%23e8d5f5" stroke-width="2" stroke-linecap="round"/><circle cx="6" cy="6" r="5.5" fill="none" stroke="%23c482ff" stroke-width="0.75" opacity="0.35"/><path d="M6 1 L7.3 4.7 L11 6 L7.3 7.3 L6 11 L4.7 7.3 L1 6 L4.7 4.7 Z" fill="%23c482ff"/><circle cx="6" cy="6" r="1.3" fill="%23fffbe8"/></svg>') 6 6, auto`;
 
-const FAIRY_INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="9" fill="none" stroke="%23c482ff" stroke-width="1.5" stroke-dasharray="3 2"/><path d="M14 6 L16 12 L22 14 L16 16 L14 22 L12 16 L6 14 L12 12 Z" fill="%23c482ff"/><circle cx="14" cy="14" r="2" fill="%23fffbe8"/></svg>') 14 14, pointer`;
+// Deliberately NOT a recolored copy of INTERACTIVE_CURSOR — that one reads as
+// a mechanical targeting reticle (thin strokes, dashed ring, crosshair ticks).
+// This is all soft filled shapes, no strokes/dashes/ticks at all, so hovering
+// a link on the fairy side reads as "glowing", not "locked on".
+const FAIRY_INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="%23c482ff" opacity="0.16"/><circle cx="13" cy="13" r="6.5" fill="%23c482ff" opacity="0.3"/><path d="M13 4 L15 10.5 L21 13 L15 15.5 L13 22 L11 15.5 L5 13 L11 10.5 Z" fill="%23e8d5f5"/><path d="M13 9 L13.9 11.6 L16.5 13 L13.9 14.4 L13 17 L12.1 14.4 L9.5 13 L12.1 11.6 Z" fill="%23fde68a" opacity="0.9"/><circle cx="13" cy="13" r="1.3" fill="%23fffbe8"/></svg>') 13 13, pointer`;
 
 // Shared fairy palette — pink/violet/mint/gold/cyan/blush, reused by the
 // ambient sparkles (buildSparkles), the seam butterflies (buildLaserStage),
@@ -1346,18 +1350,21 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
   return { destroy };
 }
 
-// ─── Fairy Dust Trail (Fairy / Right side) ─────────────────────────────────
-// Mirrors buildLaserStage's structure and teardown contract. Empty space and
-// interactive elements get the same pointer-follow dust trail (no separate
-// "aim" mode — fairy dust doesn't target); pointerdown sprays a radial bloom.
+// ─── Fairy Wisp Trail (Fairy / Right side) ─────────────────────────────────
+// Deliberately NOT a recolor of the laser stage: the ambient sparkle field
+// (buildSparkles) already fills the fairy half with floating glow dots, so a
+// second particle field on top of it just reads as noise. This is a thin
+// curved ribbon that traces the actual pointer path (short rotated segments,
+// angled to real movement direction) — a moving "thread", not more dots —
+// plus a click puff that swirls outward instead of firing straight bolts.
 //
 // isRightFairy(x,y) — is this point on the fairy side.
 // getSeamSegment()  — {a,b} endpoints of the current seam, reused from the
 //                      laser stage's own geometry helper for the reverse
-//                      handoff: a dust particle whose drift crosses the seam
+//                      handoff: the pointer's own path crossing the seam
 //                      spawns a tech spark on the far side — the inverse of
 //                      onSeamCross's bolt-becomes-butterfly handoff.
-// reduced           — prefers-reduced-motion: disables the trail and bloom
+// reduced           — prefers-reduced-motion: disables the trail and puff
 //                      entirely (mirrors playPew's pointer:coarse guard —
 //                      touch has no hover cursor, so the trail never attaches).
 function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
@@ -1378,26 +1385,35 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     /* Tech spark stage is deliberately NOT clipped — same reason
        _sfButterflyStage isn't: it renders the reverse-handoff spark on the
        tech side, past the seam from where the trail stage is clipped. */
-    ._sfDust, ._sfDustStar {
+    ._sfRibbon {
       position: absolute;
+      width: 15px;
+      height: 3px;
+      border-radius: 2px;
       pointer-events: none;
       will-change: transform, opacity;
     }
-    ._sfDust { border-radius: 50%; }
-    ._sfBloomRing {
+    ._sfPetal {
       position: absolute;
-      width: 30px;
-      height: 30px;
+      width: 9px;
+      height: 6px;
+      border-radius: 60% 60% 60% 60% / 80% 80% 40% 40%;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    ._sfPoof {
+      position: absolute;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      border: 1.5px solid rgba(196, 130, 255, 0.9);
-      box-shadow: 0 0 10px 2px rgba(196, 130, 255, 0.5);
+      background: radial-gradient(circle, rgba(232, 213, 245, 0.85) 0%, rgba(196, 130, 255, 0.45) 45%, rgba(196, 130, 255, 0) 75%);
       pointer-events: none;
       transform: translate(-50%, -50%);
-      animation: _sfBloomPop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+      animation: _sfPoofPop 0.4s ease-out forwards;
     }
-    @keyframes _sfBloomPop {
-      0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.35); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+    @keyframes _sfPoofPop {
+      0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.1); }
     }
     ._sfTechSpark {
       position: absolute;
@@ -1427,9 +1443,7 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     return id;
   }
 
-  // ── Pools — dust motes, star sparkles, tech sparks (mirrors boltPool's
-  // _busy-flag reuse pattern; SVG markup for stars is written once at
-  // pool-fill time instead of re-set on every reuse) ────────────────────────
+  // ── Pools (mirrors boltPool's _busy-flag reuse pattern) ───────────────────
   function makePool(container, fill) {
     const pool = [];
     return function get() {
@@ -1443,15 +1457,14 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
       return el;
     };
   }
-  const getDustEl = makePool(stage, () => {
+  const getRibbonEl = makePool(stage, () => {
     const el = document.createElement("div");
-    el.className = "_sfDust";
+    el.className = "_sfRibbon";
     return el;
   });
-  const getStarEl = makePool(stage, () => {
+  const getPetalEl = makePool(stage, () => {
     const el = document.createElement("div");
-    el.className = "_sfDustStar";
-    el.innerHTML = `<svg viewBox="0 0 12 12" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5 Z" fill="currentColor"/></svg>`;
+    el.className = "_sfPetal";
     return el;
   });
   const getTechSparkEl = makePool(sparkStage, () => {
@@ -1460,9 +1473,17 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     return el;
   });
 
+  // Restrained 3-shade violet/pink family for the passive trail — the loud
+  // full 6-hue FAIRY_COLORS rainbow is what the ambient sparkles already use;
+  // keeping the trail near-monochrome is what keeps it reading as "one
+  // thread" instead of "more of the same dots".
+  const ribbonColors = ["#c482ff", "#dcb4ff", "#f0c6f7"];
+
   // ── Reverse seam handoff — own budget, independent of the laser stage's
   // sessionCrossings/resetSession; sharing that counter would double-count
-  // against the bolt-to-butterfly budget in the other closure. ─────────────
+  // against the bolt-to-butterfly budget in the other closure. Now keyed off
+  // the pointer's OWN path crossing the seam (not a particle's flight path,
+  // since the ribbon no longer travels anywhere after it's placed). ────────
   let fairyCrossings = 0;
   let techSparks = 0;
   let lastSparkAt = 0;
@@ -1500,112 +1521,166 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     }
   }
 
-  // ── Particle core — 70% dust motes, 30% star sparkles, baked drift arc.
-  // (dx, dy, duration) let the same emitter serve both the falling trail
-  // (small sideways drift, downward gravity) and the radial bloom burst
-  // (large drift in every direction) without duplicating the animation code.
-  function emitParticle(x, y, dx, dy, duration) {
-    const isStar = Math.random() < 0.3;
-    const color = FAIRY_COLORS[Math.floor(Math.random() * FAIRY_COLORS.length)];
-    const el = isStar ? getStarEl() : getDustEl();
+  // ── Passive trail — a short capsule rotated to the pointer's actual travel
+  // direction, so a chain of them reads as one continuous curved ribbon
+  // rather than discrete dots (the "curvy seam-like thread" the ambient
+  // sparkle field doesn't already provide). Fixed short length regardless of
+  // jump size — a fast flick still draws a small wisp, not a giant streak. ──
+  let ribbonTick = 0;
+  function spawnRibbon(x, y, angleDeg) {
+    const el = getRibbonEl();
     el._busy = true;
     el.style.display = "";
     el.style.left = x + "px";
     el.style.top = y + "px";
-
-    if (isStar) {
-      const size = 8 + Math.random() * 6;
-      el.style.width = size + "px";
-      el.style.height = size + "px";
-      el.style.color = color;
-      el.style.background = "";
-      el.style.boxShadow = "";
-    } else {
-      const size = 2 + Math.random() * 4;
-      el.style.width = size + "px";
-      el.style.height = size + "px";
-      el.style.background = color;
-      el.style.boxShadow = `0 0 ${(size * 2.5).toFixed(0)}px 1px ${color}`;
-    }
-
-    const rot = Math.random() < 0.5 ? -180 : 180;
+    const color = ribbonColors[ribbonTick++ % ribbonColors.length];
+    el.style.background = color;
+    el.style.boxShadow = `0 0 6px 1px ${color}`;
     if (el._anim) el._anim.cancel();
     const anim = el.animate(
       [
-        { transform: "translate(-50%,-50%) scale(0.4) rotate(0deg)", opacity: 0 },
-        { transform: "translate(-50%,-50%) scale(1) rotate(0deg)", opacity: 1, offset: 0.18 },
+        { transform: `translate(-50%,-50%) rotate(${angleDeg}deg) scaleX(1) scaleY(1)`, opacity: 0.85 },
         {
-          transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.15) rotate(${rot}deg)`,
+          transform: `translate(-50%,-50%) rotate(${angleDeg}deg) translateY(-12px) scaleX(0.35) scaleY(0.5)`,
           opacity: 0,
         },
       ],
-      { duration, easing: "ease-out" }
+      { duration: 600 + Math.random() * 180, easing: "ease-out" }
     );
     el._anim = anim;
     anim.onfinish = () => { el._busy = false; el.style.display = "none"; };
-
-    // Reverse seam handoff: does this particle's drift cross the seam?
-    const seam = getSeamSegment?.();
-    if (seam) {
-      const dist = Math.hypot(dx, dy);
-      if (dist > 0.001) {
-        const hit = raySegmentIntersection(x, y, dx / dist, dy / dist, dist, seam.a, seam.b);
-        if (hit) onFairySeamCross(hit.x, hit.y);
-      }
-    }
   }
 
-  function spawnParticle(x, y) {
-    const dx = Math.random() * 60 - 30;
-    const dy = 30 + Math.random() * 60; // downward = gravity
-    emitParticle(x, y, dx, dy, 700 + Math.random() * 500);
+  // ── Click puff — petals curve outward via a mid-flight sideways kick
+  // (an S-curve, not a straight line) then drift up and tumble, so it reads
+  // as a soft "poof" instead of the laser stage's straight radial burst.
+  function emitPetal(x, y, angle, dist) {
+    const el = getPetalEl();
+    el._busy = true;
+    el.style.display = "";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    el.style.background = FAIRY_COLORS[Math.floor(Math.random() * FAIRY_COLORS.length)];
+
+    const outX = Math.cos(angle) * dist;
+    const outY = Math.sin(angle) * dist;
+    // Perpendicular kick at the midpoint bends the path into an arc.
+    const swirl = (Math.random() < 0.5 ? -1 : 1) * (dist * 0.35);
+    const midX = outX * 0.4 - Math.sin(angle) * swirl;
+    const midY = outY * 0.4 + Math.cos(angle) * swirl;
+    const rot = 180 + Math.random() * 260;
+
+    if (el._anim) el._anim.cancel();
+    const anim = el.animate(
+      [
+        { transform: "translate(-50%,-50%) scale(0.3) rotate(0deg)", opacity: 0 },
+        {
+          transform: `translate(calc(-50% + ${midX}px), calc(-50% + ${midY}px)) scale(1.1) rotate(${rot * 0.4}deg)`,
+          opacity: 1,
+          offset: 0.4,
+        },
+        {
+          transform: `translate(calc(-50% + ${outX}px), calc(-50% + ${outY - dist * 0.25}px)) scale(0.2) rotate(${rot}deg)`,
+          opacity: 0,
+        },
+      ],
+      { duration: 550 + Math.random() * 250, easing: "ease-out" }
+    );
+    el._anim = anim;
+    anim.onfinish = () => { el._busy = false; el.style.display = "none"; };
   }
 
-  function spawnBloom(x, y) {
-    const ring = document.createElement("div");
-    ring.className = "_sfBloomRing";
-    ring.style.left = x + "px";
-    ring.style.top = y + "px";
-    stage.appendChild(ring);
-    later(() => ring.remove(), 340);
+  function spawnPoof(x, y) {
+    const poof = document.createElement("div");
+    poof.className = "_sfPoof";
+    poof.style.left = x + "px";
+    poof.style.top = y + "px";
+    stage.appendChild(poof);
+    later(() => poof.remove(), 420);
 
-    const n = 10 + Math.floor(Math.random() * 9);
+    const n = 8 + Math.floor(Math.random() * 7);
     for (let i = 0; i < n; i++) {
       later(() => {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 60 + Math.random() * 100;
-        emitParticle(x, y, Math.cos(angle) * dist, Math.sin(angle) * dist, 500 + Math.random() * 300);
-      }, i * 12);
+        const dist = 50 + Math.random() * 80;
+        emitPetal(x, y, angle, dist);
+      }, i * 14);
     }
   }
 
-  // ── Input — pointermove tracks position and distance-gates the trail spawn
-  // (density tracks pointer speed instead of a fixed timer); pointerdown
-  // sprays a bloom. Skipped entirely under reduced-motion / coarse pointer —
-  // touch has no hover cursor, so there's nothing to attach a trail to.
+  // Guaranteed highlight on the clicked element itself — parity with the
+  // tech side's flashHit (buildLaserStage): without this, fairy-side inputs
+  // (e.g. the terminal textbox) never show a click highlight at all. Same
+  // inline-!important technique, since author-stylesheet hover/focus rules
+  // can otherwise outrank a single class.
+  function flashHit(targetEl) {
+    if (!targetEl) return;
+    const prevValue = targetEl.style.getPropertyValue("box-shadow");
+    const prevPriority = targetEl.style.getPropertyPriority("box-shadow");
+    targetEl.style.setProperty("box-shadow", "0 0 14px 3px rgba(196, 130, 255, 0.65)", "important");
+    later(() => {
+      if (prevValue) targetEl.style.setProperty("box-shadow", prevValue, prevPriority);
+      else targetEl.style.removeProperty("box-shadow");
+    }, 260);
+  }
+
+  // ── Input ──────────────────────────────────────────────────────────────
+  // pointermove: tracks the pointer's real path every event (for the seam
+  // crossing check, independent of trail spawn gating) and distance-gates
+  // ribbon spawns so density tracks pointer speed instead of a fixed timer.
+  // pointerdown: highlights the clicked element (if any) and sprays a puff.
+  // Skipped entirely under reduced-motion / coarse pointer — touch has no
+  // hover cursor, so there's nothing to attach a trail to.
   const coarsePointer =
     typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
   const active = !reduced && !coarsePointer;
 
   let lastX = 0;
   let lastY = 0;
+  let rawPrevX = null;
+  let rawPrevY = null;
   let lastEmitX = null;
   let lastEmitY = null;
-  const SPAWN_DIST = 7;
+  const SPAWN_DIST = 5;
 
   function handlePointerMove(e) {
-    lastX = e.clientX;
-    lastY = e.clientY;
-    if (!isRightFairy(lastX, lastY)) {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (rawPrevX !== null) {
+      const seam = getSeamSegment?.();
+      if (seam) {
+        const ddx = x - rawPrevX;
+        const ddy = y - rawPrevY;
+        const dd = Math.hypot(ddx, ddy);
+        if (dd > 0.001) {
+          const hit = raySegmentIntersection(rawPrevX, rawPrevY, ddx / dd, ddy / dd, dd, seam.a, seam.b);
+          if (hit) onFairySeamCross(hit.x, hit.y);
+        }
+      }
+    }
+    rawPrevX = x;
+    rawPrevY = y;
+    lastX = x;
+    lastY = y;
+
+    if (!isRightFairy(x, y)) {
       lastEmitX = null;
       lastEmitY = null;
       return;
     }
-    if (lastEmitX === null || Math.hypot(lastX - lastEmitX, lastY - lastEmitY) >= SPAWN_DIST) {
-      lastEmitX = lastX;
-      lastEmitY = lastY;
-      spawnParticle(lastX, lastY);
+    if (lastEmitX === null) {
+      lastEmitX = x;
+      lastEmitY = y;
+      return;
     }
+    const dx = x - lastEmitX;
+    const dy = y - lastEmitY;
+    const dist = Math.hypot(dx, dy);
+    if (dist < SPAWN_DIST) return;
+    spawnRibbon(x, y, (Math.atan2(dy, dx) * 180) / Math.PI);
+    lastEmitX = x;
+    lastEmitY = y;
   }
 
   function handlePointerDown(e) {
@@ -1614,7 +1689,11 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     if (e.target.closest("#_sfExitBtn") || e.target.closest("#_splitFictionSeam")) return;
     // Keyboard-synthesized activation reports clientX/Y === 0 — same fallback
     // as handlePointerDown in buildLaserStage.
-    spawnBloom(e.clientX || lastX, e.clientY || lastY);
+    const x = e.clientX || lastX;
+    const y = e.clientY || lastY;
+    const hitEl = findInteractiveTarget(e.target);
+    if (hitEl) flashHit(hitEl);
+    spawnPoof(x, y);
   }
 
   if (active) {
