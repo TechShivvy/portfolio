@@ -1597,6 +1597,17 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     );
     el._anim = anim;
     anim.onfinish = () => { el._busy = false; el.style.display = "none"; };
+
+    // Reverse seam handoff: does this petal's outward flight cross the seam?
+    // Same check spawnLaser runs for its bolts (approximated as a straight
+    // ray — the petal's actual path curves via the swirl kick above, but the
+    // overall (angle, dist) vector is close enough for the crossing test,
+    // same as the tech side treats its bolts as straight for this purpose).
+    const seam = getSeamSegment?.();
+    if (seam && dist > 0.001) {
+      const hit = raySegmentIntersection(x, y, Math.cos(angle), Math.sin(angle), dist, seam.a, seam.b);
+      if (hit) onFairySeamCross(hit.x, hit.y);
+    }
   }
 
   function spawnPoof(x, y) {
