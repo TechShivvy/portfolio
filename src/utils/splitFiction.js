@@ -52,6 +52,13 @@ const FAIRY_INTERACTIVE_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http:
 // fairy theme instead of three separately-tuned color sets.
 const FAIRY_COLORS = ["#f9a8d4", "#d8b4fe", "#86efac", "#fde68a", "#a5f3fc", "#fbcfe8"];
 
+// Shared click-highlight color for flashHit (both buildLaserStage's and
+// buildFairyTrail's). The same real DOM element — e.g. the terminal input —
+// can be clicked from either side of the seam depending on where the click
+// lands relative to the split, so the highlight must be identical either
+// way; it must not depend on which side's handler happened to fire.
+const CLICK_HIGHLIGHT_SHADOW = "0 0 14px 3px rgba(255, 122, 26, 0.6)";
+
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -1116,7 +1123,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
     if (!targetEl) return;
     const prevValue = targetEl.style.getPropertyValue("box-shadow");
     const prevPriority = targetEl.style.getPropertyPriority("box-shadow");
-    targetEl.style.setProperty("box-shadow", "0 0 14px 3px rgba(255, 122, 26, 0.6)", "important");
+    targetEl.style.setProperty("box-shadow", CLICK_HIGHLIGHT_SHADOW, "important");
     later(() => {
       if (prevValue) targetEl.style.setProperty("box-shadow", prevValue, prevPriority);
       else targetEl.style.removeProperty("box-shadow");
@@ -1473,11 +1480,13 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
     return el;
   });
 
-  // Restrained 3-shade violet/pink family for the passive trail — the loud
-  // full 6-hue FAIRY_COLORS rainbow is what the ambient sparkles already use;
-  // keeping the trail near-monochrome is what keeps it reading as "one
-  // thread" instead of "more of the same dots".
-  const ribbonColors = ["#c482ff", "#dcb4ff", "#f0c6f7"];
+  // Cool indigo/periwinkle family — deliberately NOT the warm violet/pink
+  // used everywhere else on the fairy side (FAIRY_COLORS' ambient sparkles,
+  // the cursor's #c482ff/#e8d5f5, the click puff's full rainbow). Same fairy
+  // hue family (violet-blue neighborhood, so it still "blends"), but shifted
+  // cool enough to read as its own distinct thread rather than one more
+  // thing painted with the same accent as the cursor and every other effect.
+  const ribbonColors = ["#8ea4ff", "#a7b8ff", "#c9d4ff"];
 
   // ── Reverse seam handoff — own budget, independent of the laser stage's
   // sessionCrossings/resetSession; sharing that counter would double-count
@@ -1610,14 +1619,16 @@ function buildFairyTrail(isRightFairy, getSeamSegment, reduced) {
 
   // Guaranteed highlight on the clicked element itself — parity with the
   // tech side's flashHit (buildLaserStage): without this, fairy-side inputs
-  // (e.g. the terminal textbox) never show a click highlight at all. Same
-  // inline-!important technique, since author-stylesheet hover/focus rules
-  // can otherwise outrank a single class.
+  // (e.g. the terminal textbox) never show a click highlight at all. Uses
+  // the SAME CLICK_HIGHLIGHT_SHADOW constant as the tech side, not a
+  // fairy-recolored variant — the terminal input is one real element that
+  // can be clicked from either side of the seam depending on where the
+  // click lands, so its highlight can't depend on which handler fired.
   function flashHit(targetEl) {
     if (!targetEl) return;
     const prevValue = targetEl.style.getPropertyValue("box-shadow");
     const prevPriority = targetEl.style.getPropertyPriority("box-shadow");
-    targetEl.style.setProperty("box-shadow", "0 0 14px 3px rgba(196, 130, 255, 0.65)", "important");
+    targetEl.style.setProperty("box-shadow", CLICK_HIGHLIGHT_SHADOW, "important");
     later(() => {
       if (prevValue) targetEl.style.setProperty("box-shadow", prevValue, prevPriority);
       else targetEl.style.removeProperty("box-shadow");
