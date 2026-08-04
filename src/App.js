@@ -2,13 +2,16 @@ import "./App.css";
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
+// Static import: the hero must be in the main bundle and outside the shared
+// Suspense boundary below, or the splash's "app ready" signal (which fires
+// once Home has painted) waits on every other lazy section's chunk too.
+import Home from "./components/Home";
 
 const About = lazy(() => import("./components/About"));
 const BeyondCode = lazy(() => import("./components/BeyondCode"));
 const ContactForm = lazy(() => import("./components/Contact"));
 const Error404 = lazy(() => import("./components/Error404"));
 const Footer = lazy(() => import("./components/Footer"));
-const Home = lazy(() => import("./components/Home"));
 const Navbar = lazy(() => import("./components/Navbar"));
 const Project = lazy(() => import("./components/Project"));
 const ScrollUp = lazy(() => import("./components/ScrollUp"));
@@ -88,14 +91,14 @@ function App() {
           }}
         />
       )}
-      <Suspense fallback={<div></div>}>
-        <Routes>
-            <Route
-              exact
-              path="/portfolio"
-              element={
-                <>
-                  <Home />
+      <Routes>
+          <Route
+            exact
+            path="/portfolio"
+            element={
+              <>
+                <Home />
+                <Suspense fallback={<div></div>}>
                   {/* Progressbar renders inside Navbar (anchored to its bottom edge). */}
                   <Navbar />
                   <About />
@@ -106,12 +109,19 @@ function App() {
                   <ContactForm />
                   <Footer />
                   <ScrollUp />
-                </>
-              }
-            />
-            <Route path="*" element={<Error404 />} />
-          </Routes>
-      </Suspense>
+                </Suspense>
+              </>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<div></div>}>
+                <Error404 />
+              </Suspense>
+            }
+          />
+        </Routes>
     </Router>
   );
 }
