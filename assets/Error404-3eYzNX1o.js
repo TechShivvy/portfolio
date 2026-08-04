@@ -1,0 +1,1 @@
+import{j as s}from"./index-UQX393lJ.js";const e="_container_q4tbo_1",n="_h1_q4tbo_13",o="_h2_q4tbo_19",t={container:e,h1:n,h2:o},a=()=>s.jsxs("div",{className:t.container,children:[s.jsx("h1",{className:t.h1,children:"404 "}),s.jsxs("h2",{className:t.h2,children:["You just hit a route that doesn't exist...",s.jsx("br",{})," the sadness."]})]});export{a as default};
