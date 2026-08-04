@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "./_Home.module.css";
 import task1 from "../utils/scramble";
-import Swal from "sweetalert2";
 import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
 import useKonami from "../utils/konami";
@@ -23,6 +22,22 @@ const Home = () => {
   }, []);
 
   useKonami(handleKonami);
+
+  // Tell the splash the hero is actually in the DOM and painted, so it can
+  // stop covering the page. Double-rAF: one frame to commit, one to paint.
+  useLayoutEffect(() => {
+    let raf1;
+    let raf2;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("hero:painted"));
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,11 +115,12 @@ const Home = () => {
   const NO_OPTS  = ["nah", "nawr", "nO", "nahhh", "nope"];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  const handleH1Click = () => {
+  const handleH1Click = async () => {
     console.log("H1 element clicked!");
     const hasRun = sessionStorage.getItem("hasRun");
 
     if (hasRun && hasRun === "true") {
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "wanna see the animation again? ^.^",
         icon: "question",
