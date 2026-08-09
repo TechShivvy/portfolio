@@ -223,29 +223,38 @@
   50%      { box-shadow: -4px 0 22px rgba(43, 162, 162, 0.85); }
 }
 
-/* Discovery nudge - a glow/opacity-only pulse at a 24px tab tucked on the
-   screen edge turned out to be genuinely easy to miss (checked against a
-   real screenshot, not just "the class applied"). Real motion reads far
-   better in peripheral vision, so this pulse actually SLIDES the tab out and
-   back, 3 times - using the standalone `translate` property (composes
-   independently of `transform`, which is why it can add extra motion on top
-   of the button's own translateY/translateX centring without needing
-   separate desktop/mobile keyframes) plus a much bigger glow and a full
-   opacity swing. */
+/* Discovery nudge - sonar ping. Two glow/opacity-only pulses (checked against
+   real screenshots, not just "the class applied") were both too easy to miss
+   at a 24px tab tucked on the screen edge - a ring expanding outward into
+   the empty space beside the tab is the actual "notification" language
+   people already recognize (Android FABs, Slack unread dots, macOS badges),
+   and expanding motion into open space is exactly what peripheral vision is
+   tuned to catch, unlike a same-size glow/opacity change in place. The ring
+   is a ::before sized and centred independently of the tab's own vertical
+   writing-mode layout, so it reads as a clean circle regardless. */
 .pocket.pocketBeacon {
-  animation: pocket-beacon 0.5s ease-in-out 3;
+  animation: pocket-beacon-glow 1s ease-out 3;
 }
-.pocket.pocketBeacon .pocketIcon {
-  animation: pocket-beacon-icon 0.5s ease-in-out 3;
-  transform-origin: center;
+.pocket.pocketBeacon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-accent);
+  pointer-events: none;
+  animation: pocket-ring 1s ease-out 3;
 }
-@keyframes pocket-beacon {
-  0%, 100% { opacity: 0.45; translate: 0 0;      box-shadow: -4px 0 10px rgba(43, 162, 162, 0.25); }
-  50%      { opacity: 1;    translate: -14px 0;   box-shadow: -10px 0 34px rgba(43, 162, 162, 1); }
+@keyframes pocket-beacon-glow {
+  0%, 100% { opacity: 0.45; box-shadow: -4px 0 10px rgba(43, 162, 162, 0.25); }
+  30%      { opacity: 1;    box-shadow: -6px 0 24px rgba(43, 162, 162, 0.85); }
 }
-@keyframes pocket-beacon-icon {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.55); }
+@keyframes pocket-ring {
+  0%   { transform: scale(0.6); opacity: 0.9; border-width: 2px; }
+  100% { transform: scale(3.2); opacity: 0;   border-width: 0.5px; }
 }
 
 .pocketIcon {

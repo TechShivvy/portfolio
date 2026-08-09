@@ -237,7 +237,7 @@ export default function Achievements() {
       if (drawerEverOpenedRef.current || drawerOpenRef.current || hiddenByOverlayRef.current) return;
       if (prefersReducedMotion()) return;
       setBeaconing(true);
-      setTimeout(() => setBeaconing(false), 1900);
+      setTimeout(() => setBeaconing(false), 3000); // matches 1s x3 ring animation
     }, BEACON_INTERVAL_MS);
     return () => clearInterval(id);
   }, [introRevealed]);
