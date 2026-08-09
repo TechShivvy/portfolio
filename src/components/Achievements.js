@@ -14,8 +14,14 @@ const RARITY_ORDER = ["legendary", "rare", "common"];
 const RARITY_LABEL = { legendary: "Legendary", rare: "Rare", common: "Common" };
 const DRAG_THRESHOLD = 6; // px of movement before a pointer-down counts as a drag
 const INTRO_FALLBACK_MS = 6000; // in case Home never mounts (e.g. the 404 page)
+const BEACON_INTERVAL_MS = 10000;
+const LS_DRAWER_SEEN = "sc.ach.drawerSeen";
 
 let toastKeySeq = 0;
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // A single toast owns its own dismiss timer, started when IT mounts (i.e.
 // when it actually becomes one of the visible top 3) - not a shared timer
@@ -64,6 +70,7 @@ export default function Achievements() {
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
   const [introRevealed, setIntroRevealed] = useState(false);
   const [pulsing, setPulsing] = useState(false);
+  const [beaconing, setBeaconing] = useState(false);
   const [sfSide, setSfSide] = useState(null); // null | "tech" | "fairy"
   const [dragOffset, setDragOffset] = useState(null); // px, null = not dragging
   const [dragging, setDragging] = useState(false);
@@ -73,6 +80,7 @@ export default function Achievements() {
   const toastStackRef = useRef(null);
   const dragStateRef = useRef(null);
   const suppressClickRef = useRef(false);
+  const drawerEverOpenedRef = useRef(false);
 
   // ─── Reveal only once the hero intro has actually finished ───────────────
   // Delays trackArrival() (and so the first toast + the pocket's count) until
@@ -166,6 +174,13 @@ export default function Achievements() {
 
   useEffect(() => {
     if (!drawerOpen) return;
+    drawerEverOpenedRef.current = true;
+    try {
+      localStorage.setItem(LS_DRAWER_SEEN, "1");
+    } catch {
+      // ignore - worst case the beacon nudges a little longer than intended
+    }
+
     const onKeyDown = (e) => {
       if (e.key === "Escape") {
         closeDrawer();
@@ -192,6 +207,38 @@ export default function Achievements() {
     drawerRef.current?.focus();
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen, closeDrawer]);
+
+  // ─── Periodic discovery nudge ─────────────────────────────────────────────
+  // A 3-beat pulse every ~10s so a first-time visitor notices the tab is
+  // interactive, without nagging forever - stops for good the first time the
+  // drawer is actually opened (persisted, so it doesn't return on a later
+  // visit either). drawerOpen/hiddenByOverlay are read via refs rather than
+  // effect dependencies so the interval itself is created exactly once, on a
+  // genuine unbroken ~10s cadence, instead of restarting (and re-phasing)
+  // every time either of those flags flips.
+  const drawerOpenRef = useRef(drawerOpen);
+  const hiddenByOverlayRef = useRef(hiddenByOverlay);
+  useEffect(() => {
+    drawerOpenRef.current = drawerOpen;
+    hiddenByOverlayRef.current = hiddenByOverlay;
+  });
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(LS_DRAWER_SEEN) === "1") drawerEverOpenedRef.current = true;
+    } catch {
+      // ignore
+    }
+    if (!introRevealed) return;
+
+    const id = setInterval(() => {
+      if (drawerEverOpenedRef.current || drawerOpenRef.current || hiddenByOverlayRef.current) return;
+      if (prefersReducedMotion()) return;
+      setBeaconing(true);
+      setTimeout(() => setBeaconing(false), 1900);
+    }, BEACON_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [introRevealed]);
 
   // ─── Drag-to-open on the pocket tab ───────────────────────────────────────
   const handlePointerDown = (e) => {
@@ -320,7 +367,7 @@ export default function Achievements() {
         type="button"
         className={`${styles.pocket} ${drawerOpen ? styles.pocketOpen : ""} ${
           pocketHidden ? styles.pocketHidden : ""
-        } ${pulsing ? styles.pocketPulse : ""}`}
+        } ${pulsing ? styles.pocketPulse : ""} ${beaconing ? styles.pocketBeacon : ""}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -330,7 +377,14 @@ export default function Achievements() {
         aria-expanded={drawerOpen}
         aria-label={`Achievements: ${progress.unlocked} of ${progress.total} unlocked`}
       >
-        <span className={styles.pocketIcon} aria-hidden="true">&#127942;</span>
+        <svg
+          className={styles.pocketIcon}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          fill="#ffd700"
+        >
+          <path d="M6 3h12v2h2.5a1 1 0 0 1 1 1v1.5A4.5 4.5 0 0 1 17 11.9c-.6 1.9-2.1 3.3-4 3.8V18h2.5a1 1 0 0 1 1 1v1H7.5v-1a1 1 0 0 1 1-1H11v-2.3c-1.9-.5-3.4-1.9-4-3.8A4.5 4.5 0 0 1 2.5 7.5V6a1 1 0 0 1 1-1H6V3Zm0 4H4v.5A2.5 2.5 0 0 0 6.2 9.9 8.8 8.8 0 0 1 6 8V7Zm12 0v1c0 .6-.1 1.3-.2 1.9A2.5 2.5 0 0 0 20 7.5V7h-2Z" />
+        </svg>
         <span className={styles.pocketCount}>
           {progress.unlocked}/{progress.total}
         </span>

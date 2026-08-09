@@ -223,8 +223,35 @@
   50%      { box-shadow: -4px 0 22px rgba(43, 162, 162, 0.85); }
 }
 
+/* Discovery nudge - a glow/opacity-only pulse at a 24px tab tucked on the
+   screen edge turned out to be genuinely easy to miss (checked against a
+   real screenshot, not just "the class applied"). Real motion reads far
+   better in peripheral vision, so this pulse actually SLIDES the tab out and
+   back, 3 times - using the standalone `translate` property (composes
+   independently of `transform`, which is why it can add extra motion on top
+   of the button's own translateY/translateX centring without needing
+   separate desktop/mobile keyframes) plus a much bigger glow and a full
+   opacity swing. */
+.pocket.pocketBeacon {
+  animation: pocket-beacon 0.5s ease-in-out 3;
+}
+.pocket.pocketBeacon .pocketIcon {
+  animation: pocket-beacon-icon 0.5s ease-in-out 3;
+  transform-origin: center;
+}
+@keyframes pocket-beacon {
+  0%, 100% { opacity: 0.45; translate: 0 0;      box-shadow: -4px 0 10px rgba(43, 162, 162, 0.25); }
+  50%      { opacity: 1;    translate: -14px 0;   box-shadow: -10px 0 34px rgba(43, 162, 162, 1); }
+}
+@keyframes pocket-beacon-icon {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.55); }
+}
+
 .pocketIcon {
-  font-size: 0.85rem;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
 }
 
 .pocketCount {
