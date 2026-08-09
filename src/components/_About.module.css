@@ -305,6 +305,18 @@ a > img {
     max-height: none;
     min-height: 90px;
   }
+
+  .stackRow {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stackLabel {
+    text-align: left;
+    min-width: 0;
+  }
+  .stackPill {
+    font-size: 0.65rem;
+  }
 }
 
 /* ─── Spotify card - terminal-themed front face ─── */
@@ -551,4 +563,54 @@ a > img {
   .termPrompt {
     font-size: 0.85rem;
   }
+}
+
+/* ─── Tech stack ─── */
+.stack {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stackHeading {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #6c7086;
+}
+
+.stackRow {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.stackLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #666;
+  min-width: 110px;
+  text-align: right;
+}
+
+.stackPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stackPill {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 2px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.stackPill:hover {
+  background: rgba(43, 162, 162, 0.1);
+  border-color: var(--color-accent);
 }

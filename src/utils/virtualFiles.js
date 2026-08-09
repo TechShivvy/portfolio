@@ -1,5 +1,6 @@
 import INTERESTS from "../content/interests";
 import ABOUT from "../content/about";
+import STACK from "../content/stack";
 
 // ─── Interest line helper ───────────────────────────────────────────────────
 function interestLines(key) {
@@ -20,10 +21,10 @@ export default function buildVirtualFiles(scrollToSection) {
   const resumeEntry  = ABOUT.find((e) => e.input === "Shivcharan.resume");
 
   return {
-    "skills.txt": () => {
-      const entry = ABOUT.find((e) => e.input === "Shivcharan.skills");
-      return [{ text: entry ? entry.return : "[]", type: "accent" }];
-    },
+    "skills.txt": () =>
+      STACK.map(({ label, items }) => ({
+        text: `${(label + ":").padEnd(16)}${items.join(", ")}`, type: "accent",
+      })),
     "contact.txt": () => {
       if (!contactEntry || !Array.isArray(contactEntry.return)) return [];
       return contactEntry.return.map((link) => {
