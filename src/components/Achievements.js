@@ -360,14 +360,6 @@ export default function Achievements() {
     }
   };
 
-  const progressBar = (() => {
-    const width = 16;
-    const filled = progress.total
-      ? Math.round((progress.unlocked / progress.total) * width)
-      : 0;
-    return "█".repeat(filled) + "░".repeat(width - filled);
-  })();
-
   let drawerStyle;
   if (dragOffset != null) {
     drawerStyle = { transform: `translateX(${dragOffset}px)` };
@@ -456,8 +448,14 @@ export default function Achievements() {
             </button>
           </div>
           <div className={styles.progressLine}>
-            [{progressBar}] <b>{progress.unlocked}</b>/{progress.total} &middot;{" "}
-            {progress.pct}%
+            [
+            <span className={styles.progressBarTrack}>
+              <span
+                className={styles.progressBarFill}
+                style={{ width: `${progress.pct}%` }}
+              />
+            </span>
+            ] <b>{progress.unlocked}</b>/{progress.total} &middot; {progress.pct}%
           </div>
         </div>
         <div className={styles.drawerBody}>

@@ -343,6 +343,35 @@
   color: var(--color-accent);
 }
 
+/* Real CSS bar, not repeated █/░ characters - source-code-pro (--font-mono)
+   doesn't cover the Unicode block-drawing range, so those glyphs silently
+   fell back to a different font with a different weight, and the "filled"
+   portion stopped reading as visually distinct from the "empty" portion at
+   this font-size (same failure mode as the Exit 8 score arrow). A real bar
+   has no font-coverage dependency at all. */
+.progressBarTrack {
+  display: inline-block;
+  width: 90px;
+  height: 8px;
+  vertical-align: middle;
+  background: repeating-linear-gradient(
+    45deg,
+    #1a1a1a,
+    #1a1a1a 2px,
+    #141414 2px,
+    #141414 4px
+  );
+  border: 1px solid #333;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.progressBarFill {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
 .drawerBody {
   flex: 1;
   overflow-y: auto;
