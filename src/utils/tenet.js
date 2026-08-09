@@ -195,6 +195,13 @@ export default async function tenet() {
   // so this is committed long before the location.replace() seven steps down.
   unlock("time-traveller");
 
+  // Dismiss the mobile keyboard - triggered from the terminal input (typed or
+  // a CHIPS tap) leaves it focused, which keeps the on-screen keyboard open
+  // and covering the bottom half of the screen through the whole reverse-play
+  // takeover. Blurring whatever's focused is caller-agnostic, so it's a no-op
+  // when triggered from Ctrl+K x instead.
+  if (document.activeElement?.blur) document.activeElement.blur();
+
   // 1. Scroll back to the top so the reverse plays over the hero.
   window.scrollTo({ top: 0, behavior: "smooth" });
   await wait(750);
