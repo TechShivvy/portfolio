@@ -21,7 +21,6 @@ const task1 = () => {
   const text = [];
   const hasRun = sessionStorage.getItem("hasRun");
 
-  console.log(hasRun)
   if (hasRun) {
     // sessionStorage.setItem("hasRunOnce", "true");
     isAnimationComplete = true;
@@ -54,8 +53,6 @@ const task1 = () => {
       scrambledText.push(getRandomChar);
     }
 
-    // console.log(text);
-
     function scrambleText() {
       if (counter < maxIterations) {
         for (let i = 0; i < originalText.length; i++) {
@@ -80,7 +77,6 @@ const task1 = () => {
           0,
           originalText.length
         );
-        console.log("'" + textElement.innerHTML + "'");
       } else {
         isAnimationComplete = true;
         centeredContentElement.style.color = COLOR_ACCENT;
@@ -127,6 +123,25 @@ const task1 = () => {
         centeredContentElement.style.color = COLOR_ACCENT;
       }
     });
+
+    // Touch has no hover - mouseover/mouseout above never fire on a phone or
+    // tablet, so identity-crisis would otherwise be unreachable there. A tap
+    // runs the same scramble for a fixed window instead of tracking
+    // enter/leave state, since touch has no equivalent to mouseout.
+    textElement.addEventListener("touchstart", () => {
+      if (!isAnimationComplete || isHovered) return;
+      unlock("identity-crisis");
+      isHovered = true;
+      clearInterval(inst);
+      centeredContentElement.style.color = COLOR_ACCENT_DANGER;
+      inst = setInterval(scrambleTextEndless, 100);
+      setTimeout(() => {
+        isHovered = false;
+        clearInterval(inst);
+        textElement.innerHTML = originalText;
+        centeredContentElement.style.color = COLOR_ACCENT;
+      }, 1200);
+    }, { passive: true });
 
     let inst = !hasRun?setInterval(scrambleText, 100):resolve();
     // resolve();

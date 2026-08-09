@@ -4,7 +4,6 @@ import styles from "../components/_Project.module.css";
 
 function ProjectCard({ project }) {
   const { title, description, skills, links } = project;
-  console.log(project);
 
   return (
     <div className={styles["card"]}>

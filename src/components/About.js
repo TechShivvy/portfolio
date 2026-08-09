@@ -158,6 +158,14 @@ function About() {
               <span className={styles.diff2Minus}>sometimes</span>{" "}<span className={styles.diff2Plus}>all the time now (unfortunately)</span>.
               {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
             </p>
+            <p className={styles["para"]}>
+              Day to day that means shipping machine learning systems that actually reach
+              production - data pipelines, model training, the API layer that serves it, and
+              the on-call rotation when it breaks. Outside of work I build things nobody asked
+              for: this portfolio's easter eggs, a Spotify playlist tool, a synchronized YouTube
+              watch party. If it's in the projects below, I built it because I was curious what
+              it'd take.
+            </p>
 
             {/* Fake macOS-style terminal chrome */}
             <div className={styles["fakeMenu"]}>

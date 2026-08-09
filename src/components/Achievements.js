@@ -5,6 +5,7 @@ import {
   EVENT_UNLOCK,
   getProgress,
   getUnlocked,
+  isTouchDevice,
   isUnlocked,
   playUnlockBlip,
   trackArrival,
@@ -337,9 +338,18 @@ export default function Achievements() {
     return acc;
   }, {});
 
+  // desktopOnly entries (konami code, the keyboard shortcuts panel) have no
+  // touch equivalent - dropped entirely from the drawer on touch devices
+  // rather than shown locked-forever. getProgress()/completionist already
+  // exclude them from the total on these devices too (utils/achievements.js).
+  const touch = isTouchDevice();
+  const visibleAchievements = touch
+    ? ACHIEVEMENTS.filter((a) => !a.desktopOnly)
+    : ACHIEVEMENTS;
+
   const grouped = RARITY_ORDER.map((rarity) => ({
     rarity,
-    items: ACHIEVEMENTS.filter((a) => a.rarity === rarity),
+    items: visibleAchievements.filter((a) => a.rarity === rarity),
   }));
 
   const dateFmt = (iso) => {
@@ -349,14 +359,6 @@ export default function Achievements() {
       return "";
     }
   };
-
-  const progressBar = (() => {
-    const width = 16;
-    const filled = progress.total
-      ? Math.round((progress.unlocked / progress.total) * width)
-      : 0;
-    return "█".repeat(filled) + "░".repeat(width - filled);
-  })();
 
   let drawerStyle;
   if (dragOffset != null) {
@@ -446,8 +448,14 @@ export default function Achievements() {
             </button>
           </div>
           <div className={styles.progressLine}>
-            [{progressBar}] <b>{progress.unlocked}</b>/{progress.total} &middot;{" "}
-            {progress.pct}%
+            [
+            <span className={styles.progressBarTrack}>
+              <span
+                className={styles.progressBarFill}
+                style={{ width: `${progress.pct}%` }}
+              />
+            </span>
+            ] <b>{progress.unlocked}</b>/{progress.total} &middot; {progress.pct}%
           </div>
         </div>
         <div className={styles.drawerBody}>

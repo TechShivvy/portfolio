@@ -126,7 +126,6 @@ const Home = () => {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const handleH1Click = async () => {
-    console.log("H1 element clicked!");
     const hasRun = sessionStorage.getItem("hasRun");
 
     if (hasRun && hasRun === "true") {

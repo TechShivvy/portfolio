@@ -15,6 +15,13 @@
  *   hint    - shown while locked. Vague enough to intrigue, specific enough to guide.
  *   rarity  - "common" | "rare" | "legendary". Drives colour and drawer grouping.
  *   secret  - hide the hint (renders "???"). The name still shows. Reserve for a few.
+ *   desktopOnly - true if there's no touch/no-keyboard equivalent trigger.
+ *               Hidden from the drawer and excluded from the progress total
+ *               on touch devices (see isTouchDevice() in utils/achievements.js).
+ *               Reserve for triggers with genuinely no alternate input path -
+ *               most terminal-command achievements are NOT desktopOnly since
+ *               the terminal works fine via the on-screen keyboard + mobile
+ *               chip buttons (src/content/terminalChips.js).
  */
 
 // Spoken by the HTML source banner and the console greeting (see src/index.js).
@@ -63,6 +70,7 @@ const ACHIEVEMENTS = [
     desc: "found the keyboard shortcuts panel.",
     hint: "one key opens every door. it's punctuation.",
     rarity: "common",
+    desktopOnly: true, // opened via `?`/Ctrl+/ only, no tap entry point exists
   },
   {
     id: "shell-access",
@@ -123,6 +131,7 @@ const ACHIEVEMENTS = [
     desc: "entered the konami code.",
     hint: "up up down down. you know the rest.",
     rarity: "rare",
+    desktopOnly: true, // arrow-key sequence, no touch equivalent exists
   },
   {
     id: "time-traveller",
@@ -281,6 +290,10 @@ const ACHIEVEMENTS = [
 Object.freeze(ACHIEVEMENTS);
 
 export const TOTAL = ACHIEVEMENTS.length;
+// Total reachable on a touch/no-keyboard device - excludes desktopOnly entries
+// so the progress bar, percentage, and completionist check never demand
+// something a mobile visitor has no way to trigger.
+export const TOTAL_TOUCH = ACHIEVEMENTS.filter((a) => !a.desktopOnly).length;
 
 export const BY_ID = ACHIEVEMENTS.reduce((acc, a) => {
   acc[a.id] = a;

@@ -41,7 +41,7 @@ const ABOUT = [
   },
   {
     input: "Shivcharan.skills",
-    return: '["C/C++", "Python", "JavaScript", "React", "Flask", "SQL"]',
+    return: '["C/C++", "Python", "JavaScript", "React", "Flask", "SQL", "Machine Learning", "NLP", "LLMs", "REST APIs", "Git", "Docker", "Linux"]',
   },
 ];
 

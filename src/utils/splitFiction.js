@@ -1749,6 +1749,13 @@ export default async function splitFiction(options = {}) {
   // Mutual exclusion with exit8.
   if (window.__exit8Active) return;
 
+  // Dismiss the mobile keyboard - triggered from the terminal input (typed or
+  // a CHIPS tap) leaves it focused, which keeps the on-screen keyboard open
+  // and covering the bottom half of the screen through the whole world-split
+  // takeover. Blurring whatever's focused is caller-agnostic, so it's a no-op
+  // when triggered from Ctrl+K f/2 instead.
+  if (document.activeElement?.blur) document.activeElement.blur();
+
   const reduced = prefersReducedMotion();
   const isSpinMode = options?.mode === "spin";
   let splitPct  = 50;

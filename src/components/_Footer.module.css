@@ -24,7 +24,8 @@ footer {
   content: "?????";
 }
 
-.hover-text:hover::before {
+.hover-text:hover::before,
+.hover-text.revealed::before {
   content: "Shivi";
   display: inline;
 }
