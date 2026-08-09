@@ -2,6 +2,7 @@ import "./App.css";
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
+import Achievements from "./components/Achievements";
 // Static import: the hero must be in the main bundle and outside the shared
 // Suspense boundary below, or the splash's "app ready" signal (which fires
 // once Home has painted) waits on every other lazy section's chunk too.
@@ -79,6 +80,7 @@ function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <KeyboardShortcuts />
+      <Achievements />
       {restoring && (
         <div
           aria-hidden="true"
