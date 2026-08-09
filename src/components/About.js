@@ -4,7 +4,6 @@ import AboutLines from "./AboutLines";
 import InteractiveTerminal from "./InteractiveTerminal";
 import useFadeIn from "../utils/useFadeIn";
 import aboutData from "../content/about";
-import STACK from "../content/stack";
 import { unlock } from "../utils/achievements";
 
 // ─── Spotify mosaic-reveal card ──────────────────────────────────────────────
@@ -224,20 +223,6 @@ function About() {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className={styles.stack}>
-              <span className={styles.stackHeading}>&gt; stack --grouped</span>
-              {STACK.map(({ label, items }) => (
-                <div className={styles.stackRow} key={label}>
-                  <span className={styles.stackLabel}>{label}</span>
-                  <div className={styles.stackPills}>
-                    {items.map((it) => (
-                      <span className={styles.stackPill} key={it}>{it}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
