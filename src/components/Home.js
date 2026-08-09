@@ -49,7 +49,14 @@ const Home = () => {
       if (cancelled) return;
       setIntroStarted(true);
       await task1();
-      if (!cancelled) setStartAnimation(true);
+      if (!cancelled) {
+        setStartAnimation(true);
+        // Scramble has settled and the matrix is about to start flowing -
+        // the achievements system waits for this before showing anything,
+        // so the first toast doesn't pop up mid-intro. See Achievements.js.
+        window.__heroIntroDone = true;
+        window.dispatchEvent(new Event("hero:intro-done"));
+      }
     }
 
     // Start the hero intro (scramble → set name → matrix) only once the

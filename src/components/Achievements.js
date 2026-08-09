@@ -13,6 +13,7 @@ const TOAST_MS = 4500;
 const RARITY_ORDER = ["legendary", "rare", "common"];
 const RARITY_LABEL = { legendary: "Legendary", rare: "Rare", common: "Common" };
 const DRAG_THRESHOLD = 6; // px of movement before a pointer-down counts as a drag
+const INTRO_FALLBACK_MS = 6000; // in case Home never mounts (e.g. the 404 page)
 
 let toastKeySeq = 0;
 
@@ -61,6 +62,7 @@ export default function Achievements() {
   const [progress, setProgress] = useState(() => getProgress());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
+  const [introRevealed, setIntroRevealed] = useState(false);
   const [pulsing, setPulsing] = useState(false);
   const [sfSide, setSfSide] = useState(null); // null | "tech" | "fairy"
   const [dragOffset, setDragOffset] = useState(null); // px, null = not dragging
@@ -72,10 +74,29 @@ export default function Achievements() {
   const dragStateRef = useRef(null);
   const suppressClickRef = useRef(false);
 
-  // ─── Arrival tracking + unlock listener ──────────────────────────────────
+  // ─── Reveal only once the hero intro has actually finished ───────────────
+  // Delays trackArrival() (and so the first toast + the pocket's count) until
+  // the scramble has settled and matrix is flowing, matching the intro's own
+  // pacing instead of popping up mid-splash. Falls back on a timer in case
+  // Home never mounts (the 404 route) or the event is otherwise missed.
   useEffect(() => {
-    const cleanupArrival = trackArrival();
-    setProgress(getProgress());
+    let cleanupArrival;
+    let fallbackId;
+
+    const reveal = () => {
+      if (cleanupArrival) return; // already revealed
+      cleanupArrival = trackArrival();
+      setProgress(getProgress());
+      setIntroRevealed(true);
+      clearTimeout(fallbackId);
+    };
+
+    if (window.__heroIntroDone) {
+      reveal();
+    } else {
+      window.addEventListener("hero:intro-done", reveal, { once: true });
+      fallbackId = setTimeout(reveal, INTRO_FALLBACK_MS);
+    }
 
     const onUnlock = (e) => {
       const entry = e.detail;
@@ -87,8 +108,10 @@ export default function Achievements() {
 
     window.addEventListener(EVENT_UNLOCK, onUnlock);
     return () => {
+      window.removeEventListener("hero:intro-done", reveal);
       window.removeEventListener(EVENT_UNLOCK, onUnlock);
-      cleanupArrival();
+      clearTimeout(fallbackId);
+      cleanupArrival?.();
     };
   }, []);
 
@@ -271,6 +294,7 @@ export default function Achievements() {
 
   const sfClassName =
     sfSide === "tech" ? styles.sfTech : sfSide === "fairy" ? styles.sfFairy : "";
+  const pocketHidden = hiddenByOverlay || !introRevealed;
 
   return (
     <>
@@ -295,7 +319,7 @@ export default function Achievements() {
         ref={pocketRef}
         type="button"
         className={`${styles.pocket} ${drawerOpen ? styles.pocketOpen : ""} ${
-          hiddenByOverlay ? styles.pocketHidden : ""
+          pocketHidden ? styles.pocketHidden : ""
         } ${pulsing ? styles.pocketPulse : ""}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
