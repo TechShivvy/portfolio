@@ -19,22 +19,10 @@
   right: 358px;
 }
 
-/* Immunity from the "67" seesaw: body.sixseven skews the whole page via a
-   transform on <body>, which becomes the containing block for every
-   position:fixed descendant (that's the whole point of the gag - everything
-   on screen skews together). The toast stack is exempted by running an equal
-   and opposite skew on itself, cancelling the inherited skew for its own
-   content while the rest of the page keeps seesawing normally around it. */
-:global(body.sixseven) .toastStack {
-  animation: sixseven-counter 0.38s ease-in-out infinite;
-}
-@keyframes sixseven-counter {
-  0%   { transform: skewY(0deg);   }
-  25%  { transform: skewY(-12deg); }
-  50%  { transform: skewY(0deg);   }
-  75%  { transform: skewY(12deg);  }
-  100% { transform: skewY(0deg);   }
-}
+/* Immunity from the "67" seesaw is now structural, not a counter-transform
+   hack: the skew lives on body.sixseven #root (src/index.css) and the toast
+   stack is portalled to <body> as a sibling of #root (see Achievements.js),
+   so it's never a descendant of the transformed element in the first place. */
 
 .toast {
   pointer-events: auto;

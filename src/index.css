@@ -113,7 +113,14 @@ body::-webkit-scrollbar {
   75%  { transform: skewY(-12deg); }
   100% { transform: skewY(0deg);   }
 }
-body.sixseven {
+/* The class stays on <body> (two JS toggle sites, and it's a useful hook), but
+   the transform applies to #root instead. Transforming <body> would make it
+   the containing block for every position:fixed element on the page,
+   including overlays that must stay readable through the gag - see the toast
+   portal in Achievements.js. #root wraps the whole real site, so the gag
+   looks identical either way: transform-origin x is 50vw either way, and
+   skewY only depends on x. */
+body.sixseven #root {
   animation: sixseven 0.38s ease-in-out infinite;
   transform-origin: center center;
 }

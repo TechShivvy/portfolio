@@ -183,15 +183,41 @@ export function trackArrival() {
 // Small tech blip played when an achievement toast actually becomes visible
 // (see AchievementToast in Achievements.js - not at unlock time, so it
 // doesn't fire for something the visitor can't yet see if 4+ land at once).
-// Two quick rising notes, ~150ms total. Silently no-ops if AudioContext is
-// unavailable or still suspended (no prior user gesture) - the four passive
-// arrival achievements can unlock without one, and browsers correctly mute
-// audio until a real interaction happens.
-export function playUnlockBlip() {
+// Two quick rising notes, ~150ms total.
+//
+// One AudioContext is created lazily and reused for every blip, rather than
+// a fresh one per call - browsers cap the number of live contexts per
+// document (~6 in Chrome), so a fresh-context-per-blip approach goes silent
+// after a handful of unlocks in one session.
+//
+// A new AudioContext starts "suspended" until a real user gesture resumes
+// it - which the four passive arrival achievements (first-contact, night-owl,
+// back-again, stuck-around) and any hover-triggered unlock can beat to the
+// punch, since neither page load nor hover/scroll counts as user activation.
+// Rather than silently dropping those, the request is remembered and replayed
+// on the visitor's first pointerdown/keydown/touchstart, whenever that turns
+// out to be - deliberately no expiry window. The splash alone holds the page
+// for 2.4s+ before anything is even clickable, so a short timeout would lapse
+// before a real visitor gets a chance to interact, which is exactly the
+// "first contact never actually beeps" bug this replaces.
+//
+// KNOWN LIMITATION, not fixable from here: every major browser refuses to
+// let ANY site play audio before the page has received a real click, key
+// press, or touch - there is no API to lift this early. So first-contact
+// (and any other achievement that unlocks before the visitor's first
+// interaction) will always show its toast silently and only catch up with a
+// beep once that first interaction happens, however long that takes. This is
+// the best behavior achievable within that constraint: exactly one beep, on
+// the actual first gesture, fired synchronously inside that gesture's own
+// event handler (not deferred to a resume().then() callback, which some
+// browsers no longer attribute to the gesture by the time it runs).
+let sharedCtx = null;
+let pendingBlip = false;
+let gestureListenersInstalled = false;
+let blipRafScheduled = false;
+
+function fireBlip(ctx) {
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "square";
@@ -208,6 +234,68 @@ export function playUnlockBlip() {
   } catch (_) {
     // ignore - a silent unlock is fine, a broken one isn't
   }
+}
+
+function installGestureListeners() {
+  if (gestureListenersInstalled) return;
+  gestureListenersInstalled = true;
+
+  const onGesture = () => {
+    gestureListenersInstalled = false;
+    window.removeEventListener("pointerdown", onGesture, true);
+    window.removeEventListener("keydown", onGesture, true);
+    window.removeEventListener("touchstart", onGesture, true);
+
+    if (!sharedCtx) return;
+    // Fire the owed blip in this SAME synchronous tick as the trusted
+    // gesture, rather than waiting on the resume() Promise first. Browsers
+    // unlock a Web Audio context the moment a node's start() is called from
+    // within a real gesture's call stack; deferring start() to a
+    // resume().then() callback pushes it into a later microtask that isn't
+    // reliably still attributed to the gesture. resume() itself is fired and
+    // forgotten - not awaited - since it isn't needed before start() for the
+    // unlock to register.
+    sharedCtx.resume().catch(() => {});
+    if (pendingBlip) fireBlip(sharedCtx);
+    pendingBlip = false;
+  };
+
+  window.addEventListener("pointerdown", onGesture, { capture: true, once: true, passive: true });
+  window.addEventListener("keydown", onGesture, { capture: true, once: true });
+  window.addEventListener("touchstart", onGesture, { capture: true, once: true, passive: true });
+}
+
+function requestBlip() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!sharedCtx) sharedCtx = new AudioCtx();
+
+    if (sharedCtx.state === "suspended") {
+      pendingBlip = true;
+      installGestureListeners();
+      return;
+    }
+
+    fireBlip(sharedCtx);
+  } catch (_) {
+    // ignore - a silent unlock is fine, a broken one isn't
+  }
+}
+
+// If several achievements unlock together (e.g. first-contact + back-again
+// on a second visit), each toast mounts in the same commit and would each
+// call this - collapse them into a single beep by batching requests into the
+// next animation frame instead of firing one per call. Achievements queued
+// deliberately later (completionist, +50ms - see maybeUnlockCompletionist)
+// land in a later frame and still get their own beep.
+export function playUnlockBlip() {
+  if (blipRafScheduled) return;
+  blipRafScheduled = true;
+  requestAnimationFrame(() => {
+    blipRafScheduled = false;
+    requestBlip();
+  });
 }
 
 export default unlock;
