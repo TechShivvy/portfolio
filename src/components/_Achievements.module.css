@@ -19,6 +19,23 @@
   right: 358px;
 }
 
+/* Immunity from the "67" seesaw: body.sixseven skews the whole page via a
+   transform on <body>, which becomes the containing block for every
+   position:fixed descendant (that's the whole point of the gag - everything
+   on screen skews together). The toast stack is exempted by running an equal
+   and opposite skew on itself, cancelling the inherited skew for its own
+   content while the rest of the page keeps seesawing normally around it. */
+:global(body.sixseven) .toastStack {
+  animation: sixseven-counter 0.38s ease-in-out infinite;
+}
+@keyframes sixseven-counter {
+  0%   { transform: skewY(0deg);   }
+  25%  { transform: skewY(-12deg); }
+  50%  { transform: skewY(0deg);   }
+  75%  { transform: skewY(12deg);  }
+  100% { transform: skewY(0deg);   }
+}
+
 .toast {
   pointer-events: auto;
   position: relative;
@@ -160,6 +177,11 @@
   opacity: 1;
   transform: translateY(-50%) translateX(-4px);
   box-shadow: -4px 0 14px rgba(43, 162, 162, 0.35);
+  /* Replace the browser's default focus ring (a mismatched blue/cyan against
+     this teal UI) with the themed glow above - still a clearly visible
+     focus indicator, just an on-brand one. Most noticeable after Escape
+     returns focus here from the drawer. */
+  outline: none;
 }
 
 .pocket.pocketOpen {
@@ -269,6 +291,10 @@
   flex: 1;
   overflow-y: auto;
   padding: 8px 18px 20px;
+  /* Stop scroll chaining - without this, scrolling past either end of the
+     list hands the remaining scroll delta to the page underneath instead of
+     just stopping. */
+  overscroll-behavior: contain;
 }
 
 .rarityGroup {
