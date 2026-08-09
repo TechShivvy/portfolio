@@ -15,7 +15,11 @@ const RARITY_ORDER = ["legendary", "rare", "common"];
 const RARITY_LABEL = { legendary: "Legendary", rare: "Rare", common: "Common" };
 const DRAG_THRESHOLD = 6; // px of movement before a pointer-down counts as a drag
 const INTRO_FALLBACK_MS = 6000; // in case Home never mounts (e.g. the 404 page)
-const BEACON_INTERVAL_MS = 10000;
+// Progressive backoff: fast the first few times (catches attention while the
+// visitor is still fresh on the page), then relaxes so it doesn't nag for the
+// rest of a long session. Last value repeats indefinitely once the array is
+// exhausted.
+const BEACON_SCHEDULE_MS = [3000, 5000, 8000, 13000, 21000, 34000];
 const LS_DRAWER_SEEN = "sc.ach.drawerSeen";
 
 let toastKeySeq = 0;
@@ -211,13 +215,14 @@ export default function Achievements() {
   }, [drawerOpen, closeDrawer]);
 
   // ─── Periodic discovery nudge ─────────────────────────────────────────────
-  // A 3-beat pulse every ~10s so a first-time visitor notices the tab is
-  // interactive, without nagging forever - stops for good the first time the
-  // drawer is actually opened (persisted, so it doesn't return on a later
-  // visit either). drawerOpen/hiddenByOverlay are read via refs rather than
-  // effect dependencies so the interval itself is created exactly once, on a
-  // genuine unbroken ~10s cadence, instead of restarting (and re-phasing)
-  // every time either of those flags flips.
+  // A ring-pulse on a progressive backoff (BEACON_SCHEDULE_MS): quick the
+  // first few times, since that's when it matters most (a visitor who just
+  // arrived), then spacing out further so a long session doesn't get nagged
+  // at a flat cadence forever. Stops for good the first time the drawer is
+  // actually opened (persisted, so it doesn't return on a later visit
+  // either). drawerOpen/hiddenByOverlay are read via refs rather than effect
+  // dependencies so the schedule itself is created exactly once and isn't
+  // restarted (and re-phased) every time either of those flags flips.
   const drawerOpenRef = useRef(drawerOpen);
   const hiddenByOverlayRef = useRef(hiddenByOverlay);
   useEffect(() => {
@@ -233,13 +238,30 @@ export default function Achievements() {
     }
     if (!introRevealed) return;
 
-    const id = setInterval(() => {
-      if (drawerEverOpenedRef.current || drawerOpenRef.current || hiddenByOverlayRef.current) return;
-      if (prefersReducedMotion()) return;
-      setBeaconing(true);
-      setTimeout(() => setBeaconing(false), 3000); // matches 1s x3 ring animation
-    }, BEACON_INTERVAL_MS);
-    return () => clearInterval(id);
+    let cancelled = false;
+    let timeoutId;
+    let step = 0;
+
+    const scheduleNext = () => {
+      const delay = BEACON_SCHEDULE_MS[Math.min(step, BEACON_SCHEDULE_MS.length - 1)];
+      timeoutId = setTimeout(tick, delay);
+    };
+
+    const tick = () => {
+      if (cancelled || drawerEverOpenedRef.current) return;
+      if (!drawerOpenRef.current && !hiddenByOverlayRef.current && !prefersReducedMotion()) {
+        setBeaconing(true);
+        setTimeout(() => setBeaconing(false), 3000); // matches 1s x3 ring animation
+      }
+      step++;
+      scheduleNext();
+    };
+
+    scheduleNext();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [introRevealed]);
 
   // ─── Drag-to-open on the pocket tab ───────────────────────────────────────
