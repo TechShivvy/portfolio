@@ -211,6 +211,14 @@ const ACHIEVEMENTS = [
     rarity: "legendary",
     secret: true,
   },
+  {
+    id: "raavana-mavandaa",
+    name: "raavana mavandaa",
+    desc: "escaped exit 8 to a mass hero send-off. ravana's son indeed.",
+    hint: "???",
+    rarity: "legendary",
+    secret: true,
+  },
 
   // ─── split fiction ─────────────────────────────────────────────────────────
   {

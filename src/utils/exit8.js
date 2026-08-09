@@ -4,6 +4,8 @@
 import { unlock } from "./achievements";
 
 // ── Audio Helper ───────────────────────────────────────────────────
+// The win track is "Raavana Mavandaa" (Anirudh, Jana Nayagan) - a mass hero
+// send-off for making it out. Also its own achievement, see winGame() below.
 let winAudioInstance = null;
 
 const getWinAudio = () => {
@@ -464,6 +466,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
   const winGame = () => {
     st._won = true;
     unlock(isFast ? "speedrunner" : "broke-the-loop");
+    unlock("raavana-mavandaa"); // the win track itself - see playWinAudio above
     playWinAudio();
     const escapedHeroEl = st.heroEl;
     const heroOrigText = st.heroOrig ?? "SHIVCHARAN";
