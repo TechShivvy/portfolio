@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./_About.module.css";
 import startExit8 from "../utils/exit8";
 import buildCommands from "../utils/terminalCommands";
-import buildVirtualFiles from "../utils/virtualFiles";
+import buildVirtualFiles, { HIDDEN_FILES } from "../utils/virtualFiles";
 import renderText from "../utils/renderText";
 import { BOOT_LINES } from "../content/bootLines";
 import { CHIPS } from "../content/terminalChips";
@@ -260,7 +260,7 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
       }
       const pool = editingCommand
         ? Object.keys(buildCommands(scrollToSection)).filter((c) => !c.startsWith("-"))
-        : Object.keys(buildVirtualFiles(scrollToSection));
+        : [...Object.keys(buildVirtualFiles(scrollToSection)), ...HIDDEN_FILES];
       const matches = pool.filter((c) => c.startsWith(token));
       if (matches.length === 0) {
         inputRef.current?.focus();

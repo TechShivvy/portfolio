@@ -14,6 +14,11 @@ function interestLines(key) {
   ];
 }
 
+// ─── Hidden files ───────────────────────────────────────────────────────────
+// Listed by `ls` and offered by Tab completion, but not readable — `cat` on
+// these returns a permission-denied easter egg instead of contents.
+export const HIDDEN_FILES = [".secrets"];
+
 // ─── Virtual filesystem ──────────────────────────────────────────────────────
 // Files visible under `ls` and readable via `cat <name>`.
 // Each entry: { name, type: "file"|"dir", fn: () => Line[] }

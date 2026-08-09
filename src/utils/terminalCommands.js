@@ -2,7 +2,7 @@ import TIMELINE from "../content/timeline";
 import tenet from "./tenet";
 import splitFiction from "./splitFiction";
 import throwPokeball from "./pokeball";
-import buildVirtualFiles from "./virtualFiles";
+import buildVirtualFiles, { HIDDEN_FILES } from "./virtualFiles";
 import { SECRET_CODE } from "../content/achievements";
 import { unlock } from "./achievements";
 
@@ -43,7 +43,7 @@ export default function buildCommands(scrollToSection) {
         { text: "drwxr-xr-x  work/", type: "output" },
         { text: "drwxr-xr-x  beyond-code/", type: "output" },
         ...names.map((n) => ({ text: `-rw-r--r--  ${n}`, type: "output" })),
-        { text: "-rw-------  .secrets", type: "danger" },
+        ...HIDDEN_FILES.map((n) => ({ text: `-rw-------  ${n}`, type: "danger" })),
       ];
     },
 
