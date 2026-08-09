@@ -123,6 +123,26 @@
   background: #ffd700;
 }
 
+/* Split Fiction re-theme: overrides rarity colour to match whichever side of
+   the seam the toast currently sits over (tracked by polling
+   window.__sfIsRightAt - see Achievements.js). Declared after the rarity
+   rules above so it wins on equal specificity. Matters most in spin mode,
+   where the seam rotates continuously and a stationary toast in the corner
+   drifts between sides on its own. */
+.toast.sfTech {
+  border-left-color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.32);
+}
+.toast.sfTech .toastLabel { color: #00e5ff; }
+.toast.sfTech .toastBar   { background: #00e5ff; }
+
+.toast.sfFairy {
+  border-left-color: #c482ff;
+  border-color: rgba(196, 130, 255, 0.32);
+}
+.toast.sfFairy .toastLabel { color: #c482ff; }
+.toast.sfFairy .toastBar   { background: #c482ff; }
+
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }

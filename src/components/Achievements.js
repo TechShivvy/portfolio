@@ -24,7 +24,7 @@ let toastKeySeq = 0;
 // oldest" timer, so a toast already most of the way through its own CSS
 // drain animation could sit fully-drained-but-still-visible for a while, or
 // get yanked away out of sync with its bar.
-function AchievementToast({ entry, onDismiss }) {
+function AchievementToast({ entry, sfClassName, onDismiss }) {
   // onDismiss is a fresh closure from the parent's map() on every render (it
   // captures this toast's key), so it can't be a dependency of the mount
   // effect below without re-triggering that effect on every unrelated parent
@@ -44,7 +44,7 @@ function AchievementToast({ entry, onDismiss }) {
 
   return (
     <div
-      className={`${styles.toast} ${styles[entry.rarity] || ""}`}
+      className={`${styles.toast} ${styles[entry.rarity] || ""} ${sfClassName}`}
       onClick={onDismiss}
       role="status"
     >
@@ -62,11 +62,13 @@ export default function Achievements() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
   const [pulsing, setPulsing] = useState(false);
+  const [sfSide, setSfSide] = useState(null); // null | "tech" | "fairy"
   const [dragOffset, setDragOffset] = useState(null); // px, null = not dragging
   const [dragging, setDragging] = useState(false);
 
   const drawerRef = useRef(null);
   const pocketRef = useRef(null);
+  const toastStackRef = useRef(null);
   const dragStateRef = useRef(null);
   const suppressClickRef = useRef(false);
 
@@ -99,17 +101,30 @@ export default function Achievements() {
     setToasts((prev) => prev.filter((t) => t.key !== key));
   }, []);
 
-  // ─── Hide the pocket while Exit 8 or Split Fiction own the viewport ──────
-  // Both are hand-rolled DOM/canvas takeovers with no lifecycle event bus of
-  // their own - Exit 8 flags window.__exit8Active, Split Fiction toggles the
-  // _sfActive body class. A light poll is simpler and safer here than adding
-  // new event plumbing to either of those large, delicate files.
+  // ─── Hide the pocket while Exit 8 or Split Fiction own the viewport, and
+  // re-theme in-flight toasts to whichever side of the Split Fiction seam
+  // they currently sit on ───────────────────────────────────────────────────
+  // Both eggs are hand-rolled DOM/canvas takeovers with no lifecycle event bus
+  // of their own - Exit 8 flags window.__exit8Active, Split Fiction toggles
+  // the _sfActive body class and exposes window.__sfIsRightAt(x, y). A light
+  // poll is simpler and safer here than adding new event plumbing to either
+  // of those large, delicate files, and it's the only way to track spin
+  // mode's rotating seam, which has no discrete "side changed" event at all.
   useEffect(() => {
     const check = () => {
-      const active =
-        !!window.__exit8Active ||
-        document.body.classList.contains("_sfActive");
+      const sfActive = document.body.classList.contains("_sfActive");
+      const active = !!window.__exit8Active || sfActive;
       setHiddenByOverlay((prev) => (prev !== active ? active : prev));
+
+      if (sfActive && typeof window.__sfIsRightAt === "function") {
+        const rect = toastStackRef.current?.getBoundingClientRect();
+        const x = rect ? (rect.left + rect.right) / 2 : window.innerWidth - 20;
+        const y = rect ? (rect.top + rect.bottom) / 2 : 30;
+        const side = window.__sfIsRightAt(x, y) ? "fairy" : "tech";
+        setSfSide((prev) => (prev !== side ? side : prev));
+      } else {
+        setSfSide((prev) => (prev !== null ? null : prev));
+      }
     };
     check();
     const id = setInterval(check, 400);
@@ -254,10 +269,14 @@ export default function Achievements() {
     drawerStyle = { transform: `translateX(${dragOffset}px)` };
   }
 
+  const sfClassName =
+    sfSide === "tech" ? styles.sfTech : sfSide === "fairy" ? styles.sfFairy : "";
+
   return (
     <>
       {/* Toast stack */}
       <div
+        ref={toastStackRef}
         className={`${styles.toastStack} ${drawerOpen ? styles.shiftedForDrawer : ""}`}
         aria-live="polite"
       >
@@ -265,6 +284,7 @@ export default function Achievements() {
           <AchievementToast
             key={t.key}
             entry={t}
+            sfClassName={sfClassName}
             onDismiss={() => dismissToast(t.key)}
           />
         ))}
