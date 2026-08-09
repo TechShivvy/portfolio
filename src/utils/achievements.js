@@ -1,4 +1,16 @@
-import ACHIEVEMENTS, { BY_ID, TOTAL } from "../content/achievements";
+import ACHIEVEMENTS, { BY_ID, TOTAL, TOTAL_TOUCH } from "../content/achievements";
+
+// True for touch/no-keyboard devices (phones, tablets) - hybrid touchscreen
+// laptops still report pointer:fine (mouse/trackpad present) so they're
+// correctly treated as desktop here. Used to hide desktopOnly achievements
+// (konami code, the keyboard shortcuts panel) that have no touch equivalent.
+export function isTouchDevice() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches
+  );
+}
 
 // ─── Achievements engine ─────────────────────────────────────────────────────
 // Every unlock is written to localStorage and is permanent - it survives
@@ -62,10 +74,11 @@ export function getUnlocked() {
 
 export function getProgress() {
   const unlocked = Object.keys(getLedger()).length;
+  const total = isTouchDevice() ? TOTAL_TOUCH : TOTAL;
   return {
     unlocked,
-    total: TOTAL,
-    pct: TOTAL ? Math.round((unlocked / TOTAL) * 100) : 0,
+    total,
+    pct: total ? Math.round((unlocked / total) * 100) : 0,
   };
 }
 
@@ -129,8 +142,9 @@ export function bumpDistinct(id, target, value) {
 function maybeUnlockCompletionist() {
   const ledger = getLedger();
   const unlockedCount = Object.keys(ledger).length;
+  const total = isTouchDevice() ? TOTAL_TOUCH : TOTAL;
   // -1: don't count completionist itself in "everything else"
-  if (unlockedCount >= TOTAL - 1 && !ledger.completionist) {
+  if (unlockedCount >= total - 1 && !ledger.completionist) {
     // Queue so it always lands as its own, later toast rather than racing
     // the achievement that just triggered it.
     setTimeout(() => unlock("completionist"), 50);

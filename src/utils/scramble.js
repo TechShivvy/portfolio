@@ -128,6 +128,25 @@ const task1 = () => {
       }
     });
 
+    // Touch has no hover - mouseover/mouseout above never fire on a phone or
+    // tablet, so identity-crisis would otherwise be unreachable there. A tap
+    // runs the same scramble for a fixed window instead of tracking
+    // enter/leave state, since touch has no equivalent to mouseout.
+    textElement.addEventListener("touchstart", () => {
+      if (!isAnimationComplete || isHovered) return;
+      unlock("identity-crisis");
+      isHovered = true;
+      clearInterval(inst);
+      centeredContentElement.style.color = COLOR_ACCENT_DANGER;
+      inst = setInterval(scrambleTextEndless, 100);
+      setTimeout(() => {
+        isHovered = false;
+        clearInterval(inst);
+        textElement.innerHTML = originalText;
+        centeredContentElement.style.color = COLOR_ACCENT;
+      }, 1200);
+    }, { passive: true });
+
     let inst = !hasRun?setInterval(scrambleText, 100):resolve();
     // resolve();
   });
