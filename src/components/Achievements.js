@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./_Achievements.module.css";
 import ACHIEVEMENTS from "../content/achievements";
 import {
@@ -371,21 +372,29 @@ export default function Achievements() {
 
   return (
     <>
-      {/* Toast stack */}
-      <div
-        ref={toastStackRef}
-        className={`${styles.toastStack} ${drawerOpen ? styles.shiftedForDrawer : ""}`}
-        aria-live="polite"
-      >
-        {visibleToasts.map((t) => (
-          <AchievementToast
-            key={t.key}
-            entry={t}
-            sfClassName={sfClassName}
-            onDismiss={() => dismissToast(t.key)}
-          />
-        ))}
-      </div>
+      {/* Toast stack - portalled to <body> so it sits OUTSIDE #root, the
+          element the 67 easter egg skews. A descendant of the transformed
+          element can't be made immune: it inherits both the shear and a
+          viewport-width-dependent vertical offset, and its fixed positioning
+          re-anchors to the transformed box. Being a sibling of #root instead
+          makes it genuinely untouched (issue #41). */}
+      {createPortal(
+        <div
+          ref={toastStackRef}
+          className={`${styles.toastStack} ${drawerOpen ? styles.shiftedForDrawer : ""}`}
+          aria-live="polite"
+        >
+          {visibleToasts.map((t) => (
+            <AchievementToast
+              key={t.key}
+              entry={t}
+              sfClassName={sfClassName}
+              onDismiss={() => dismissToast(t.key)}
+            />
+          ))}
+        </div>,
+        document.body
+      )}
 
       {/* Pocket tab */}
       <button
