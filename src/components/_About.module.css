@@ -567,7 +567,12 @@ a > img {
 
 /* ─── Tech stack ─── */
 .stack {
-  margin-top: 28px;
+  margin-top: 16px;
+  background-color: #151515;
+  border-radius: 5px;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  font-family: var(--font-mono);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -576,7 +581,7 @@ a > img {
 .stackHeading {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: #6c7086;
+  color: var(--color-accent);
 }
 
 .stackRow {
