@@ -6,6 +6,7 @@ import {
   getProgress,
   getUnlocked,
   isUnlocked,
+  playUnlockBlip,
   trackArrival,
 } from "../utils/achievements";
 
@@ -44,6 +45,7 @@ function AchievementToast({ entry, sfClassName, onDismiss }) {
   });
 
   useEffect(() => {
+    playUnlockBlip();
     const id = setTimeout(() => onDismissRef.current(), TOAST_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps

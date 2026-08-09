@@ -166,4 +166,34 @@ export function trackArrival() {
   return () => clearTimeout(timer);
 }
 
+// Small tech blip played when an achievement toast actually becomes visible
+// (see AchievementToast in Achievements.js - not at unlock time, so it
+// doesn't fire for something the visitor can't yet see if 4+ land at once).
+// Two quick rising notes, ~150ms total. Silently no-ops if AudioContext is
+// unavailable or still suspended (no prior user gesture) - the four passive
+// arrival achievements can unlock without one, and browsers correctly mute
+// audio until a real interaction happens.
+export function playUnlockBlip() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch (_) {
+    // ignore - a silent unlock is fine, a broken one isn't
+  }
+}
+
 export default unlock;
