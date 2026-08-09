@@ -63,11 +63,26 @@
   transform: translateX(5px);
 }
 
+/* Short forms only kick in on narrow screens - see the @media block below. */
+.short {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .navbar a {
-    /* Fluid size keeps all six links on one row without crowding, down to the
-       narrowest phones. */
+    /* Fluid size keeps all seven links on one row without crowding, down to
+       the narrowest phones. */
     font-size: clamp(0.5rem, 2.7vw, 0.8rem);
     letter-spacing: 0;
+  }
+
+  /* Seven full-word links no longer fit at this width - swap to terse forms
+     (e.g. "timeline" -> "log") so the row still fits on one line down to
+     320px without shrinking the font into illegibility. */
+  .full {
+    display: none;
+  }
+  .short {
+    display: inline;
   }
 }

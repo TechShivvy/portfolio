@@ -27,22 +27,39 @@ function Navbar() {
     >
       <ul>
         <li>
-          <a href="#home">&nbsp;home&nbsp;</a>
+          <a href="#home">
+            &nbsp;<span className={styles.full}>home</span><span className={styles.short}>home</span>&nbsp;
+          </a>
         </li>
         <li>
-          <a href="#about">&nbsp;about&nbsp;</a>
+          <a href="#about">
+            &nbsp;<span className={styles.full}>about</span><span className={styles.short}>about</span>&nbsp;
+          </a>
         </li>
         <li>
-          <a href="#timeline">&nbsp;timeline&nbsp;</a>
+          <a href="#timeline">
+            &nbsp;<span className={styles.full}>timeline</span><span className={styles.short}>log</span>&nbsp;
+          </a>
         </li>
         <li>
-          <a href="#projects">&nbsp;projects&nbsp;</a>
+          <a href="#work">
+            &nbsp;<span className={styles.full}>work</span><span className={styles.short}>work</span>&nbsp;
+          </a>
         </li>
         <li>
-          <a href="#beyond-code">&nbsp;beyond&nbsp;</a>
+          <a href="#projects">
+            &nbsp;<span className={styles.full}>projects</span><span className={styles.short}>proj</span>&nbsp;
+          </a>
         </li>
         <li>
-          <a href="#contact">&nbsp;contact&nbsp;</a>
+          <a href="#beyond-code">
+            &nbsp;<span className={styles.full}>beyond</span><span className={styles.short}>beyond</span>&nbsp;
+          </a>
+        </li>
+        <li>
+          <a href="#contact">
+            &nbsp;<span className={styles.full}>contact</span><span className={styles.short}>mail</span>&nbsp;
+          </a>
         </li>
       </ul>
       {/* Lives inside the nav so it can anchor to the navbar's bottom edge via

@@ -1,6 +1,7 @@
 import INTERESTS from "../content/interests";
 import ABOUT from "../content/about";
 import STACK from "../content/stack";
+import WORK from "../content/work";
 
 // ─── Interest line helper ───────────────────────────────────────────────────
 function interestLines(key) {
@@ -46,6 +47,10 @@ export default function buildVirtualFiles(scrollToSection) {
     "interests.txt": () =>
       Object.values(INTERESTS).map((i) => ({
         text: `  ${i.icon}  ${i.label.padEnd(14)} - ${i.blurb}`, type: "output",
+      })),
+    "work.txt": () =>
+      Object.values(WORK).map((w) => ({
+        text: `  ${w.icon}  ${w.label.padEnd(14)} - ${w.blurb}`, type: "output",
       })),
     "games.txt":   () => interestLines("games"),
     "anime.txt":   () => interestLines("anime"),

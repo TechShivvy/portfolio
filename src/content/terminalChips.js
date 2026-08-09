@@ -8,6 +8,8 @@ export const CHIPS = [
   "git log",
   "spotify --now-playing",
   "timeline",
+  "work",
+  "cat work.txt",
   "projects",
   "matrix",
   "replay",

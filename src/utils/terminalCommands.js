@@ -40,6 +40,7 @@ export default function buildCommands(scrollToSection) {
       const names = Object.keys(virtualFiles);
       return [
         { text: "drwxr-xr-x  projects/", type: "output" },
+        { text: "drwxr-xr-x  work/", type: "output" },
         { text: "drwxr-xr-x  beyond-code/", type: "output" },
         ...names.map((n) => ({ text: `-rw-r--r--  ${n}`, type: "output" })),
         { text: "-rw-------  .secrets", type: "danger" },
@@ -140,6 +141,13 @@ export default function buildCommands(scrollToSection) {
         return [{ text: "timeline - scrolls the page to the Timeline section.", type: "info" }];
       scrollToSection("timeline");
       return [{ text: ">> scrolling to timeline...", type: "info" }];
+    },
+
+    work: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "work - scrolls the page to the Work section.", type: "info" }];
+      scrollToSection("work");
+      return [{ text: ">> scrolling to work...", type: "info" }];
     },
 
     projects: (args) => {
