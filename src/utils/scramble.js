@@ -21,7 +21,6 @@ const task1 = () => {
   const text = [];
   const hasRun = sessionStorage.getItem("hasRun");
 
-  console.log(hasRun)
   if (hasRun) {
     // sessionStorage.setItem("hasRunOnce", "true");
     isAnimationComplete = true;
@@ -54,8 +53,6 @@ const task1 = () => {
       scrambledText.push(getRandomChar);
     }
 
-    // console.log(text);
-
     function scrambleText() {
       if (counter < maxIterations) {
         for (let i = 0; i < originalText.length; i++) {
@@ -80,7 +77,6 @@ const task1 = () => {
           0,
           originalText.length
         );
-        console.log("'" + textElement.innerHTML + "'");
       } else {
         isAnimationComplete = true;
         centeredContentElement.style.color = COLOR_ACCENT;
