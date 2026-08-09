@@ -4,7 +4,7 @@ import WORK from "../content/work";
 import STACK from "../content/stack";
 import useFadeIn from "../utils/useFadeIn";
 
-const KEYS = ["evals", "platform", "data", "mlops", "devops"];
+const KEYS = ["platform", "data", "evals", "automation", "security", "ownership"];
 
 export default function Work() {
   const fadeRef = useFadeIn();

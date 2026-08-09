@@ -169,16 +169,16 @@ function About() {
               reason.
             </p>
             <p className={styles["para"]}>
-              At work that's two and a half years at Comcast, mostly on the unglamorous half of
-              ML: platform reliability, observability, and the evaluation layer - not training
-              models. Right now I build evaluation pipelines for LLM agents - versioned,
-              reproducible, running on a schedule against real production transcripts so
-              regressions get caught before anyone files a ticket. Before that it was Kubernetes
-              upgrades and graceful shutdowns, distributed model serving on Ray, a telemetry
-              pipeline in Scala and Spark, load-testing frameworks, and enough Grafana
-              dashboards to have strong opinions about them. A lot of the job is deep debugging
-              - the kind where the bug turns out to be an event loop three
-              systems away from where you started looking.
+              At work that's two and a half years at Comcast, where I've owned production
+              reliability, data pipelines, and evaluation infrastructure for ML and AI-agent
+              systems end to end. Right now that means evaluation pipelines for LLM agents -
+              versioned, reproducible, running on a schedule against real production transcripts
+              so regressions get caught before anyone files a ticket. Before that it was
+              Kubernetes upgrades and graceful shutdowns, distributed model serving on Ray, a
+              telemetry pipeline I built in Scala and Spark, and enough Grafana dashboards to
+              have strong opinions about them. A lot of the job is deep debugging - the kind
+              where the bug turns out to be an event loop three systems away from where you
+              started looking. More on all of that below.
             </p>
 
             {/* Fake macOS-style terminal chrome */}
