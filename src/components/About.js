@@ -159,12 +159,26 @@ function About() {
               {" "}I'm currently on a quest to locate the elusive missing semicolon ;)
             </p>
             <p className={styles["para"]}>
-              Day to day that means shipping machine learning systems that actually reach
-              production - data pipelines, model training, the API layer that serves it, and
-              the on-call rotation when it breaks. Outside of work I build things nobody asked
-              for: this portfolio's easter eggs, a Spotify playlist tool, a synchronized YouTube
-              watch party. If it's in the projects below, I built it because I was curious what
-              it'd take.
+              Outside of work I build things for two reasons that usually show up together:
+              something personal annoys me enough that I can't leave it alone, and I'm curious
+              what it'd actually take to fix. A Spotify tool because building playlists by hand
+              got old. A synchronized YouTube watch party because long-distance movie night was
+              three people counting down "3, 2, 1, play" and still desyncing. The ten seconds
+              where it first works properly is genuinely the best part of my week - that hit is
+              most of why I keep doing this. The easter eggs on this page exist for the same
+              reason.
+            </p>
+            <p className={styles["para"]}>
+              At work that's two and a half years at Comcast, where I've owned production
+              reliability, data pipelines, and evaluation infrastructure for ML and AI-agent
+              systems end to end. Right now that means evaluation pipelines for LLM agents -
+              versioned, reproducible, running on a schedule against real production transcripts
+              so regressions get caught before anyone files a ticket. Before that it was
+              Kubernetes upgrades and graceful shutdowns, distributed model serving on Ray, a
+              telemetry pipeline I built in Scala and Spark, and enough Grafana dashboards to
+              have strong opinions about them. A lot of the job is deep debugging - the kind
+              where the bug turns out to be an event loop three systems away from where you
+              started looking. More on all of that below.
             </p>
 
             {/* Fake macOS-style terminal chrome */}

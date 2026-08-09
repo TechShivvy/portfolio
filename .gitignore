@@ -29,3 +29,5 @@ yarn-error.log*
 /src-backup
 
 pr-description.md
+
+**/company-writeups/**

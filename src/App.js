@@ -17,6 +17,7 @@ const Navbar = lazy(() => import("./components/Navbar"));
 const Project = lazy(() => import("./components/Project"));
 const ScrollUp = lazy(() => import("./components/ScrollUp"));
 const Timeline = lazy(() => import("./components/Timeline"));
+const Work = lazy(() => import("./components/Work"));
 
 function App() {
   // If we have a saved scroll position, start "restoring" so a black overlay
@@ -105,6 +106,7 @@ function App() {
                   <Navbar />
                   <About />
                   <Timeline />
+                  <Work />
                   <Project />
                   <BeyondCode />
                   {/* <Construction /> */}
