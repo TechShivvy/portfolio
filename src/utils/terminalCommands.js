@@ -3,6 +3,8 @@ import tenet from "./tenet";
 import splitFiction from "./splitFiction";
 import throwPokeball from "./pokeball";
 import buildVirtualFiles from "./virtualFiles";
+import { SECRET_CODE } from "../content/achievements";
+import { unlock } from "./achievements";
 
 // ─── Command definitions ────────────────────────────────────────────────────
 export default function buildCommands(scrollToSection) {
@@ -24,6 +26,8 @@ export default function buildCommands(scrollToSection) {
       { text: "  clear               - clear terminal", type: "output" },
       { text: "  history             - command history", type: "output" },
       { text: "  sudo                - try it ;)", type: "output" },
+      { text: "  achievements        - open the achievements panel  [Ctrl+K t]", type: "output" },
+      { text: "  unlock <word>       - redeem a word found somewhere on this site", type: "output" },
       { text: "  exit 8 [fast]        - the loop. spot 8 anomalies (fast mode: exit 8 fast).  [Ctrl+K 8 / Ctrl+K 9]", type: "output" },
       { text: "  split-fiction [2]    - split the world in two (2 = rotating seam mode).  [Ctrl+K f / Ctrl+K 2]", type: "output" },
       { text: "  tenet               - play the whole intro in reverse, then power off.  [Ctrl+K x]", type: "output" },
@@ -282,6 +286,24 @@ export default function buildCommands(scrollToSection) {
         return [{ text: "pokeball - throw a pokéball at the hero text. 50/50 catch rate.", type: "info" }];
       setTimeout(() => throwPokeball(), 300);
       return [{ text: ">> throwing pokéball...", type: "accent" }];
+    },
+
+    achievements: (args) => {
+      if (args[0] === "-h" || args[0] === "--help")
+        return [{ text: "achievements - opens the achievements panel.", type: "info" }];
+      window.dispatchEvent(new CustomEvent("achievements:toggle"));
+      return [{ text: ">> opening achievements...", type: "info" }];
+    },
+
+    unlock: (args) => {
+      if (!args.length || args[0] === "-h" || args[0] === "--help")
+        return [{ text: "unlock <word> - redeem a word you found somewhere on this site.", type: "info" }];
+      const word = args.join(" ");
+      if (word === SECRET_CODE) {
+        unlock("source-diver");
+        return [{ text: ">> correct. achievement unlocked: source diver.", type: "accent" }];
+      }
+      return [{ text: `unlock: '${word}' isn't it. keep looking.`, type: "danger" }];
     },
   };
 }

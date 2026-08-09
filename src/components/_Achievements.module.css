@@ -1,0 +1,450 @@
+/* ─── Toast stack (top-right) ─────────────────────────────────────────────── */
+.toastStack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 100003; /* clears the shortcuts modal (100002) */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: min(300px, calc(100vw - 32px));
+  transition: right 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* When the drawer is open it occupies the same top-right corner - shift the
+   toast stack clear of it (340px drawer + 18px gap) instead of overlapping
+   its header. */
+.toastStack.shiftedForDrawer {
+  right: 358px;
+}
+
+/* Immunity from the "67" seesaw: body.sixseven skews the whole page via a
+   transform on <body>, which becomes the containing block for every
+   position:fixed descendant (that's the whole point of the gag - everything
+   on screen skews together). The toast stack is exempted by running an equal
+   and opposite skew on itself, cancelling the inherited skew for its own
+   content while the rest of the page keeps seesawing normally around it. */
+:global(body.sixseven) .toastStack {
+  animation: sixseven-counter 0.38s ease-in-out infinite;
+}
+@keyframes sixseven-counter {
+  0%   { transform: skewY(0deg);   }
+  25%  { transform: skewY(-12deg); }
+  50%  { transform: skewY(0deg);   }
+  75%  { transform: skewY(12deg);  }
+  100% { transform: skewY(0deg);   }
+}
+
+.toast {
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  background: rgba(13, 13, 13, 0.92);
+  border: 1px solid rgba(43, 162, 162, 0.28);
+  border-left: 2px solid var(--color-accent);
+  border-radius: 3px;
+  color: #b9c7c7;
+  font-family: var(--font-mono);
+  padding: 9px 12px 10px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  animation: toast-in 0.22s ease-out;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.toast.rare {
+  border-left-color: #c482ff;
+  border-color: rgba(196, 130, 255, 0.28);
+}
+
+.toast.legendary {
+  border-left-color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.32);
+}
+
+.toast.legendary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 215, 0, 0.18) 48%,
+    transparent 66%
+  );
+  transform: translateX(-120%);
+  animation: toast-shimmer 1.1s ease-out 0.1s 1;
+}
+
+.toastLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-accent);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.toast.rare .toastLabel {
+  color: #c482ff;
+}
+.toast.legendary .toastLabel {
+  color: #ffd700;
+}
+
+.toastName {
+  margin-top: 3px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.toastDesc {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.toastBar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-accent);
+  animation: toast-drain 4.5s linear forwards;
+}
+.toast.rare .toastBar {
+  background: #c482ff;
+}
+.toast.legendary .toastBar {
+  background: #ffd700;
+}
+
+/* Split Fiction re-theme: overrides rarity colour to match whichever side of
+   the seam the toast currently sits over (tracked by polling
+   window.__sfIsRightAt - see Achievements.js). Declared after the rarity
+   rules above so it wins on equal specificity. Matters most in spin mode,
+   where the seam rotates continuously and a stationary toast in the corner
+   drifts between sides on its own. */
+.toast.sfTech {
+  border-left-color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.32);
+}
+.toast.sfTech .toastLabel { color: #00e5ff; }
+.toast.sfTech .toastBar   { background: #00e5ff; }
+
+.toast.sfFairy {
+  border-left-color: #c482ff;
+  border-color: rgba(196, 130, 255, 0.32);
+}
+.toast.sfFairy .toastLabel { color: #c482ff; }
+.toast.sfFairy .toastBar   { background: #c482ff; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-shimmer {
+  to { transform: translateX(120%); }
+}
+@keyframes toast-drain {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: toast-in-reduced 0.18s ease-out; }
+  .toast.legendary::after { animation: none; content: none; }
+  @keyframes toast-in-reduced {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+}
+
+/* ─── Pocket tab (right edge, vertically centred) ─────────────────────────── */
+.pocket {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%) translateX(0);
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 24px;
+  padding: 10px 3px;
+  background: rgba(13, 13, 13, 0.85);
+  border: 1px solid rgba(43, 162, 162, 0.3);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: #b9c7c7;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  cursor: var(--cursor-pointer, pointer);
+  opacity: 0.45;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  touch-action: none;
+  writing-mode: vertical-rl;
+}
+
+.pocket:hover,
+.pocket:focus-visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(-4px);
+  box-shadow: -4px 0 14px rgba(43, 162, 162, 0.35);
+  /* Replace the browser's default focus ring (a mismatched blue/cyan against
+     this teal UI) with the themed glow above - still a clearly visible
+     focus indicator, just an on-brand one. Most noticeable after Escape
+     returns focus here from the drawer. */
+  outline: none;
+}
+
+.pocket.pocketOpen {
+  opacity: 1;
+}
+
+.pocket.pocketHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(28px);
+}
+
+.pocket.pocketPulse {
+  animation: pocket-pulse 0.9s ease-in-out 2;
+}
+
+@keyframes pocket-pulse {
+  0%, 100% { box-shadow: -4px 0 14px rgba(43, 162, 162, 0.35); }
+  50%      { box-shadow: -4px 0 22px rgba(43, 162, 162, 0.85); }
+}
+
+/* Discovery nudge - sonar ping. Two glow/opacity-only pulses (checked against
+   real screenshots, not just "the class applied") were both too easy to miss
+   at a 24px tab tucked on the screen edge - a ring expanding outward into
+   the empty space beside the tab is the actual "notification" language
+   people already recognize (Android FABs, Slack unread dots, macOS badges),
+   and expanding motion into open space is exactly what peripheral vision is
+   tuned to catch, unlike a same-size glow/opacity change in place. The ring
+   is a ::before sized and centred independently of the tab's own vertical
+   writing-mode layout, so it reads as a clean circle regardless. */
+.pocket.pocketBeacon {
+  animation: pocket-beacon-glow 1s ease-out 3;
+}
+.pocket.pocketBeacon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-accent);
+  pointer-events: none;
+  animation: pocket-ring 1s ease-out 3;
+}
+@keyframes pocket-beacon-glow {
+  0%, 100% { opacity: 0.45; box-shadow: -4px 0 10px rgba(43, 162, 162, 0.25); }
+  30%      { opacity: 1;    box-shadow: -6px 0 24px rgba(43, 162, 162, 0.85); }
+}
+@keyframes pocket-ring {
+  0%   { transform: scale(0.6); opacity: 0.9; border-width: 2px; }
+  100% { transform: scale(3.2); opacity: 0;   border-width: 0.5px; }
+}
+
+.pocketIcon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.pocketCount {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ─── Drawer ───────────────────────────────────────────────────────────────── */
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100002;
+  width: 340px;
+  max-width: 88vw;
+  background: #0d0d0d;
+  border-left: 1px solid #2a2a2a;
+  box-shadow: -12px 0 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  color: #ccc;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.drawer.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawer.dragging {
+  transition: none;
+}
+
+.drawerHeader {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid #222;
+}
+
+.drawerTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.drawerClose {
+  background: transparent;
+  border: 1px solid #333;
+  color: #888;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 2px;
+  cursor: var(--cursor-pointer, pointer);
+}
+.drawerClose:hover {
+  color: var(--color-accent-danger);
+  border-color: var(--color-accent-danger);
+}
+
+.progressLine {
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: #999;
+  letter-spacing: 0.02em;
+}
+.progressLine b {
+  color: var(--color-accent);
+}
+
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 18px 20px;
+  /* Stop scroll chaining - without this, scrolling past either end of the
+     list hands the remaining scroll delta to the page underneath instead of
+     just stopping. */
+  overscroll-behavior: contain;
+}
+
+.rarityGroup {
+  margin-top: 14px;
+}
+.rarityGroup:first-child {
+  margin-top: 6px;
+}
+
+.rarityHeading {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+.rarityHeading.legendary { color: #ffd700; }
+.rarityHeading.rare      { color: #c482ff; }
+.rarityHeading.common    { color: var(--color-accent); }
+
+.row {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed #1c1c1c;
+}
+
+.rowIcon {
+  flex: 0 0 auto;
+  width: 18px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: 0.78rem;
+  color: #eee;
+}
+.row.locked .rowName {
+  color: #666;
+}
+
+.rowDesc {
+  margin-top: 2px;
+  font-size: 0.66rem;
+  color: #888;
+}
+.row.locked .rowDesc {
+  color: #555;
+  font-style: italic;
+}
+
+.rowDate {
+  flex: 0 0 auto;
+  font-size: 0.6rem;
+  color: #555;
+  white-space: nowrap;
+}
+
+.row.unlocked.rare .rowName    { color: #c482ff; }
+.row.unlocked.legendary .rowName { color: #ffd700; }
+
+@media (max-width: 640px) {
+  .drawer {
+    width: 100vw;
+    max-width: 100vw;
+  }
+  .pocket {
+    top: auto;
+    bottom: 100px; /* clear the terminal chip row / scroll-up button */
+    transform: translateY(0) translateX(0);
+  }
+  .pocket:hover,
+  .pocket:focus-visible {
+    transform: translateY(0) translateX(-4px);
+  }
+  .pocket.pocketHidden {
+    transform: translateY(0) translateX(28px);
+  }
+  .toastStack {
+    top: 12px;
+    right: 8px;
+    left: 8px;
+    max-width: none;
+  }
+  /* Drawer is full-width on mobile, so shifting sideways can't clear it -
+     drop below its header row instead. */
+  .toastStack.shiftedForDrawer {
+    top: 72px;
+    right: 8px;
+  }
+}

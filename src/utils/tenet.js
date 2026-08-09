@@ -1,4 +1,5 @@
 import { COLOR_ACCENT_DANGER } from "./tokens";
+import { unlock } from "./achievements";
 
 // ─── Tenet sequence ──────────────────────────────────────────────────────────
 // Plays the entire hero intro *in reverse* and then closes the tab. The forward
@@ -190,6 +191,9 @@ function reverseSplash() {
 export default async function tenet() {
   if (window.__tenet) return;
   window.__tenet = true;
+  // Unlocked here, at the very start - localStorage.setItem is synchronous,
+  // so this is committed long before the location.replace() seven steps down.
+  unlock("time-traveller");
 
   // 1. Scroll back to the top so the reverse plays over the hero.
   window.scrollTo({ top: 0, behavior: "smooth" });

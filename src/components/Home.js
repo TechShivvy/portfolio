@@ -4,6 +4,7 @@ import task1 from "../utils/scramble";
 import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
 import useKonami from "../utils/konami";
+import { unlock } from "../utils/achievements";
 
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
@@ -15,8 +16,10 @@ const Home = () => {
   const arrowHiddenRef = useRef(false);
 
   const handleKonami = useCallback(() => {
+    unlock("person-of-culture");
     const next = !window.__matrixRainbow;
     window.__matrixRainbow = next;
+    if (next) unlock("rainbow-road");
     setRainbowToast(next ? ">> rainbow matrix: ON" : ">> rainbow matrix: OFF");
     setTimeout(() => setRainbowToast(null), 2200);
   }, []);
@@ -46,7 +49,14 @@ const Home = () => {
       if (cancelled) return;
       setIntroStarted(true);
       await task1();
-      if (!cancelled) setStartAnimation(true);
+      if (!cancelled) {
+        setStartAnimation(true);
+        // Scramble has settled and the matrix is about to start flowing -
+        // the achievements system waits for this before showing anything,
+        // so the first toast doesn't pop up mid-intro. See Achievements.js.
+        window.__heroIntroDone = true;
+        window.dispatchEvent(new Event("hero:intro-done"));
+      }
     }
 
     // Start the hero intro (scramble → set name → matrix) only once the

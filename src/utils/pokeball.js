@@ -1,3 +1,5 @@
+import { unlock } from "./achievements";
+
 // Throws a Pokéball at the hero h1 text, captures it with a wiggle sequence,
 // then releases it. Scrolls to top first so the animation is always visible.
 export default function throwPokeball() {
@@ -99,6 +101,7 @@ export default function throwPokeball() {
 
     // ── Caught path ───────────────────────────────────────────────────────────
     function onCaught() {
+      unlock("gotta-catch-em");
       // Toast + green glow appear together = outcome reveal
       showToast("★  Shivcharan was caught!", "caught");
       ball.animate(
@@ -127,6 +130,7 @@ export default function throwPokeball() {
 
     // ── Escaped path ──────────────────────────────────────────────────────────
     function onEscaped() {
+      unlock("uncontainable");
       const MSGS = [
         "Shivcharan broke free!",
         "Critical escape! HP restored.",

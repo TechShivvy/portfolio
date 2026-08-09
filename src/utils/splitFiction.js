@@ -18,6 +18,8 @@
 //   • Draggable seam → applySplit() → CSS vars update → everything follows.
 //   • Clean teardown: every node, listener, CSS var, and global is restored.
 
+import { unlock, bump } from "./achievements";
+
 const HOLD_MS  = 60000; // 1 minute (exits cleanly via Esc or EXIT button)
 const SPLIT_MS = 900;
 const MIN_PCT  = 10;
@@ -1133,6 +1135,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
   const fairyColors = FAIRY_COLORS;
   function spawnButterfly(x, y) {
     if (reduced) return;
+    unlock("metamorphosis");
     const color = fairyColors[Math.floor(Math.random() * fairyColors.length)];
     const el = document.createElement("div");
     el.className = "_sfButterfly";
@@ -1183,6 +1186,7 @@ function buildLaserStage(isLeftSciFi, getSeamSegment, reduced) {
   }
 
   function spawnLaser(x, y, angleDeg, distance) {
+    bump("trigger-happy", 50);
     const flash = document.createElement("div");
     flash.className = "_sfFlash";
     flash.style.left = x + "px";
@@ -1769,7 +1773,11 @@ export default async function splitFiction(options = {}) {
   setSplitVars(splitPct);
   window.__sfFairyActive = true;
   document.body.classList.add("_sfActive");
-  if (isSpinMode) document.body.classList.add("_sfSpinMode");
+  unlock("world-splitter");
+  if (isSpinMode) {
+    document.body.classList.add("_sfSpinMode");
+    unlock("spin-doctor");
+  }
 
   // Assign --tile-idx to each Spotify mosaic tile so the hover-dissolve stagger
   // animation works. The real DOM only has one set of tiles — no clone needed.

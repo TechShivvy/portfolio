@@ -3,6 +3,7 @@ import styles from "./_KeyboardShortcuts.module.css";
 import tenet from "../utils/tenet";
 import splitFiction from "../utils/splitFiction";
 import throwPokeball from "../utils/pokeball";
+import { unlock } from "../utils/achievements";
 
 // ─── Site-wide keyboard shortcuts ────────────────────────────────────────────
 // `?` or `Ctrl+/`  -> toggle this shortcuts panel (works anywhere on the site)
@@ -18,17 +19,24 @@ const replay = (opts) => {
   window.location.reload();
 };
 
+// `ach`: achievement id to unlock the instant the key is pressed - fired by
+// the dispatch wrapper below, BEFORE run() executes. That ordering matters for
+// r (raw.html navigates immediately) and q (closes the tab immediately):
+// localStorage.setItem is synchronous, so the unlock always lands first.
+// Actions whose achievement lives inside a shared util (tenet, splitFiction,
+// exit8, pokeball) don't need `ach` here - the util unlocks it itself, so it
+// fires the same way whether triggered by shortcut or terminal command.
 const ACTIONS = {
   s: { label: "replay splash", run: () => replay({ splash: true }) },
   m: { label: "replay matrix", run: () => replay({ matrix: true }) },
   a: { label: "replay all", run: () => replay({ splash: true, matrix: true }) },
-  r: { label: "raw HTML", run: () => { window.location.href = "/portfolio/raw.html"; } },
+  r: { label: "raw HTML", ach: "y2k-compliant", run: () => { window.location.href = "/portfolio/raw.html"; } },
   x: { label: "tenet", run: () => tenet() },
   8: { label: "exit 8", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8" })) },
   9: { label: "exit 8 fast", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "exit 8 fast" })) },
   f: { label: "split fiction", run: () => splitFiction() },
   2: { label: "split fiction spin", run: () => window.dispatchEvent(new CustomEvent("terminal:run", { detail: "split-fiction 2" })) },
-  6: { label: "67", run: () => {
+  6: { label: "67", ach: "six-seven", run: () => {
     if (document.body.classList.contains("sixseven")) {
       document.body.classList.remove("sixseven");
     } else {
@@ -37,7 +45,8 @@ const ACTIONS = {
     }
   }},
   p: { label: "pokéball", run: () => throwPokeball() },
-  q: { label: "suicide", run: () => window.location.replace("about:blank") },
+  q: { label: "suicide", ach: "self-destruct", run: () => window.location.replace("about:blank") },
+  t: { label: "achievements", run: () => window.dispatchEvent(new CustomEvent("achievements:toggle")) },
 };
 
 // Rows rendered inside the panel. `section` entries render as headers.
@@ -57,6 +66,7 @@ const SHORTCUTS = [
   { keys: ["Ctrl+K", "6"], desc: "67 (six seven seesaw for 4.2s)" },
   { keys: ["Ctrl+K", "p"], desc: "pokéball (catch the hero text)" },
   { keys: ["Ctrl+K", "q"], desc: "suicide (closes the tab)" },
+  { keys: ["Ctrl+K", "t"], desc: "achievements (see what you've found)" },
   { section: "terminal" },
   { keys: ["Enter"], desc: "run command" },
   { keys: ["\u2191", "\u2193"], desc: "command history" },
@@ -97,7 +107,10 @@ export default function KeyboardShortcuts() {
           e.preventDefault();
           const action = ACTIONS[e.key.toLowerCase()];
           cancelPrefix();
-          if (action) action.run();
+          if (action) {
+            if (action.ach) unlock(action.ach);
+            action.run();
+          }
           return;
         }
       }
@@ -118,6 +131,7 @@ export default function KeyboardShortcuts() {
         (e.key === "?" && !isTyping(e.target))
       ) {
         e.preventDefault();
+        if (!showPanel) unlock("rtfm");
         setShowPanel((v) => !v);
         return;
       }

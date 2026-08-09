@@ -4,6 +4,7 @@ import AboutLines from "./AboutLines";
 import InteractiveTerminal from "./InteractiveTerminal";
 import useFadeIn from "../utils/useFadeIn";
 import aboutData from "../content/about";
+import { unlock } from "../utils/achievements";
 
 // ─── Spotify mosaic-reveal card ──────────────────────────────────────────────
 const COLS = 24;
@@ -72,6 +73,7 @@ function SpotifyMosaic() {
   // Click toggles pin: not-pinned → pinned-revealed → not-pinned (hover again) …
   const handleClick = (e) => {
     if (e.target.closest("a")) return; // let link clicks through
+    if (!pinned) unlock("now-playing");
     setPinned((prev) => !prev);
   };
 
@@ -139,6 +141,7 @@ function About() {
   const [hasBooted, setHasBooted] = useState(false);
 
   const handleToggle = () => {
+    if (!interactive) unlock("shell-access");
     setInteractive((prev) => !prev);
   };
 

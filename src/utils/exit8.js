@@ -1,7 +1,11 @@
 // Exit 8 — seamless corridor loop + anomaly detection game
 // Exports a factory function that returns a game instance with full cleanup
 
+import { unlock } from "./achievements";
+
 // ── Audio Helper ───────────────────────────────────────────────────
+// The win track is "Raavana Mavandaa" (Anirudh, Jana Nayagan) - a mass hero
+// send-off for making it out. Also its own achievement, see winGame() below.
 let winAudioInstance = null;
 
 const getWinAudio = () => {
@@ -57,6 +61,14 @@ const playSynthVictorySound = () => {
   } catch (_) {}
 };
 
+// Score display markup - "N ↓". The down arrow is wrapped to force the
+// site's normal mono stack instead of inheriting the hero's "Hacked" display
+// font, which doesn't cover this glyph and was falling back per-character to
+// whatever the browser picked next, making the arrow look visibly different
+// from the score digit next to it.
+const scoreHTML = (n) =>
+  `${n} <span style="font-family:var(--font-mono,monospace)">↓</span>`;
+
 export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast = false }) {
   // Guard: prevent concurrent game instances
   if (startExit8._active) return { teardown: () => {} };
@@ -104,7 +116,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
   st.heroEl = heroEl;
   st.heroOrig = heroEl ? heroEl.textContent : null;
   if (heroEl) {
-    heroEl.textContent = "0 ↓";
+    heroEl.innerHTML = scoreHTML(0);
     heroEl.style.color = "#2ba2a2";
     heroEl.style.pointerEvents = "none";
     if (heroEl.parentElement) heroEl.parentElement.style.zIndex = "1";
@@ -211,7 +223,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
 
     const ch = c.querySelector("#hackerText");
     if (ch) {
-      ch.textContent = `${st.score} ↓`;
+      ch.innerHTML = scoreHTML(st.score);
       ch.style.color = "#2ba2a2";
       if (ch.parentElement) ch.parentElement.style.zIndex = "1";
     }
@@ -228,13 +240,13 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
     const scoreEl = document.getElementById("_exit8score");
     if (scoreEl) scoreEl.textContent = `[${st.score}/8]`;
     if (st.heroEl) {
-      st.heroEl.textContent = `${st.score} ↓`;
+      st.heroEl.innerHTML = scoreHTML(st.score);
       st.heroEl.style.color = "#2ba2a2";
     }
     (st.clones || []).forEach((c) => {
       const ch = c.querySelector("#hackerText");
       if (ch) {
-        ch.textContent = `${st.score} ↓`;
+        ch.innerHTML = scoreHTML(st.score);
         ch.style.color = "#2ba2a2";
       }
     });
@@ -353,6 +365,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
     }
 
     if (st.anomalyFiredThisCorridor && !st.verdictLocked) {
+      unlock("anomaly-spotter");
       st.score = Math.min(st.score + 1, 9);
       updateScoreUI();
       if (st.score >= 9) {
@@ -452,6 +465,8 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
   // ── Win sequence ───────────────────────────────────────────────────
   const winGame = () => {
     st._won = true;
+    unlock(isFast ? "speedrunner" : "broke-the-loop");
+    unlock("raavana-mavandaa"); // the win track itself - see playWinAudio above
     playWinAudio();
     const escapedHeroEl = st.heroEl;
     const heroOrigText = st.heroOrig ?? "SHIVCHARAN";
@@ -619,7 +634,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
           else if (st.anomalyFiredThisCorridor) _pred = 0;
           const _ch = _nextClone.querySelector("#hackerText");
           if (_ch) {
-            _ch.textContent = `${_pred} ↓`;
+            _ch.innerHTML = scoreHTML(_pred);
             _ch.style.color = "#2ba2a2";
           }
         }

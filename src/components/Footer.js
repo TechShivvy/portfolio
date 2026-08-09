@@ -1,5 +1,7 @@
 import React from "react";
 import styles from "./_Footer.module.css";
+import { unlock } from "../utils/achievements";
+
 function Footer() {
   const startYear = 2024;
   const currentYear = new Date().getFullYear();
@@ -9,8 +11,12 @@ function Footer() {
     <footer>
       <div className={styles["footer-content"]}>
         <p>
-          Made by <span className={styles["hover-text"]} /> &copy; {yearRange} |
-          All Rights Reserved
+          Made by{" "}
+          <span
+            className={styles["hover-text"]}
+            onMouseEnter={() => unlock("who-made-this")}
+          />{" "}
+          &copy; {yearRange} | All Rights Reserved
         </p>
       </div>
     </footer>
