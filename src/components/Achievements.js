@@ -16,6 +16,46 @@ const DRAG_THRESHOLD = 6; // px of movement before a pointer-down counts as a dr
 
 let toastKeySeq = 0;
 
+// A single toast owns its own dismiss timer, started when IT mounts (i.e.
+// when it actually becomes one of the visible top 3) - not a shared timer
+// tied to the whole queue. That's what keeps its drain bar and its removal
+// in sync regardless of how many other toasts are stacked around it:
+// previously every new toast arriving reset a single shared "remove the
+// oldest" timer, so a toast already most of the way through its own CSS
+// drain animation could sit fully-drained-but-still-visible for a while, or
+// get yanked away out of sync with its bar.
+function AchievementToast({ entry, onDismiss }) {
+  // onDismiss is a fresh closure from the parent's map() on every render (it
+  // captures this toast's key), so it can't be a dependency of the mount
+  // effect below without re-triggering that effect on every unrelated parent
+  // re-render (e.g. a sibling toast arriving) - which is the exact bug this
+  // component exists to avoid. A ref holds the latest closure without being
+  // a dependency, so the timer really does start once, at mount, and only then.
+  const onDismissRef = useRef(onDismiss);
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  });
+
+  useEffect(() => {
+    const id = setTimeout(() => onDismissRef.current(), TOAST_MS);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      className={`${styles.toast} ${styles[entry.rarity] || ""}`}
+      onClick={onDismiss}
+      role="status"
+    >
+      <div className={styles.toastLabel}>&#9656; Achievement Unlocked</div>
+      <div className={styles.toastName}>{entry.name}</div>
+      <div className={styles.toastDesc}>{entry.desc}</div>
+      <div className={styles.toastBar} />
+    </div>
+  );
+}
+
 export default function Achievements() {
   const [toasts, setToasts] = useState([]);
   const [progress, setProgress] = useState(() => getProgress());
@@ -50,21 +90,14 @@ export default function Achievements() {
     };
   }, []);
 
-  // Auto-dismiss the oldest toast, and cap how many render at once so a
-  // burst of unlocks (e.g. Ctrl+K chords fired back to back) queues cleanly.
-  useEffect(() => {
-    if (!toasts.length) return;
-    const id = setTimeout(() => {
-      setToasts((prev) => prev.slice(1));
-    }, TOAST_MS);
-    return () => clearTimeout(id);
-  }, [toasts]);
-
+  // Cap how many render at once so a burst of unlocks (e.g. Ctrl+K chords
+  // fired back to back) queues cleanly; each visible toast dismisses itself
+  // independently (see AchievementToast above).
   const visibleToasts = toasts.slice(0, 3);
 
-  const dismissToast = (key) => {
+  const dismissToast = useCallback((key) => {
     setToasts((prev) => prev.filter((t) => t.key !== key));
-  };
+  }, []);
 
   // ─── Hide the pocket while Exit 8 or Split Fiction own the viewport ──────
   // Both are hand-rolled DOM/canvas takeovers with no lifecycle event bus of
@@ -229,19 +262,11 @@ export default function Achievements() {
         aria-live="polite"
       >
         {visibleToasts.map((t) => (
-          <div
+          <AchievementToast
             key={t.key}
-            className={`${styles.toast} ${styles[t.rarity] || ""}`}
-            onClick={() => dismissToast(t.key)}
-            role="status"
-          >
-            <div className={styles.toastLabel}>
-              &#9656; Achievement Unlocked
-            </div>
-            <div className={styles.toastName}>{t.name}</div>
-            <div className={styles.toastDesc}>{t.desc}</div>
-            <div className={styles.toastBar} />
-          </div>
+            entry={t}
+            onDismiss={() => dismissToast(t.key)}
+          />
         ))}
       </div>
 
