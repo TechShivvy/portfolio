@@ -7,6 +7,19 @@ import renderText from "../utils/renderText";
 import { BOOT_LINES } from "../content/bootLines";
 import { CHIPS } from "../content/terminalChips";
 import sleep from "../utils/sleep";
+import { unlock, bumpDistinct } from "../utils/achievements";
+
+// Achievement fired the moment a command runs, keyed by command name. Commands
+// whose achievement lives inside a shared util (tenet, split-fiction, exit 8,
+// pokeball) aren't listed here - the util unlocks it itself, so it fires the
+// same way whether triggered by typing the command or by a Ctrl+K shortcut.
+const CMD_ACHIEVEMENTS = {
+  help: "helped",
+  ls: "snooper",
+  sudo: "nice-try",
+  "67": "six-seven",
+  suicide: "self-destruct",
+};
 
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -186,6 +199,31 @@ export default function InteractiveTerminal({ isActive, onClose, hasBooted, onBo
           { text: `shivi-shell: command not found: ${cmd}. Type 'help' for commands.`, type: "danger" },
         ]);
         return;
+      }
+
+      if (CMD_ACHIEVEMENTS[cmd]) unlock(CMD_ACHIEVEMENTS[cmd]);
+
+      // ── argument-aware achievement checks ─────────────────────────────────
+      if (cmd === "cat" && args.length) {
+        const target = args[0];
+        if (target === ".secrets" || target === "secrets") {
+          unlock("permission-denied");
+        } else {
+          const name = target.endsWith(".txt") ? target : `${target}.txt`;
+          if (buildVirtualFiles(scrollToSection)[name]) {
+            bumpDistinct("archaeologist", 3, name);
+          }
+        }
+      }
+      if (cmd === "matrix" && args[0] === "rainbow") unlock("rainbow-road");
+      if (
+        (cmd === "portfolio" && args[0] === "--no-css") ||
+        cmd === "--no-css"
+      ) {
+        unlock("y2k-compliant");
+      }
+      if (cmd === "sudo" && (args[0] === "suicide" || args[0] === "exit")) {
+        unlock("self-destruct");
       }
 
       const result = commands[cmd](args);

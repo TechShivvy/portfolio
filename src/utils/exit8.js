@@ -1,6 +1,8 @@
 // Exit 8 — seamless corridor loop + anomaly detection game
 // Exports a factory function that returns a game instance with full cleanup
 
+import { unlock } from "./achievements";
+
 // ── Audio Helper ───────────────────────────────────────────────────
 let winAudioInstance = null;
 
@@ -353,6 +355,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
     }
 
     if (st.anomalyFiredThisCorridor && !st.verdictLocked) {
+      unlock("anomaly-spotter");
       st.score = Math.min(st.score + 1, 9);
       updateScoreUI();
       if (st.score >= 9) {
@@ -452,6 +455,7 @@ export default function startExit8({ setLines, inputRef, rootEl, onQuit, isFast 
   // ── Win sequence ───────────────────────────────────────────────────
   const winGame = () => {
     st._won = true;
+    unlock(isFast ? "speedrunner" : "broke-the-loop");
     playWinAudio();
     const escapedHeroEl = st.heroEl;
     const heroOrigText = st.heroOrig ?? "SHIVCHARAN";

@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import styles from "./_Timeline.module.css";
 import useFadeIn from "../utils/useFadeIn";
 import timelineData from "../content/timeline";
+import { unlock } from "../utils/achievements";
 
 function Timeline() {
   const fadeRef = useFadeIn();
   const [openHash, setOpenHash] = useState(null);
 
-  const toggle = (hash) =>
+  const toggle = (hash) => {
+    unlock("git-blame");
     setOpenHash((prev) => (prev === hash ? null : hash));
+  };
 
   return (
     <div className={styles.timelineSection} id="timeline" ref={fadeRef}>

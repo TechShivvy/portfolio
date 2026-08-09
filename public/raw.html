@@ -147,5 +147,22 @@ tech     - terminal tooling, logging, too many YouTube rabbit holes
 <p><i>yes, this is intentional. sometimes you just want the plain HTML.</i></p>
 <p><a href="/portfolio/">&larr; back to the real one (with CSS and everything)</a></p>
 
+<script>
+  // Belt-and-suspenders unlock for the y2k-compliant achievement: the React
+  // app already unlocks it before redirecting here, but this covers a direct
+  // visit or bookmark that skips the app entirely. Same origin, so
+  // localStorage is shared with /portfolio/. Mirrors the ledger shape written
+  // by unlock() in src/utils/achievements.js - keep these in sync if that
+  // shape ever changes.
+  try {
+    var KEY = "sc.achievements";
+    var ledger = JSON.parse(localStorage.getItem(KEY) || "{}");
+    if (!ledger["y2k-compliant"]) {
+      ledger["y2k-compliant"] = { at: new Date().toISOString() };
+      localStorage.setItem(KEY, JSON.stringify(ledger));
+    }
+  } catch (e) {}
+</script>
+
 </body>
 </html>

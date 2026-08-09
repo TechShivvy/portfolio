@@ -4,6 +4,7 @@ import task1 from "../utils/scramble";
 import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "../utils/tokens";
 import MatrixAnimation from "./Matrix.js";
 import useKonami from "../utils/konami";
+import { unlock } from "../utils/achievements";
 
 const Home = () => {
   const [startAnimation, setStartAnimation] = useState(false);
@@ -15,8 +16,10 @@ const Home = () => {
   const arrowHiddenRef = useRef(false);
 
   const handleKonami = useCallback(() => {
+    unlock("person-of-culture");
     const next = !window.__matrixRainbow;
     window.__matrixRainbow = next;
+    if (next) unlock("rainbow-road");
     setRainbowToast(next ? ">> rainbow matrix: ON" : ">> rainbow matrix: OFF");
     setTimeout(() => setRainbowToast(null), 2200);
   }, []);

@@ -1,5 +1,6 @@
 import styles from "./../components/_Home.module.css";
 import { COLOR_ACCENT, COLOR_ACCENT_DANGER } from "./tokens";
+import { unlock } from "./achievements";
 
 const task1 = () => {
   const textElement = document.getElementById("hackerText");
@@ -111,6 +112,7 @@ const task1 = () => {
 
     textElement.addEventListener("mouseover", () => {
       if (isAnimationComplete) {
+        unlock("identity-crisis");
         isHovered = true;
         clearInterval(inst);
         centeredContentElement.style.color = COLOR_ACCENT_DANGER;

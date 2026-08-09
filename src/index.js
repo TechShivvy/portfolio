@@ -3,6 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 
+// The second place snoopers look, after the HTML comment. Same code word,
+// same deal - see SECRET_CODE in src/content/achievements.js.
+console.log(
+  '%cshivi-shell%c oh hi. the terminal knows a word: semicolon\ntype: unlock semicolon',
+  'color:#2ba2a2;font-weight:bold;font-family:monospace',
+  'color:#999;font-family:monospace'
+);
+
 // Inject cursor paths as CSS variables so they correctly use Vite's base path
 // in all environments (dev: '/', production gh-pages: '/portfolio/').
 const base = import.meta.env.BASE_URL;
